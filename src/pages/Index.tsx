@@ -18,15 +18,7 @@ const Index = () => {
   const { toast } = useToast();
   const [appointmentForm, setAppointmentForm] = useState({ name: '', phone: '', doctor: '', date: '' });
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', message: '' });
-  const [consultationForm, setConsultationForm] = useState({ name: '', phone: '', issue: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const doctors = [
-    { name: 'Др. Иванова Мария', specialty: 'Терапевт', schedule: 'Пн-Пт: 9:00-17:00', experience: '15 лет' },
-    { name: 'Др. Петров Алексей', specialty: 'Кардиолог', schedule: 'Вт-Сб: 10:00-18:00', experience: '12 лет' },
-    { name: 'Др. Сидорова Елена', specialty: 'Педиатр', schedule: 'Пн-Пт: 8:00-16:00', experience: '20 лет' },
-    { name: 'Др. Козлов Дмитрий', specialty: 'Хирург', schedule: 'Ср-Вс: 11:00-19:00', experience: '18 лет' },
-  ];
 
   const handleAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,43 +80,6 @@ const Index = () => {
         toast({
           title: "Ошибка",
           description: data.error || "Не удалось отправить жалобу",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Ошибка",
-        description: "Проблема с подключением к серверу",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleConsultation = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await fetch(BACKEND_URLS.consultations, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(consultationForm),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Запрос принят!",
-          description: "Врач свяжется с вами в течение 24 часов для онлайн-консультации.",
-        });
-        setConsultationForm({ name: '', phone: '', issue: '' });
-      } else {
-        toast({
-          title: "Ошибка",
-          description: data.error || "Не удалось создать запрос",
           variant: "destructive",
         });
       }
@@ -217,46 +172,6 @@ const Index = () => {
                   />
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? 'Отправка...' : 'Отправить'}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="lg" variant="outline" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
-                  <Icon name="Video" size={20} />
-                  Онлайн-консультация
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Онлайн-консультация</DialogTitle>
-                  <DialogDescription>Врач свяжется с вами в течение 24 часов</DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleConsultation} className="space-y-4">
-                  <Input
-                    placeholder="Ваше имя"
-                    value={consultationForm.name}
-                    onChange={(e) => setConsultationForm({ ...consultationForm, name: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Телефон"
-                    type="tel"
-                    value={consultationForm.phone}
-                    onChange={(e) => setConsultationForm({ ...consultationForm, phone: e.target.value })}
-                    required
-                  />
-                  <Textarea
-                    placeholder="Опишите вашу проблему"
-                    value={consultationForm.issue}
-                    onChange={(e) => setConsultationForm({ ...consultationForm, issue: e.target.value })}
-                    required
-                    rows={4}
-                  />
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Отправка...' : 'Отправить запрос'}
                   </Button>
                 </form>
               </DialogContent>
