@@ -644,7 +644,7 @@ const Index = () => {
               className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-green-600 hover:bg-green-700"
               asChild
             >
-              <a href="#forum">
+              <a href="/forum">
                 <Icon name="Users" size={20} />
                 Больничный форум
               </a>
@@ -979,12 +979,7 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start gap-3" asChild>
-                  <a href="/forum">
-                    <Icon name="Users" size={20} />
-                    Форум пациентов
-                  </a>
-                </Button>
+
                 <Button variant="outline" className="w-full justify-start gap-3" asChild>
                   <a href="#contacts">
                     <Icon name="Phone" size={20} />
