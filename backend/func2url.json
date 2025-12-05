@@ -1,4 +1,5 @@
 {
+  "sms-verify": "https://functions.poehali.dev/7ea5c6f5-d200-4cc0-b34b-10144a995d69",
   "forum_topics": "https://functions.poehali.dev/e1e111a6-e824-4bf1-9416-b5c145b37906",
   "forum_moderation": "https://functions.poehali.dev/70286923-439c-45b7-9744-403f0827a0c1",
   "forum_auth": "https://functions.poehali.dev/5453d7ba-4709-4da4-9761-5372c5aa776a",

@@ -13,6 +13,7 @@ const BACKEND_URLS = {
   schedules: 'https://functions.poehali.dev/6f53f66d-3e47-4e57-93dd-52d63c16d38f',
   consultations: 'https://functions.poehali.dev/d77bf8b2-a03f-4774-81ca-c6ae5f643a02',
   complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
+  smsVerify: 'https://functions.poehali.dev/7ea5c6f5-d200-4cc0-b34b-10144a995d69',
 };
 
 const Index = () => {
@@ -33,6 +34,11 @@ const Index = () => {
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
   const [maxTextIndex, setMaxTextIndex] = useState(0);
   const [isMaxBannerVisible, setIsMaxBannerVisible] = useState(false);
 
@@ -208,8 +214,115 @@ const Index = () => {
     }
   };
 
+  const handleSendCode = async () => {
+    if (!appointmentForm.patient_phone) {
+      toast({
+        title: "Ошибка",
+        description: "Введите номер телефона",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingCode(true);
+
+    try {
+      const response = await fetch(BACKEND_URLS.smsVerify, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          phone_number: appointmentForm.patient_phone
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCodeSent(true);
+        toast({
+          title: "Код отправлен",
+          description: "Проверьте SMS на вашем телефоне",
+        });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось отправить код",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode) {
+      toast({
+        title: "Ошибка",
+        description: "Введите код из SMS",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setVerifyingCode(true);
+
+    try {
+      const response = await fetch(BACKEND_URLS.smsVerify, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          phone_number: appointmentForm.patient_phone,
+          code: verificationCode
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.verified) {
+        setPhoneVerified(true);
+        toast({
+          title: "Телефон подтвержден",
+          description: "Теперь вы можете завершить запись",
+        });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Неверный код",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const handleAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!phoneVerified) {
+      toast({
+        title: "Ошибка",
+        description: "Сначала подтвердите номер телефона",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -234,6 +347,9 @@ const Index = () => {
         setSelectedDoctor(null);
         setSelectedDate('');
         setIsAppointmentOpen(false);
+        setPhoneVerified(false);
+        setCodeSent(false);
+        setVerificationCode('');
       } else {
         toast({
           title: "Ошибка",
@@ -619,21 +735,94 @@ const Index = () => {
                           onChange={(e) => setAppointmentForm({ ...appointmentForm, patient_name: e.target.value })}
                           required
                         />
-                        <Input
-                          placeholder="Телефон"
-                          type="tel"
-                          value={appointmentForm.patient_phone}
-                          onChange={(e) => setAppointmentForm({ ...appointmentForm, patient_phone: e.target.value })}
-                          required
-                        />
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Телефон (+79991234567)"
+                            type="tel"
+                            value={appointmentForm.patient_phone}
+                            onChange={(e) => {
+                              setAppointmentForm({ ...appointmentForm, patient_phone: e.target.value });
+                              setPhoneVerified(false);
+                              setCodeSent(false);
+                              setVerificationCode('');
+                            }}
+                            required
+                            disabled={phoneVerified}
+                          />
+                          {!phoneVerified && !codeSent && (
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              className="w-full"
+                              onClick={handleSendCode}
+                              disabled={sendingCode || !appointmentForm.patient_phone}
+                            >
+                              <Icon name="MessageSquare" size={16} className="mr-2" />
+                              {sendingCode ? 'Отправка...' : 'Получить код подтверждения'}
+                            </Button>
+                          )}
+                          {codeSent && !phoneVerified && (
+                            <Card className="bg-blue-50 border-blue-200">
+                              <CardContent className="pt-4 space-y-3">
+                                <div className="flex items-start gap-2">
+                                  <Icon name="MessageSquare" size={20} className="text-blue-600 mt-0.5" />
+                                  <div className="text-sm text-blue-900">
+                                    <p className="font-medium mb-1">Код отправлен на ваш телефон</p>
+                                    <p className="text-xs text-blue-700">Введите 6-значный код из SMS</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Input
+                                    placeholder="000000"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    maxLength={6}
+                                    className="text-center text-lg font-mono"
+                                  />
+                                  <Button 
+                                    type="button" 
+                                    onClick={handleVerifyCode}
+                                    disabled={verifyingCode || verificationCode.length !== 6}
+                                  >
+                                    {verifyingCode ? 'Проверка...' : 'Проверить'}
+                                  </Button>
+                                </div>
+                                <Button 
+                                  type="button" 
+                                  variant="link" 
+                                  size="sm"
+                                  onClick={handleSendCode}
+                                  disabled={sendingCode}
+                                  className="w-full p-0 h-auto"
+                                >
+                                  Отправить код повторно
+                                </Button>
+                              </CardContent>
+                            </Card>
+                          )}
+                          {phoneVerified && (
+                            <Card className="bg-green-50 border-green-200">
+                              <CardContent className="pt-3 pb-3">
+                                <div className="flex items-center gap-2 text-green-800">
+                                  <Icon name="CheckCircle" size={20} className="text-green-600" />
+                                  <span className="text-sm font-medium">Телефон подтвержден</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
                         <Textarea
                           placeholder="Краткое описание проблемы (необязательно)"
                           value={appointmentForm.description}
                           onChange={(e) => setAppointmentForm({ ...appointmentForm, description: e.target.value })}
                           rows={3}
                         />
-                        <Button type="submit" className="w-full" disabled={isSubmitting}>
-                          {isSubmitting ? 'Отправка...' : 'Записаться на прием'}
+                        <Button 
+                          type="submit" 
+                          className="w-full" 
+                          disabled={isSubmitting || !phoneVerified}
+                        >
+                          {isSubmitting ? 'Отправка...' : phoneVerified ? 'Записаться на прием' : 'Сначала подтвердите телефон'}
                         </Button>
                       </form>
                     )}
