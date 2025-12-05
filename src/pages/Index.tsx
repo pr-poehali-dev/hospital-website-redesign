@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,16 +8,74 @@ import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
 const BACKEND_URLS = {
-  appointments: 'https://functions.poehali.dev/2147bb97-ded9-4502-b750-cc52ffabe545',
+  appointments: 'https://functions.poehali.dev/a7f148cd-e1c2-40e3-9762-cc8b2bc2dffb',
+  doctors: 'https://functions.poehali.dev/68f877b2-aeda-437a-ad67-925a3414d688',
   consultations: 'https://functions.poehali.dev/d77bf8b2-a03f-4774-81ca-c6ae5f643a02',
   complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
 };
 
 const Index = () => {
   const { toast } = useToast();
-  const [appointmentForm, setAppointmentForm] = useState({ name: '', phone: '', doctor: '', date: '' });
+  const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [appointmentForm, setAppointmentForm] = useState({ 
+    patient_name: '', 
+    patient_phone: '', 
+    appointment_time: '',
+    description: '' 
+  });
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+
+  useEffect(() => {
+    loadDoctors();
+  }, []);
+
+  useEffect(() => {
+    if (selectedDoctor && selectedDate) {
+      loadAvailableSlots();
+    }
+  }, [selectedDoctor, selectedDate]);
+
+  const loadDoctors = async () => {
+    try {
+      const response = await fetch(BACKEND_URLS.doctors);
+      const data = await response.json();
+      setDoctors(data.doctors?.filter((d: any) => d.is_active) || []);
+    } catch (error) {
+      console.error('Failed to load doctors:', error);
+    }
+  };
+
+  const loadAvailableSlots = async () => {
+    if (!selectedDoctor || !selectedDate) return;
+    
+    try {
+      const response = await fetch(
+        `${BACKEND_URLS.appointments}/available-slots?doctor_id=${selectedDoctor.id}&date=${selectedDate}`
+      );
+      const data = await response.json();
+      setAvailableSlots(data.available_slots || []);
+    } catch (error) {
+      console.error('Failed to load slots:', error);
+    }
+  };
+
+  const getNext7Days = () => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      days.push({
+        date: date.toISOString().split('T')[0],
+        label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' })
+      });
+    }
+    return days;
+  };
 
   const handleAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,17 +85,24 @@ const Index = () => {
       const response = await fetch(BACKEND_URLS.appointments, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(appointmentForm),
+        body: JSON.stringify({
+          doctor_id: selectedDoctor.id,
+          appointment_date: selectedDate,
+          ...appointmentForm
+        }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         toast({
           title: "Запись успешна!",
-          description: "Мы свяжемся с вами для подтверждения приема.",
+          description: `Вы записаны к ${selectedDoctor.full_name} на ${selectedDate} в ${appointmentForm.appointment_time}`,
         });
-        setAppointmentForm({ name: '', phone: '', doctor: '', date: '' });
+        setAppointmentForm({ patient_name: '', patient_phone: '', appointment_time: '', description: '' });
+        setSelectedDoctor(null);
+        setSelectedDate('');
+        setIsAppointmentOpen(false);
       } else {
         toast({
           title: "Ошибка",
@@ -131,48 +196,158 @@ const Index = () => {
             Современная медицинская помощь с заботой о каждом пациенте. Квалифицированные специалисты и передовые технологии.
           </p>
           <div className="flex gap-4 justify-center flex-wrap animate-scale-in">
-            <Dialog>
+            <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
                   <Icon name="Calendar" size={20} />
                   Записаться на прием
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Запись на прием</DialogTitle>
-                  <DialogDescription>Заполните форму, и мы свяжемся с вами</DialogDescription>
+                  <DialogDescription>Выберите врача, дату и время приема</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleAppointment} className="space-y-4">
-                  <Input
-                    placeholder="Ваше имя"
-                    value={appointmentForm.name}
-                    onChange={(e) => setAppointmentForm({ ...appointmentForm, name: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Телефон"
-                    type="tel"
-                    value={appointmentForm.phone}
-                    onChange={(e) => setAppointmentForm({ ...appointmentForm, phone: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Специалист"
-                    value={appointmentForm.doctor}
-                    onChange={(e) => setAppointmentForm({ ...appointmentForm, doctor: e.target.value })}
-                    required
-                  />
-                  <Input
-                    type="date"
-                    value={appointmentForm.date}
-                    onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
-                    required
-                  />
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Отправка...' : 'Отправить'}
-                  </Button>
-                </form>
+                
+                {!selectedDoctor ? (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold">Выберите врача:</h3>
+                    <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                      {doctors.map((doctor: any) => (
+                        <Card 
+                          key={doctor.id} 
+                          className="cursor-pointer hover:shadow-lg transition-shadow"
+                          onClick={() => setSelectedDoctor(doctor)}
+                        >
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Icon name="User" size={20} className="text-primary" />
+                              {doctor.full_name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{doctor.position}</p>
+                            {doctor.specialization && (
+                              <p className="text-sm font-medium mt-1">{doctor.specialization}</p>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ) : !selectedDate ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedDoctor(null)}>
+                        Изменить
+                      </Button>
+                    </div>
+                    <h3 className="font-semibold">Выберите дату:</h3>
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                      {getNext7Days().map((day) => (
+                        <Button
+                          key={day.date}
+                          variant="outline"
+                          className="h-20 flex flex-col"
+                          onClick={() => setSelectedDate(day.date)}
+                        >
+                          <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
+                          <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : availableSlots.length === 0 && !isSubmitting ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
+                        <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedDate('')}>
+                        Изменить дату
+                      </Button>
+                    </div>
+                    <Card className="bg-yellow-50 border-yellow-200">
+                      <CardContent className="py-6 text-center">
+                        <Icon name="AlertCircle" size={32} className="text-yellow-600 mx-auto mb-2" />
+                        <p className="text-yellow-800">На выбранную дату нет свободных слотов</p>
+                        <p className="text-sm text-yellow-600 mt-1">Выберите другую дату</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
+                        <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => { setSelectedDate(''); setAppointmentForm({ ...appointmentForm, appointment_time: '' }); }}>
+                        Изменить дату
+                      </Button>
+                    </div>
+                    
+                    {!appointmentForm.appointment_time ? (
+                      <div>
+                        <h3 className="font-semibold mb-3">Выберите время:</h3>
+                        <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+                          {availableSlots.map((slot: string) => (
+                            <Button
+                              key={slot}
+                              variant="outline"
+                              onClick={() => setAppointmentForm({ ...appointmentForm, appointment_time: slot })}
+                            >
+                              {slot}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleAppointment} className="space-y-4">
+                        <Card className="bg-primary/5">
+                          <CardContent className="pt-4">
+                            <p className="text-sm"><strong>Врач:</strong> {selectedDoctor.full_name}</p>
+                            <p className="text-sm"><strong>Дата:</strong> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                            <p className="text-sm"><strong>Время:</strong> {appointmentForm.appointment_time}</p>
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              type="button"
+                              onClick={() => setAppointmentForm({ ...appointmentForm, appointment_time: '' })}
+                              className="mt-2 p-0 h-auto"
+                            >
+                              Изменить время
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <Input
+                          placeholder="Ваше ФИО"
+                          value={appointmentForm.patient_name}
+                          onChange={(e) => setAppointmentForm({ ...appointmentForm, patient_name: e.target.value })}
+                          required
+                        />
+                        <Input
+                          placeholder="Телефон"
+                          type="tel"
+                          value={appointmentForm.patient_phone}
+                          onChange={(e) => setAppointmentForm({ ...appointmentForm, patient_phone: e.target.value })}
+                          required
+                        />
+                        <Textarea
+                          placeholder="Краткое описание проблемы (необязательно)"
+                          value={appointmentForm.description}
+                          onChange={(e) => setAppointmentForm({ ...appointmentForm, description: e.target.value })}
+                          rows={3}
+                        />
+                        <Button type="submit" className="w-full" disabled={isSubmitting}>
+                          {isSubmitting ? 'Отправка...' : 'Записаться на прием'}
+                        </Button>
+                      </form>
+                    )}
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
 
