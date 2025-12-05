@@ -9,6 +9,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Управление расписанием врачей
     GET /?doctor_id=X - получить расписание врача
     POST / - создать/обновить расписание
+    PUT / - изменить статус активности или время
     DELETE /?id=X - удалить расписание
     """
     method = event.get('httpMethod', 'GET')
@@ -18,7 +19,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type, X-Doctor-Token',
                 'Access-Control-Max-Age': '86400'
             },
@@ -51,7 +52,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute("SELECT * FROM doctor_schedules WHERE doctor_id = %s AND is_active = true ORDER BY day_of_week", (doctor_id,))
+            cursor.execute("SELECT * FROM doctor_schedules WHERE doctor_id = %s ORDER BY day_of_week", (doctor_id,))
             schedules = cursor.fetchall()
             cursor.close()
             
@@ -104,6 +105,47 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 'isBase64Encoded': False
             }
         
+        elif method == 'PUT':
+            body = json.loads(event.get('body', '{}'))
+            schedule_id = body.get('id')
+            is_active = body.get('is_active')
+            start_time = body.get('start_time')
+            end_time = body.get('end_time')
+            
+            if not schedule_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Schedule ID is required'}),
+                    'isBase64Encoded': False
+                }
+            
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            
+            if is_active is not None:
+                cursor.execute("UPDATE doctor_schedules SET is_active = %s WHERE id = %s RETURNING *", (is_active, schedule_id))
+            elif start_time and end_time:
+                cursor.execute("UPDATE doctor_schedules SET start_time = %s, end_time = %s WHERE id = %s RETURNING *", (start_time, end_time, schedule_id))
+            else:
+                cursor.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Either is_active or both start_time and end_time are required'}),
+                    'isBase64Encoded': False
+                }
+            
+            schedule = cursor.fetchone()
+            conn.commit()
+            cursor.close()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'schedule': schedule}, default=str),
+                'isBase64Encoded': False
+            }
+        
         elif method == 'DELETE':
             query_params = event.get('queryStringParameters') or {}
             schedule_id = query_params.get('id')
@@ -117,7 +159,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             cursor = conn.cursor()
-            cursor.execute("UPDATE doctor_schedules SET is_active = false WHERE id = %s", (schedule_id,))
+            cursor.execute("DELETE FROM doctor_schedules WHERE id = %s", (schedule_id,))
             conn.commit()
             cursor.close()
             

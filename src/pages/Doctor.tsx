@@ -28,6 +28,8 @@ const Doctor = () => {
     end_time: '17:00'
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<any>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
@@ -112,6 +114,80 @@ const Doctor = () => {
         loadSchedules(doctorInfo.id);
       } else {
         toast({ title: "Ошибка", description: data.error || "Не удалось сохранить расписание", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleToggleActive = async (scheduleId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch(API_URLS.schedules, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: scheduleId,
+          is_active: !currentStatus
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: currentStatus ? "День деактивирован" : "День активирован" });
+        loadSchedules(doctorInfo.id);
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось изменить статус", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteSchedule = async (scheduleId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот день из расписания?')) return;
+    
+    try {
+      const response = await fetch(`${API_URLS.schedules}?id=${scheduleId}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "День удален из расписания" });
+        loadSchedules(doctorInfo.id);
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось удалить", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleEditSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.schedules, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingSchedule.id,
+          start_time: editingSchedule.start_time,
+          end_time: editingSchedule.end_time
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Время приема обновлено" });
+        setIsEditOpen(false);
+        setEditingSchedule(null);
+        loadSchedules(doctorInfo.id);
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось обновить", variant: "destructive" });
       }
     } catch (error) {
       toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
@@ -283,6 +359,45 @@ const Doctor = () => {
                 </Dialog>
               </div>
 
+              <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Изменить время приема</DialogTitle>
+                  </DialogHeader>
+                  {editingSchedule && (
+                    <form onSubmit={handleEditSchedule} className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">День недели</label>
+                        <Input
+                          value={DAYS_OF_WEEK[editingSchedule.day_of_week]}
+                          disabled
+                          className="bg-muted"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Время начала</label>
+                        <Input
+                          type="time"
+                          value={editingSchedule.start_time?.slice(0, 5) || '08:00'}
+                          onChange={(e) => setEditingSchedule({ ...editingSchedule, start_time: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Время окончания</label>
+                        <Input
+                          type="time"
+                          value={editingSchedule.end_time?.slice(0, 5) || '17:00'}
+                          onChange={(e) => setEditingSchedule({ ...editingSchedule, end_time: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">Сохранить изменения</Button>
+                    </form>
+                  )}
+                </DialogContent>
+              </Dialog>
+
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {schedules.length === 0 ? (
                   <Card className="col-span-full">
@@ -292,20 +407,53 @@ const Doctor = () => {
                   </Card>
                 ) : (
                   schedules.map((schedule: any) => (
-                    <Card key={schedule.id}>
+                    <Card key={schedule.id} className={!schedule.is_active ? 'opacity-60' : ''}>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Icon name="Calendar" size={20} className="text-primary" />
-                          {DAYS_OF_WEEK[schedule.day_of_week]}
+                        <CardTitle className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Icon name="Calendar" size={20} className="text-primary" />
+                            {DAYS_OF_WEEK[schedule.day_of_week]}
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            schedule.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {schedule.is_active ? 'Активно' : 'Неактивно'}
+                          </span>
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-lg">
+                        <p className="text-lg mb-4">
                           {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          Статус: {schedule.is_active ? 'Активно' : 'Неактивно'}
-                        </p>
+                        <div className="flex gap-2 flex-wrap">
+                          <Button 
+                            size="sm" 
+                            variant={schedule.is_active ? "outline" : "default"}
+                            onClick={() => handleToggleActive(schedule.id, schedule.is_active)}
+                          >
+                            <Icon name={schedule.is_active ? "PauseCircle" : "PlayCircle"} size={16} className="mr-1" />
+                            {schedule.is_active ? 'Деактивировать' : 'Активировать'}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              setEditingSchedule(schedule);
+                              setIsEditOpen(true);
+                            }}
+                          >
+                            <Icon name="Edit" size={16} className="mr-1" />
+                            Изменить
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleDeleteSchedule(schedule.id)}
+                          >
+                            <Icon name="Trash2" size={16} className="mr-1" />
+                            Удалить
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))
