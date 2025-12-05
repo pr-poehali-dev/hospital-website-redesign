@@ -1192,6 +1192,23 @@ const Index = () => {
         </div>
       </footer>
 
+      <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="snowflake absolute text-white/80 text-2xl"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 10}s`,
+              fontSize: `${10 + Math.random() * 20}px`,
+            }}
+          >
+            ❄
+          </div>
+        ))}
+      </div>
+
       <div className="fixed bottom-4 right-4 z-50 flex flex-col items-center gap-2 animate-bounce-slow pointer-events-none">
         <div className="text-center bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border-2 border-green-500">
           <p className="text-green-700 font-bold text-sm whitespace-nowrap">С Новым Годом! 🎉</p>
@@ -1220,6 +1237,17 @@ const Index = () => {
           }
         }
         
+        @keyframes fall {
+          0% {
+            transform: translateY(-100px) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0.8;
+          }
+        }
+        
         .animate-bounce-slow {
           animation: bounce-slow 3s ease-in-out infinite;
         }
@@ -1227,6 +1255,10 @@ const Index = () => {
         .animate-swing {
           animation: swing 2s ease-in-out infinite;
           transform-origin: top center;
+        }
+        
+        .snowflake {
+          animation: fall linear infinite;
         }
       `}</style>
     </div>
