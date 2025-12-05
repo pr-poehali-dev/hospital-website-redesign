@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
@@ -311,6 +311,34 @@ const Doctor = () => {
             </TabsList>
 
             <TabsContent value="schedule" className="mt-6">
+              <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-3">
+                    <Icon name="Info" size={20} className="text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-900 font-medium mb-2">✨ Гибкое расписание для каждого дня недели</p>
+                      <p className="text-sm text-blue-700 mb-3">
+                        Настраивайте индивидуальное время работы и перерывы для каждого дня. 
+                        Например: понедельник 8:00-17:00 с перерывом 12:00-13:00, а суббота 9:00-14:00 без перерыва.
+                      </p>
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="px-2 py-1 bg-white/60 rounded-md text-blue-800">
+                          <Icon name="Clock" size={12} className="inline mr-1" />
+                          Разное время работы
+                        </span>
+                        <span className="px-2 py-1 bg-white/60 rounded-md text-orange-800">
+                          <Icon name="Coffee" size={12} className="inline mr-1" />
+                          Индивидуальные перерывы
+                        </span>
+                        <span className="px-2 py-1 bg-white/60 rounded-md text-green-800">
+                          <Icon name="CheckCircle" size={12} className="inline mr-1" />
+                          Полный контроль
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold">Рабочее расписание</h2>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -323,6 +351,9 @@ const Doctor = () => {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Установить рабочий день</DialogTitle>
+                      <DialogDescription>
+                        Настройте индивидуальное расписание и перерыв для выбранного дня недели
+                      </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCreateSchedule} className="space-y-4">
                       <div>
@@ -466,15 +497,22 @@ const Doctor = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="mb-4">
-                          <p className="text-lg font-medium">
-                            {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
-                          </p>
-                          {schedule.break_start_time && schedule.break_end_time && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              <Icon name="Coffee" size={14} className="inline mr-1" />
-                              Перерыв: {schedule.break_start_time.slice(0, 5)} - {schedule.break_end_time.slice(0, 5)}
+                        <div className="mb-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Icon name="Clock" size={16} className="text-primary" />
+                            <p className="text-lg font-medium">
+                              {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
                             </p>
+                          </div>
+                          {schedule.break_start_time && schedule.break_end_time ? (
+                            <div className="flex items-center gap-2 bg-orange-50 px-3 py-2 rounded-md">
+                              <Icon name="Coffee" size={14} className="text-orange-600" />
+                              <p className="text-sm text-orange-900 font-medium">
+                                Перерыв: {schedule.break_start_time.slice(0, 5)} - {schedule.break_end_time.slice(0, 5)}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground ml-6">Без перерыва</p>
                           )}
                         </div>
                         <div className="flex gap-2 flex-wrap">

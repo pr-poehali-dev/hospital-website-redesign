@@ -538,18 +538,20 @@ const Index = () => {
                     {!appointmentForm.appointment_time ? (
                       <div>
                         <h3 className="font-semibold mb-3">Выберите время:</h3>
-                        <div className="flex gap-4 mb-3 text-xs">
+                        <div className="flex flex-wrap gap-4 mb-3 text-xs">
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 border-2 border-primary rounded"></div>
-                            <span>Свободно</span>
+                            <span className="font-medium">Свободно</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 bg-red-100 border-2 border-red-500 rounded"></div>
-                            <span>Занято</span>
+                            <span className="font-medium">Занято</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-orange-100 border-2 border-orange-500 rounded"></div>
-                            <span>Перерыв</span>
+                            <div className="w-4 h-4 bg-orange-100 border-2 border-orange-500 rounded flex items-center justify-center">
+                              <Icon name="Coffee" size={10} className="text-orange-600" />
+                            </div>
+                            <span className="font-medium">Перерыв врача</span>
                           </div>
                         </div>
                         <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
