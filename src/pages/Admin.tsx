@@ -28,6 +28,8 @@ const Admin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<any>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -140,6 +142,70 @@ const Admin = () => {
       }
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось деактивировать врача", variant: "destructive" });
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Ошибка", description: "Можно загружать только изображения", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Ошибка", description: "Размер файла не должен превышать 5 МБ", variant: "destructive" });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('https://cdn.poehali.dev/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        setDoctorForm({ ...doctorForm, photo_url: data.url });
+        toast({ title: "Успешно", description: "Фото загружено" });
+      } else {
+        toast({ title: "Ошибка", description: "Не удалось загрузить файл", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с загрузкой файла", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
     }
   };
 
@@ -269,11 +335,67 @@ const Admin = () => {
                     onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
                     required
                   />
-                  <Input
-                    placeholder="URL фотографии врача (необязательно)"
-                    value={doctorForm.photo_url}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
-                  />
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Фотография врача</label>
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+                      }`}
+                    >
+                      {doctorForm.photo_url ? (
+                        <div className="space-y-3">
+                          <img 
+                            src={doctorForm.photo_url} 
+                            alt="Предпросмотр" 
+                            className="w-32 h-32 object-cover rounded-lg mx-auto"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '';
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
+                          >
+                            <Icon name="Trash2" size={14} className="mr-1" />
+                            Удалить фото
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Icon name="Upload" size={40} className="mx-auto text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">Перетащите изображение сюда</p>
+                            <p className="text-xs text-muted-foreground">или</p>
+                          </div>
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                              disabled={isUploading}
+                            />
+                            <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>
+                              <span>
+                                {isUploading ? 'Загрузка...' : 'Выбрать файл'}
+                              </span>
+                            </Button>
+                          </label>
+                          <p className="text-xs text-muted-foreground">До 5 МБ, JPG, PNG, GIF</p>
+                        </div>
+                      )}
+                    </div>
+                    <Input
+                      placeholder="Или введите URL изображения"
+                      value={doctorForm.photo_url}
+                      onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                    />
+                  </div>
                   <Button type="submit" className="w-full">Создать врача</Button>
                 </form>
               </DialogContent>
@@ -307,34 +429,67 @@ const Admin = () => {
                     value={doctorForm.specialization}
                     onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
                   />
-                  <Input
-                    placeholder="URL фотографии врача"
-                    value={doctorForm.photo_url}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
-                  />
-                  {doctorForm.photo_url && (
-                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                      <img 
-                        src={doctorForm.photo_url} 
-                        alt="Предпросмотр" 
-                        className="w-20 h-20 object-cover rounded-lg"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Предпросмотр фото</p>
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
-                        >
-                          Удалить фото
-                        </Button>
-                      </div>
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Фотография врача</label>
+                    <div
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
+                      }`}
+                    >
+                      {doctorForm.photo_url ? (
+                        <div className="space-y-3">
+                          <img 
+                            src={doctorForm.photo_url} 
+                            alt="Предпросмотр" 
+                            className="w-32 h-32 object-cover rounded-lg mx-auto"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '';
+                            }}
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
+                          >
+                            <Icon name="Trash2" size={14} className="mr-1" />
+                            Удалить фото
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Icon name="Upload" size={40} className="mx-auto text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">Перетащите изображение сюда</p>
+                            <p className="text-xs text-muted-foreground">или</p>
+                          </div>
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                              disabled={isUploading}
+                            />
+                            <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>
+                              <span>
+                                {isUploading ? 'Загрузка...' : 'Выбрать файл'}
+                              </span>
+                            </Button>
+                          </label>
+                          <p className="text-xs text-muted-foreground">До 5 МБ, JPG, PNG, GIF</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                    <Input
+                      placeholder="Или введите URL изображения"
+                      value={doctorForm.photo_url}
+                      onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                    />
+                  </div>
                   <Input
                     type="password"
                     placeholder="Новый пароль (оставьте пустым, чтобы не менять)"
