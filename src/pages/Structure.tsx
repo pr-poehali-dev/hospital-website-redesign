@@ -15,8 +15,7 @@ const Structure = () => {
               className="w-12 h-12 object-contain mix-blend-multiply"
             />
             <div>
-              <p className="text-[10px] text-muted-foreground leading-tight">ГУ АЦГМБ ЛНР</p>
-              <h1 className="text-sm font-bold text-primary leading-tight">Антрацитовская центральная<br />городская многопрофильная больница</h1>
+              <h1 className="text-sm font-bold text-primary leading-tight">ГБУЗ Антрацитовская центральная<br />городская многопрофильная больница</h1>
             </div>
           </div>
           <nav className="hidden lg:flex gap-4 text-sm">
@@ -32,9 +31,9 @@ const Structure = () => {
       <section className="py-12 bg-white/90">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4">Структура ГУ "АЦГМБ" ЛНР</h1>
+            <h1 className="text-4xl font-bold mb-4">Структура ГБУЗ "АЦГМБ" ЛНР</h1>
             <p className="text-muted-foreground max-w-3xl mx-auto">
-              Государственное учреждение "Антрацитовская центральная многопрофильная больница" Луганской Народной Республики
+              ГБУЗ Антрацитовская центральная многопрофильная больница Луганской Народной Республики
             </p>
             <p className="text-sm text-muted-foreground mt-2">г. Антрацит, ул. Толстоусова, д.1, 294613</p>
           </div>
