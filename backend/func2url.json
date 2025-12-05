@@ -1,4 +1,8 @@
 {
+  "forum_topics": "https://functions.poehali.dev/e1e111a6-e824-4bf1-9416-b5c145b37906",
+  "forum_moderation": "https://functions.poehali.dev/70286923-439c-45b7-9744-403f0827a0c1",
+  "forum_auth": "https://functions.poehali.dev/5453d7ba-4709-4da4-9761-5372c5aa776a",
+  "forum_posts": "https://functions.poehali.dev/0352645c-ae3d-4c45-8081-4f7a347244a6",
   "user_questions": "https://functions.poehali.dev/816ff0e8-3dcc-4eeb-a985-36603a12894c",
   "faq": "https://functions.poehali.dev/fb5160e8-f170-4c21-97a9-3afbcb6f78a9",
   "schedules": "https://functions.poehali.dev/6f53f66d-3e47-4e57-93dd-52d63c16d38f",

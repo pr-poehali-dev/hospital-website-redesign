@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Get posts for topic",
+      "method": "GET",
+      "path": "/?topic_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "posts": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

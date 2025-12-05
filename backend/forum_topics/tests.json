@@ -1,0 +1,14 @@
+{
+  "tests": [
+    {
+      "name": "Get all topics",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "topics": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

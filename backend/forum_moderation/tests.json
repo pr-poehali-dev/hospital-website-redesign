@@ -1,0 +1,17 @@
+{
+  "tests": [
+    {
+      "name": "Get all users (admin)",
+      "method": "GET",
+      "path": "/users",
+      "headers": {
+        "X-Admin-Token": "admin123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "users": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
