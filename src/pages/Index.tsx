@@ -220,15 +220,30 @@ const Index = () => {
                           onClick={() => setSelectedDoctor(doctor)}
                         >
                           <CardHeader className="pb-3">
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <Icon name="User" size={20} className="text-primary" />
-                              {doctor.full_name}
+                            <CardTitle className="text-lg flex items-center gap-3">
+                              {doctor.photo_url ? (
+                                <img 
+                                  src={doctor.photo_url} 
+                                  alt={doctor.full_name} 
+                                  className="w-12 h-12 rounded-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <Icon name="User" size={24} className="text-primary" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <div className="font-semibold">{doctor.full_name}</div>
+                                <div className="text-sm text-muted-foreground font-normal">{doctor.position}</div>
+                              </div>
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-sm text-muted-foreground">{doctor.position}</p>
                             {doctor.specialization && (
-                              <p className="text-sm font-medium mt-1">{doctor.specialization}</p>
+                              <p className="text-sm font-medium">{doctor.specialization}</p>
                             )}
                           </CardContent>
                         </Card>
@@ -238,7 +253,26 @@ const Index = () => {
                 ) : !selectedDate ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
+                      <div className="flex items-center gap-3">
+                        {selectedDoctor.photo_url ? (
+                          <img 
+                            src={selectedDoctor.photo_url} 
+                            alt={selectedDoctor.full_name} 
+                            className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon name="User" size={24} className="text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">{selectedDoctor.position}</p>
+                        </div>
+                      </div>
                       <Button variant="outline" size="sm" onClick={() => setSelectedDoctor(null)}>
                         Изменить
                       </Button>
@@ -261,9 +295,25 @@ const Index = () => {
                 ) : availableSlots.length === 0 && !isSubmitting ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
-                        <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                      <div className="flex items-center gap-3">
+                        {selectedDoctor.photo_url ? (
+                          <img 
+                            src={selectedDoctor.photo_url} 
+                            alt={selectedDoctor.full_name} 
+                            className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon name="User" size={24} className="text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                        </div>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => setSelectedDate('')}>
                         Изменить дату
@@ -280,9 +330,25 @@ const Index = () => {
                 ) : (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">Врач: {selectedDoctor.full_name}</h3>
-                        <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                      <div className="flex items-center gap-3">
+                        {selectedDoctor.photo_url ? (
+                          <img 
+                            src={selectedDoctor.photo_url} 
+                            alt={selectedDoctor.full_name} 
+                            className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon name="User" size={24} className="text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">Дата: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
+                        </div>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => { setSelectedDate(''); setAppointmentForm({ ...appointmentForm, appointment_time: '' }); }}>
                         Изменить дату

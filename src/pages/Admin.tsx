@@ -22,9 +22,12 @@ const Admin = () => {
     position: '',
     specialization: '',
     login: '',
-    password: ''
+    password: '',
+    photo_url: ''
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState<any>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -83,11 +86,40 @@ const Admin = () => {
       
       if (response.ok && data.success) {
         toast({ title: "Успешно", description: "Врач добавлен" });
-        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '' });
+        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '' });
         setIsOpen(false);
         loadDoctors();
       } else {
         toast({ title: "Ошибка", description: data.error || "Не удалось создать врача", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateDoctor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.doctors, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingDoctor.id,
+          ...doctorForm
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Данные врача обновлены" });
+        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '' });
+        setIsEditOpen(false);
+        setEditingDoctor(null);
+        loadDoctors();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось обновить врача", variant: "destructive" });
       }
     } catch (error) {
       toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
@@ -109,6 +141,20 @@ const Admin = () => {
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось деактивировать врача", variant: "destructive" });
     }
+  };
+
+  const openEditDialog = (doctor: any) => {
+    setEditingDoctor(doctor);
+    setDoctorForm({
+      full_name: doctor.full_name,
+      phone: doctor.phone || '',
+      position: doctor.position,
+      specialization: doctor.specialization || '',
+      login: doctor.login,
+      password: '',
+      photo_url: doctor.photo_url || ''
+    });
+    setIsEditOpen(true);
   };
 
   const handleLogout = () => {
@@ -223,7 +269,79 @@ const Admin = () => {
                     onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
                     required
                   />
+                  <Input
+                    placeholder="URL фотографии врача (необязательно)"
+                    value={doctorForm.photo_url}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                  />
                   <Button type="submit" className="w-full">Создать врача</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Редактировать врача</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdateDoctor} className="space-y-4">
+                  <Input
+                    placeholder="ФИО врача"
+                    value={doctorForm.full_name}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, full_name: e.target.value })}
+                    required
+                  />
+                  <Input
+                    placeholder="Телефон"
+                    value={doctorForm.phone}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
+                  />
+                  <Input
+                    placeholder="Должность"
+                    value={doctorForm.position}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, position: e.target.value })}
+                    required
+                  />
+                  <Input
+                    placeholder="Специализация"
+                    value={doctorForm.specialization}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
+                  />
+                  <Input
+                    placeholder="URL фотографии врача"
+                    value={doctorForm.photo_url}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                  />
+                  {doctorForm.photo_url && (
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <img 
+                        src={doctorForm.photo_url} 
+                        alt="Предпросмотр" 
+                        className="w-20 h-20 object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Предпросмотр фото</p>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
+                        >
+                          Удалить фото
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <Input
+                    type="password"
+                    placeholder="Новый пароль (оставьте пустым, чтобы не менять)"
+                    value={doctorForm.password}
+                    onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
+                  />
+                  <Button type="submit" className="w-full">Сохранить изменения</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -234,7 +352,18 @@ const Admin = () => {
               <Card key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Icon name="User" size={20} className="text-primary" />
+                    {doctor.photo_url ? (
+                      <img 
+                        src={doctor.photo_url} 
+                        alt={doctor.full_name} 
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <Icon name="User" size={20} className="text-primary" />
+                    )}
                     {doctor.full_name}
                   </CardTitle>
                 </CardHeader>
@@ -245,14 +374,26 @@ const Admin = () => {
                   <p className="text-sm"><strong>Логин:</strong> {doctor.login}</p>
                   <p className="text-sm"><strong>Статус:</strong> {doctor.is_active ? 'Активен' : 'Деактивирован'}</p>
                   {doctor.is_active && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => handleDeleteDoctor(doctor.id)}
-                      className="w-full mt-2"
-                    >
-                      Деактивировать
-                    </Button>
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => openEditDialog(doctor)}
+                        className="flex-1"
+                      >
+                        <Icon name="Edit" size={14} className="mr-1" />
+                        Изменить
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => handleDeleteDoctor(doctor.id)}
+                        className="flex-1"
+                      >
+                        <Icon name="Trash2" size={14} className="mr-1" />
+                        Удалить
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>

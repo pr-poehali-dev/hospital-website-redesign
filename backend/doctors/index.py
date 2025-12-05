@@ -47,7 +47,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             if doctor_id:
-                cursor.execute("SELECT id, full_name, phone, position, specialization, login, is_active, created_at FROM doctors WHERE id = %s", (doctor_id,))
+                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, created_at FROM doctors WHERE id = %s", (doctor_id,))
                 doctor = cursor.fetchone()
                 cursor.close()
                 
@@ -66,7 +66,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             else:
-                cursor.execute("SELECT id, full_name, phone, position, specialization, login, is_active, created_at FROM doctors ORDER BY full_name")
+                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, created_at FROM doctors ORDER BY full_name")
                 doctors = cursor.fetchall()
                 cursor.close()
                 
@@ -85,6 +85,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             specialization = body.get('specialization')
             login = body.get('login')
             password = body.get('password', 'doctor123')
+            photo_url = body.get('photo_url')
             
             if not all([full_name, position, login]):
                 return {
@@ -96,8 +97,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "INSERT INTO doctors (full_name, phone, position, specialization, login, password_hash) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id, full_name, phone, position, specialization, login, is_active, created_at",
-                (full_name, phone, position, specialization, login, password)
+                "INSERT INTO doctors (full_name, phone, position, specialization, login, password_hash, photo_url) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, created_at",
+                (full_name, phone, position, specialization, login, password, photo_url)
             )
             doctor = cursor.fetchone()
             conn.commit()
@@ -137,6 +138,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if 'specialization' in body:
                 update_fields.append('specialization = %s')
                 update_values.append(body['specialization'])
+            if 'photo_url' in body:
+                update_fields.append('photo_url = %s')
+                update_values.append(body['photo_url'])
             if 'is_active' in body:
                 update_fields.append('is_active = %s')
                 update_values.append(body['is_active'])
@@ -153,7 +157,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             update_values.append(doctor_id)
-            query = f"UPDATE doctors SET {', '.join(update_fields)} WHERE id = %s RETURNING id, full_name, phone, position, specialization, login, is_active, created_at"
+            query = f"UPDATE doctors SET {', '.join(update_fields)} WHERE id = %s RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, created_at"
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(query, update_values)
