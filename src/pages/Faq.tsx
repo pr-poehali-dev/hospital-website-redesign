@@ -126,7 +126,7 @@ const Faq = () => {
           </div>
           
           {isMaxBannerVisible && (
-            <div className="relative mt-3">
+            <div className="relative mt-3 animate-in fade-in slide-in-from-top-4 duration-500">
               <a 
                 href="https://max.ru/" 
                 target="_blank" 
