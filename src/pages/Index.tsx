@@ -143,21 +143,20 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <header className="bg-white/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg">
-              <Icon name="HeartPulse" size={32} className="text-white" />
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center shadow-lg">
+              <Icon name="HeartPulse" size={24} className="text-white" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Государственное учреждение</p>
-              <h1 className="text-2xl font-bold text-primary">Антрацитовская центральная городская многопрофильная больница</h1>
-              <p className="text-xs text-muted-foreground">Луганской Народной Республики</p>
+              <p className="text-[10px] text-muted-foreground leading-tight">ГУ АЦГМБ ЛНР</p>
+              <h1 className="text-sm font-bold text-primary leading-tight">Антрацитовская центральная<br />городская многопрофильная больница</h1>
             </div>
           </div>
-          <nav className="hidden md:flex gap-6">
-            <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium">О нас</a>
-            <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium">Врачи</a>
-            <a href="#services" className="text-foreground hover:text-primary transition-colors font-medium">Услуги</a>
-            <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium">Контакты</a>
+          <nav className="hidden lg:flex gap-4 text-sm">
+            <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">О нас</a>
+            <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">График приема граждан</a>
+            <a href="#services" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Структура ГУ "АЦГМБ" ЛНР</a>
+            <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Контакты</a>
           </nav>
         </div>
       </header>
