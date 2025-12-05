@@ -117,6 +117,31 @@ const Doctor = () => {
     }
   };
 
+  const handleUpdateAppointmentStatus = async (appointmentId: number, newStatus: string) => {
+    try {
+      const response = await fetch(API_URLS.appointments, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: appointmentId,
+          status: newStatus
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        const statusText = newStatus === 'completed' ? 'Прием завершен' : 'Запись отменена';
+        toast({ title: "Успешно", description: statusText });
+        loadAppointments(doctorInfo.id);
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось обновить статус", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('doctor_auth');
     setIsAuthenticated(false);
@@ -310,10 +335,10 @@ const Doctor = () => {
                             .map((appointment: any) => (
                             <div 
                               key={appointment.id} 
-                              className="border-l-4 border-primary pl-4 py-2 bg-muted/30 rounded"
+                              className="border-l-4 border-primary pl-4 py-3 bg-muted/30 rounded"
                             >
-                              <div className="flex items-start justify-between">
-                                <div>
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
                                   <p className="font-semibold flex items-center gap-2">
                                     <Icon name="Clock" size={16} className="text-primary" />
                                     {appointment.appointment_time.slice(0, 5)}
@@ -328,13 +353,41 @@ const Doctor = () => {
                                       {appointment.description}
                                     </p>
                                   )}
+                                  
+                                  {appointment.status === 'scheduled' && (
+                                    <div className="flex gap-2 mt-3">
+                                      <Button 
+                                        size="sm" 
+                                        variant="default"
+                                        onClick={() => handleUpdateAppointmentStatus(appointment.id, 'completed')}
+                                      >
+                                        <Icon name="CheckCircle" size={14} className="mr-1" />
+                                        Завершить прием
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="destructive"
+                                        onClick={() => {
+                                          if (confirm('Вы уверены, что хотите отменить эту запись?')) {
+                                            handleUpdateAppointmentStatus(appointment.id, 'cancelled');
+                                          }
+                                        }}
+                                      >
+                                        <Icon name="XCircle" size={14} className="mr-1" />
+                                        Отменить
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs ${
+                                <span className={`px-3 py-1 rounded-full text-xs h-fit ${
                                   appointment.status === 'scheduled' 
                                     ? 'bg-green-100 text-green-800' 
+                                    : appointment.status === 'completed'
+                                    ? 'bg-blue-100 text-blue-800'
                                     : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {appointment.status === 'scheduled' ? 'Запланировано' : 'Отменено'}
+                                  {appointment.status === 'scheduled' ? 'Запланировано' : 
+                                   appointment.status === 'completed' ? 'Завершено' : 'Отменено'}
                                 </span>
                               </div>
                             </div>
