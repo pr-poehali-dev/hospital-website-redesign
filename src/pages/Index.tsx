@@ -980,7 +980,7 @@ const Index = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button variant="outline" className="w-full justify-start gap-3" asChild>
-                  <a href="#forum">
+                  <a href="/forum">
                     <Icon name="Users" size={20} />
                     Форум пациентов
                   </a>
