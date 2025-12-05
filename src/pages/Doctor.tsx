@@ -57,7 +57,7 @@ const Doctor = () => {
       
       return () => clearInterval(interval);
     }
-  }, [lastAppointmentIds]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,12 +104,16 @@ const Doctor = () => {
       const data = await response.json();
       const newAppointments = data.appointments || [];
       
+      setAppointments(newAppointments);
+      
       if (checkForNew && lastAppointmentIds.size > 0) {
-        const newIds = new Set(newAppointments.map((a: any) => a.id));
         const addedAppointments = newAppointments.filter((a: any) => !lastAppointmentIds.has(a.id));
         
         if (addedAppointments.length > 0) {
-          const latestAppointment = addedAppointments[0];
+          const latestAppointment = addedAppointments[addedAppointments.length - 1];
+          
+          console.log('🔔 Новая запись обнаружена:', latestAppointment);
+          
           if (soundEnabled) {
             playNotificationSound();
           }
@@ -122,9 +126,9 @@ const Doctor = () => {
           const appointmentTime = latestAppointment.appointment_time.slice(0, 5);
           const phoneNumber = latestAppointment.patient_phone || 'не указан';
           
-          let description = `Пациент: ${latestAppointment.patient_name}\\nТелефон: ${phoneNumber}\\nДата: ${appointmentDate} в ${appointmentTime}`;
+          let description = `Пациент: ${latestAppointment.patient_name}\nТелефон: ${phoneNumber}\nДата: ${appointmentDate} в ${appointmentTime}`;
           if (latestAppointment.description) {
-            description += `\\nОписание: ${latestAppointment.description}`;
+            description += `\nОписание: ${latestAppointment.description}`;
           }
           
           toast({
@@ -133,14 +137,12 @@ const Doctor = () => {
             duration: 10000,
           });
         }
-        
-        setLastAppointmentIds(newIds);
-      } else if (!checkForNew) {
-        setLastAppointmentIds(new Set(newAppointments.map((a: any) => a.id)));
       }
       
-      setAppointments(newAppointments);
+      const newIds = new Set(newAppointments.map((a: any) => a.id));
+      setLastAppointmentIds(newIds);
     } catch (error) {
+      console.error('Ошибка загрузки записей:', error);
       toast({ title: "Ошибка", description: "Не удалось загрузить записи", variant: "destructive" });
     }
   };
