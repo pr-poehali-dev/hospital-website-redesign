@@ -194,6 +194,10 @@ const Doctor = () => {
     return acc;
   }, {});
 
+  const scheduledCount = appointments.filter((app: any) => app.status === 'scheduled').length;
+  const completedCount = appointments.filter((app: any) => app.status === 'completed').length;
+  const cancelledCount = appointments.filter((app: any) => app.status === 'cancelled').length;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <header className="bg-white/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
@@ -312,13 +316,16 @@ const Doctor = () => {
             <TabsContent value="appointments" className="mt-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h2 className="text-3xl font-bold">Записи пациентов</h2>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button 
                     variant={statusFilter === 'all' ? 'default' : 'outline'} 
                     size="sm"
                     onClick={() => setStatusFilter('all')}
                   >
                     Все
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-background/20 text-xs font-semibold">
+                      {appointments.length}
+                    </span>
                   </Button>
                   <Button 
                     variant={statusFilter === 'scheduled' ? 'default' : 'outline'} 
@@ -328,6 +335,9 @@ const Doctor = () => {
                   >
                     <Icon name="Clock" size={14} className="mr-1" />
                     Запланировано
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-background/20 text-xs font-semibold">
+                      {scheduledCount}
+                    </span>
                   </Button>
                   <Button 
                     variant={statusFilter === 'completed' ? 'default' : 'outline'} 
@@ -337,6 +347,9 @@ const Doctor = () => {
                   >
                     <Icon name="CheckCircle" size={14} className="mr-1" />
                     Завершено
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-background/20 text-xs font-semibold">
+                      {completedCount}
+                    </span>
                   </Button>
                   <Button 
                     variant={statusFilter === 'cancelled' ? 'default' : 'outline'} 
@@ -346,6 +359,9 @@ const Doctor = () => {
                   >
                     <Icon name="XCircle" size={14} className="mr-1" />
                     Отменено
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-background/20 text-xs font-semibold">
+                      {cancelledCount}
+                    </span>
                   </Button>
                 </div>
               </div>
