@@ -148,8 +148,9 @@ const Index = () => {
               <Icon name="HeartPulse" size={32} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary">МедЦентр Здоровье</h1>
-              <p className="text-sm text-muted-foreground">Забота о вашем здоровье</p>
+              <p className="text-xs text-muted-foreground">Государственное учреждение</p>
+              <h1 className="text-2xl font-bold text-primary">Антрацитовская центральная городская многопрофильная больница</h1>
+              <p className="text-xs text-muted-foreground">Луганской Народной Республики</p>
             </div>
           </div>
           <nav className="hidden md:flex gap-6">
@@ -166,7 +167,9 @@ const Index = () => {
           <div className="w-32 h-32 mx-auto mb-8 bg-gradient-to-br from-primary via-accent to-secondary rounded-full flex items-center justify-center shadow-2xl animate-fade-in">
             <Icon name="Hospital" size={64} className="text-white" />
           </div>
-          <h2 className="text-5xl font-bold mb-4 text-foreground animate-fade-in">МедЦентр Здоровье</h2>
+          <p className="text-lg text-muted-foreground mb-2 animate-fade-in">Государственное учреждение</p>
+          <h2 className="text-5xl font-bold mb-2 text-foreground animate-fade-in">Антрацитовская центральная городская многопрофильная больница</h2>
+          <p className="text-lg text-muted-foreground mb-8 animate-fade-in">Луганской Народной Республики</p>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
             Современная медицинская помощь с заботой о каждом пациенте. Квалифицированные специалисты и передовые технологии.
           </p>
