@@ -18,7 +18,10 @@ const Index = () => {
   const { toast } = useToast();
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [doctorSchedule, setDoctorSchedule] = useState<any[]>([]);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
+  const [allSlots, setAllSlots] = useState<any>({});
+  const [allTimeSlotsForDate, setAllTimeSlotsForDate] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [appointmentForm, setAppointmentForm] = useState({ 
     patient_name: '', 
@@ -35,8 +38,16 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
+    if (selectedDoctor) {
+      loadDoctorSchedule();
+      loadAllSlots();
+    }
+  }, [selectedDoctor]);
+
+  useEffect(() => {
     if (selectedDoctor && selectedDate) {
       loadAvailableSlots();
+      loadAllTimeSlotsForSelectedDate();
     }
   }, [selectedDoctor, selectedDate]);
 
@@ -50,6 +61,42 @@ const Index = () => {
     }
   };
 
+  const loadDoctorSchedule = async () => {
+    if (!selectedDoctor) return;
+    
+    try {
+      const response = await fetch(`${BACKEND_URLS.schedules}?doctor_id=${selectedDoctor.id}`);
+      const data = await response.json();
+      setDoctorSchedule(data.schedules || []);
+    } catch (error) {
+      console.error('Failed to load schedule:', error);
+    }
+  };
+
+  const loadAllSlots = async () => {
+    if (!selectedDoctor) return;
+    
+    const days = getNext7Days();
+    const slotsMap: any = {};
+    
+    for (const day of days) {
+      try {
+        const response = await fetch(
+          `${BACKEND_URLS.appointments}?action=available-slots&doctor_id=${selectedDoctor.id}&date=${day.date}`
+        );
+        const data = await response.json();
+        slotsMap[day.date] = {
+          available: data.available_slots || [],
+          hasSchedule: data.available_slots && data.available_slots.length > 0
+        };
+      } catch (error) {
+        slotsMap[day.date] = { available: [], hasSchedule: false };
+      }
+    }
+    
+    setAllSlots(slotsMap);
+  };
+
   const loadAvailableSlots = async () => {
     if (!selectedDoctor || !selectedDate) return;
     
@@ -59,6 +106,21 @@ const Index = () => {
       );
       const data = await response.json();
       setAvailableSlots(data.available_slots || []);
+      setAllTimeSlotsForDate(data.all_slots || []);
+    } catch (error) {
+      console.error('Failed to load slots:', error);
+    }
+  };
+
+  const loadAllTimeSlotsForSelectedDate = async () => {
+    if (!selectedDoctor || !selectedDate) return;
+    
+    try {
+      const response = await fetch(
+        `${BACKEND_URLS.appointments}?action=available-slots&doctor_id=${selectedDoctor.id}&date=${selectedDate}`
+      );
+      const data = await response.json();
+      setAllTimeSlotsForDate(data.all_slots || []);
     } catch (error) {
       console.error('Failed to load slots:', error);
     }
@@ -71,10 +133,52 @@ const Index = () => {
       date.setDate(date.getDate() + i);
       days.push({
         date: date.toISOString().split('T')[0],
-        label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' })
+        label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }),
+        dayOfWeek: date.getDay()
       });
     }
     return days;
+  };
+
+  const isDayAvailable = (date: string) => {
+    return allSlots[date]?.hasSchedule || false;
+  };
+
+  const getAllSlotsForDate = async (date: string) => {
+    if (!selectedDoctor) return [];
+    
+    try {
+      const response = await fetch(
+        `${BACKEND_URLS.appointments}?action=available-slots&doctor_id=${selectedDoctor.id}&date=${date}`
+      );
+      const data = await response.json();
+      
+      const dateObj = new Date(date + 'T00:00:00');
+      const dayOfWeek = dateObj.getDay() === 0 ? 6 : dateObj.getDay() - 1;
+      
+      const schedule = doctorSchedule.find((s: any) => s.day_of_week === dayOfWeek && s.is_active);
+      
+      if (!schedule) return [];
+      
+      const allTimeSlots = [];
+      const startTime = new Date(`2000-01-01T${schedule.start_time}`);
+      const endTime = new Date(`2000-01-01T${schedule.end_time}`);
+      
+      const current = new Date(startTime);
+      while (current < endTime) {
+        const timeStr = current.toTimeString().slice(0, 5);
+        allTimeSlots.push({
+          time: timeStr,
+          available: data.available_slots?.includes(timeStr) || false
+        });
+        current.setMinutes(current.getMinutes() + 15);
+      }
+      
+      return allTimeSlots;
+    } catch (error) {
+      console.error('Failed to load all slots:', error);
+      return [];
+    }
   };
 
   const handleAppointment = async (e: React.FormEvent) => {
@@ -279,17 +383,24 @@ const Index = () => {
                     </div>
                     <h3 className="font-semibold">Выберите дату:</h3>
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                      {getNext7Days().map((day) => (
-                        <Button
-                          key={day.date}
-                          variant="outline"
-                          className="h-20 flex flex-col"
-                          onClick={() => setSelectedDate(day.date)}
-                        >
-                          <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
-                          <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
-                        </Button>
-                      ))}
+                      {getNext7Days().map((day) => {
+                        const isAvailable = isDayAvailable(day.date);
+                        return (
+                          <Button
+                            key={day.date}
+                            variant="outline"
+                            className={`h-20 flex flex-col ${!isAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            onClick={() => isAvailable && setSelectedDate(day.date)}
+                            disabled={!isAvailable}
+                          >
+                            <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
+                            <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
+                            {!isAvailable && (
+                              <span className="text-[10px] text-red-500 mt-0.5">Нет приема</span>
+                            )}
+                          </Button>
+                        );
+                      })}
                     </div>
                   </div>
                 ) : availableSlots.length === 0 && !isSubmitting ? (
@@ -358,16 +469,45 @@ const Index = () => {
                     {!appointmentForm.appointment_time ? (
                       <div>
                         <h3 className="font-semibold mb-3">Выберите время:</h3>
+                        <div className="flex gap-4 mb-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-primary rounded"></div>
+                            <span>Свободно</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-100 border-2 border-red-500 rounded"></div>
+                            <span>Занято</span>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-4 md:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                          {availableSlots.map((slot: string) => (
-                            <Button
-                              key={slot}
-                              variant="outline"
-                              onClick={() => setAppointmentForm({ ...appointmentForm, appointment_time: slot })}
-                            >
-                              {slot}
-                            </Button>
-                          ))}
+                          {allTimeSlotsForDate.length > 0 ? (
+                            allTimeSlotsForDate.map((slot: any) => (
+                              <Button
+                                key={slot.time}
+                                variant="outline"
+                                className={`${
+                                  !slot.available 
+                                    ? 'bg-red-100 border-red-500 text-red-700 hover:bg-red-200 cursor-not-allowed' 
+                                    : 'hover:bg-primary hover:text-white'
+                                }`}
+                                onClick={() => slot.available && setAppointmentForm({ ...appointmentForm, appointment_time: slot.time })}
+                                disabled={!slot.available}
+                              >
+                                {slot.time}
+                              </Button>
+                            ))
+                          ) : (
+                            availableSlots.map((slot: string) => (
+                              <Button
+                                key={slot}
+                                variant="outline"
+                                className="hover:bg-primary hover:text-white"
+                                onClick={() => setAppointmentForm({ ...appointmentForm, appointment_time: slot })}
+                              >
+                                {slot}
+                              </Button>
+                            ))
+                          )}
                         </div>
                       </div>
                     ) : (

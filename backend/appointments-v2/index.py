@@ -93,10 +93,20 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 end_datetime = datetime.combine(date_obj, end_time)
                 
                 available_slots = []
+                all_slots = []
                 while current_time < end_datetime:
                     slot_time = current_time.time()
-                    if slot_time not in booked_times:
-                        available_slots.append(slot_time.strftime('%H:%M'))
+                    time_str = slot_time.strftime('%H:%M')
+                    is_available = slot_time not in booked_times
+                    
+                    all_slots.append({
+                        'time': time_str,
+                        'available': is_available
+                    })
+                    
+                    if is_available:
+                        available_slots.append(time_str)
+                    
                     current_time += timedelta(minutes=15)
                 
                 return {
@@ -104,6 +114,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({
                         'available_slots': available_slots,
+                        'all_slots': all_slots,
                         'start_time': start_time.strftime('%H:%M'),
                         'end_time': end_time.strftime('%H:%M')
                     }),
