@@ -45,6 +45,7 @@ const Admin = () => {
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isFaqEditOpen, setIsFaqEditOpen] = useState(false);
   const [userQuestions, setUserQuestions] = useState([]);
+  const [newQuestionsCount, setNewQuestionsCount] = useState(0);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -55,6 +56,16 @@ const Admin = () => {
       loadUserQuestions();
     }
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const interval = setInterval(() => {
+      loadUserQuestions(true);
+    }, 30000);
+    
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,13 +409,26 @@ const Admin = () => {
     setIsFaqEditOpen(true);
   };
 
-  const loadUserQuestions = async () => {
+  const loadUserQuestions = async (silent = false) => {
     try {
       const response = await fetch(API_URLS.userQuestions);
       const data = await response.json();
-      setUserQuestions(data.questions || []);
+      const questions = data.questions || [];
+      const pendingCount = questions.filter((q: any) => q.status === 'pending').length;
+      
+      if (silent && pendingCount > newQuestionsCount && newQuestionsCount > 0) {
+        toast({
+          title: "Новые вопросы!",
+          description: `У вас ${pendingCount} ${pendingCount === 1 ? 'новый вопрос' : pendingCount < 5 ? 'новых вопроса' : 'новых вопросов'}`,
+        });
+      }
+      
+      setUserQuestions(questions);
+      setNewQuestionsCount(pendingCount);
     } catch (error) {
-      toast({ title: "Ошибка", description: "Не удалось загрузить вопросы", variant: "destructive" });
+      if (!silent) {
+        toast({ title: "Ошибка", description: "Не удалось загрузить вопросы", variant: "destructive" });
+      }
     }
   };
 
@@ -504,7 +528,14 @@ const Admin = () => {
             <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="doctors">Врачи</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
-              <TabsTrigger value="questions">Вопросы</TabsTrigger>
+              <TabsTrigger value="questions" className="relative">
+                Вопросы
+                {newQuestionsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {newQuestionsCount}
+                  </span>
+                )}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="doctors">
