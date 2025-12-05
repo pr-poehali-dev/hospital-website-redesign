@@ -68,12 +68,14 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     
     conn = psycopg2.connect(database_url)
     path = event.get('path', '/')
+    query_params = event.get('queryStringParameters') or {}
+    action = query_params.get('action', '')
     
     try:
         if method == 'GET':
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
-            if '/users' in path:
+            if '/users' in path or action == 'getUsers':
                 cursor.execute("""
                     SELECT 
                         id, email, username, is_verified, is_blocked, blocked_reason, 
@@ -93,7 +95,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             
-            elif '/topics' in path:
+            elif '/topics' in path or action == 'getTopics':
                 cursor.execute("""
                     SELECT 
                         t.*,

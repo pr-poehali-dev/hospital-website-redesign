@@ -475,7 +475,7 @@ const Admin = () => {
 
   const loadForumUsers = async () => {
     try {
-      const response = await fetch(`${API_URLS.forumModeration}/users`, {
+      const response = await fetch(`${API_URLS.forumModeration}?action=getUsers`, {
         headers: { 'X-Admin-Token': 'admin123' },
       });
       const data = await response.json();
@@ -487,7 +487,7 @@ const Admin = () => {
 
   const loadForumTopics = async () => {
     try {
-      const response = await fetch(`${API_URLS.forumModeration}/topics`, {
+      const response = await fetch(`${API_URLS.forumModeration}?action=getTopics`, {
         headers: { 'X-Admin-Token': 'admin123' },
       });
       const data = await response.json();

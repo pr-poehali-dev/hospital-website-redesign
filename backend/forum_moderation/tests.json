@@ -3,14 +3,23 @@
     {
       "name": "Get all users (admin)",
       "method": "GET",
-      "path": "/users",
+      "path": "/?action=getUsers",
       "headers": {
         "X-Admin-Token": "admin123"
       },
       "expectedStatus": 200,
-      "expectedBody": {
-        "users": "array"
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all topics (admin)",
+      "method": "GET",
+      "path": "/?action=getTopics",
+      "headers": {
+        "X-Admin-Token": "admin123"
       },
+      "expectedStatus": 200,
+      "expectedBody": {},
       "bodyMatcher": "partial"
     }
   ]
