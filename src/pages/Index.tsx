@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
@@ -112,7 +111,7 @@ const Index = () => {
           <nav className="hidden lg:flex gap-4 text-sm">
             <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">О нас</a>
             <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">График приема граждан</a>
-            <a href="#services" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Структура ГУ "АЦГМБ" ЛНР</a>
+            <a href="/structure" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Структура ГУ "АЦГМБ" ЛНР</a>
             <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Контакты</a>
           </nav>
         </div>
@@ -466,175 +465,18 @@ const Index = () => {
         </div>
       </section>
 
-      <section id="services" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-4">Структура ГУ "АЦГМБ" ЛНР</h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            В состав больницы входят специализированные отделения и службы, обеспечивающие комплексную медицинскую помощь
+      <section id="services" className="py-16 bg-white/90">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-4">Структура ГУ "АЦГМБ" ЛНР</h2>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Полная информация о поликлиниках, амбулаториях, отделениях и службах больницы
           </p>
-          <Tabs defaultValue="clinical" className="max-w-5xl mx-auto">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="clinical">Клинические отделения</TabsTrigger>
-              <TabsTrigger value="diagnostic">Диагностические службы</TabsTrigger>
-              <TabsTrigger value="administration">Администрация</TabsTrigger>
-            </TabsList>
-            <TabsContent value="clinical" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Клинические отделения</CardTitle>
-                  <CardDescription>Основные лечебные подразделения</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Activity" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Терапевтическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Лечение заболеваний внутренних органов, 40 коек</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Heart" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Кардиологическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Диагностика и лечение сердечно-сосудистых заболеваний, 25 коек</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Scissors" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Хирургическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Плановые и экстренные операции, 30 коек</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Baby" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Педиатрическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Лечение детей от 0 до 18 лет, 35 коек</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Users" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Отделение реанимации и интенсивной терапии</p>
-                      <p className="text-sm text-muted-foreground">Круглосуточная помощь тяжелобольным, 10 коек</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Ambulance" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Приемное отделение</p>
-                      <p className="text-sm text-muted-foreground">Круглосуточный прием экстренных пациентов</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="diagnostic" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Диагностические службы</CardTitle>
-                  <CardDescription>Подразделения для диагностики заболеваний</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Icon name="TestTube" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Клиническая лаборатория</p>
-                      <p className="text-sm text-muted-foreground">Общеклинические, биохимические анализы</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="ScanLine" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Рентгенологическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Рентгенография, флюорография, маммография</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Waves" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Отделение УЗИ-диагностики</p>
-                      <p className="text-sm text-muted-foreground">Ультразвуковое исследование всех органов</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Activity" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Кабинет функциональной диагностики</p>
-                      <p className="text-sm text-muted-foreground">ЭКГ, холтеровское мониторирование, спирометрия</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Microscope" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Патологоанатомическое отделение</p>
-                      <p className="text-sm text-muted-foreground">Гистологические и цитологические исследования</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Pill" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Аптека</p>
-                      <p className="text-sm text-muted-foreground">Обеспечение медикаментами стационарных пациентов</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="administration" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Административно-управленческий персонал</CardTitle>
-                  <CardDescription>Руководство и обслуживающие службы</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Icon name="UserCheck" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Администрация</p>
-                      <p className="text-sm text-muted-foreground">Главный врач, заместители, заведующие отделениями</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="ClipboardList" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Регистратура</p>
-                      <p className="text-sm text-muted-foreground">Запись на прием, оформление документов</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="FileText" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Юридическая служба</p>
-                      <p className="text-sm text-muted-foreground">Правовое сопровождение деятельности</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Calculator" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Бухгалтерия</p>
-                      <p className="text-sm text-muted-foreground">Финансовый учет и отчетность</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Wrench" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Хозяйственная служба</p>
-                      <p className="text-sm text-muted-foreground">Обслуживание зданий и оборудования</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Icon name="Shield" size={20} className="text-primary mt-1" />
-                    <div>
-                      <p className="font-semibold">Отдел кадров</p>
-                      <p className="text-sm text-muted-foreground">Управление персоналом, документооборот</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <Button asChild size="lg" className="gap-2">
+            <a href="/structure">
+              <Icon name="Building2" size={20} />
+              Посмотреть полную структуру
+            </a>
+          </Button>
         </div>
       </section>
 
