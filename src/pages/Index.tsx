@@ -927,7 +927,7 @@ const Index = () => {
                   </a>
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3" asChild>
-                  <a href="#faq">
+                  <a href="/faq">
                     <Icon name="HelpCircle" size={20} />
                     Часто задаваемые вопросы
                   </a>

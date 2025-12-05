@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
 const API_URLS = {
   auth: 'https://functions.poehali.dev/b51b3f73-d83d-4a55-828e-5feec95d1227',
   doctors: 'https://functions.poehali.dev/68f877b2-aeda-437a-ad67-925a3414d688',
+  faq: 'https://functions.poehali.dev/fb5160e8-f170-4c21-97a9-3afbcb6f78a9',
 };
 
 const Admin = () => {
@@ -30,12 +33,23 @@ const Admin = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [faqs, setFaqs] = useState([]);
+  const [faqForm, setFaqForm] = useState({
+    question: '',
+    answer: '',
+    image_url: '',
+    display_order: 0
+  });
+  const [editingFaq, setEditingFaq] = useState<any>(null);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isFaqEditOpen, setIsFaqEditOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
     if (auth) {
       setIsAuthenticated(true);
       loadDoctors();
+      loadFaqs();
     }
   }, []);
 
@@ -269,6 +283,118 @@ const Admin = () => {
     setIsAuthenticated(false);
   };
 
+  const loadFaqs = async () => {
+    try {
+      const response = await fetch(`${API_URLS.faq}?all=true`);
+      const data = await response.json();
+      setFaqs(data.faqs || []);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось загрузить FAQ", variant: "destructive" });
+    }
+  };
+
+  const handleCreateFaq = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.faq, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(faqForm),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Вопрос добавлен" });
+        setFaqForm({ question: '', answer: '', image_url: '', display_order: 0 });
+        setIsFaqOpen(false);
+        loadFaqs();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось создать вопрос", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateFaq = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.faq, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingFaq.id,
+          ...faqForm
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Вопрос обновлен" });
+        setFaqForm({ question: '', answer: '', image_url: '', display_order: 0 });
+        setIsFaqEditOpen(false);
+        setEditingFaq(null);
+        loadFaqs();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось обновить вопрос", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteFaq = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этот вопрос?')) return;
+    
+    try {
+      const response = await fetch(`${API_URLS.faq}?id=${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        toast({ title: "Успешно", description: "Вопрос удален" });
+        loadFaqs();
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось удалить вопрос", variant: "destructive" });
+    }
+  };
+
+  const handleToggleFaqStatus = async (id: number, newStatus: boolean) => {
+    try {
+      const response = await fetch(API_URLS.faq, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_active: newStatus }),
+      });
+      
+      if (response.ok) {
+        const statusText = newStatus ? 'активирован' : 'скрыт';
+        toast({ title: "Успешно", description: `Вопрос ${statusText}` });
+        loadFaqs();
+      } else {
+        toast({ title: "Ошибка", description: "Не удалось изменить статус", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const openEditFaqDialog = (faq: any) => {
+    setEditingFaq(faq);
+    setFaqForm({
+      question: faq.question,
+      answer: faq.answer,
+      image_url: faq.image_url || '',
+      display_order: faq.display_order || 0
+    });
+    setIsFaqEditOpen(true);
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -327,8 +453,15 @@ const Admin = () => {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold">Управление врачами</h2>
+          <Tabs defaultValue="doctors" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+              <TabsTrigger value="doctors">Врачи</TabsTrigger>
+              <TabsTrigger value="faq">FAQ</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="doctors">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold">Управление врачами</h2>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button size="lg">
@@ -613,6 +746,174 @@ const Admin = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="faq">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold">Управление FAQ</h2>
+            <Dialog open={isFaqOpen} onOpenChange={setIsFaqOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg">
+                  <Icon name="Plus" size={20} className="mr-2" />
+                  Добавить вопрос
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Добавить новый вопрос</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateFaq} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Вопрос</label>
+                    <Input
+                      placeholder="Введите вопрос"
+                      value={faqForm.question}
+                      onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Ответ</label>
+                    <Textarea
+                      placeholder="Введите ответ"
+                      value={faqForm.answer}
+                      onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                      required
+                      rows={6}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">URL изображения (необязательно)</label>
+                    <Input
+                      placeholder="https://example.com/image.jpg"
+                      value={faqForm.image_url}
+                      onChange={(e) => setFaqForm({ ...faqForm, image_url: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Порядок отображения</label>
+                    <Input
+                      type="number"
+                      value={faqForm.display_order}
+                      onChange={(e) => setFaqForm({ ...faqForm, display_order: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">Создать вопрос</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isFaqEditOpen} onOpenChange={setIsFaqEditOpen}>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Редактировать вопрос</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdateFaq} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Вопрос</label>
+                    <Input
+                      placeholder="Введите вопрос"
+                      value={faqForm.question}
+                      onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Ответ</label>
+                    <Textarea
+                      placeholder="Введите ответ"
+                      value={faqForm.answer}
+                      onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                      required
+                      rows={6}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">URL изображения (необязательно)</label>
+                    <Input
+                      placeholder="https://example.com/image.jpg"
+                      value={faqForm.image_url}
+                      onChange={(e) => setFaqForm({ ...faqForm, image_url: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Порядок отображения</label>
+                    <Input
+                      type="number"
+                      value={faqForm.display_order}
+                      onChange={(e) => setFaqForm({ ...faqForm, display_order: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">Сохранить изменения</Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid md:grid-cols-1 gap-4">
+            {faqs.map((faq: any) => (
+              <Card key={faq.id} className={!faq.is_active ? 'opacity-50' : ''}>
+                <CardHeader>
+                  <CardTitle className="text-lg">{faq.question}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{faq.answer}</p>
+                  {faq.image_url && (
+                    <img 
+                      src={faq.image_url} 
+                      alt={faq.question}
+                      className="w-full max-w-md rounded-lg"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className="flex items-center justify-between mt-3 p-3 bg-muted/30 rounded">
+                    <span className="text-sm font-medium">Статус:</span>
+                    <button
+                      onClick={() => handleToggleFaqStatus(faq.id, !faq.is_active)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        faq.is_active ? 'bg-primary' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          faq.is_active ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                      faq.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {faq.is_active ? 'Активен' : 'Скрыт'}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => openEditFaqDialog(faq)}
+                      className="flex-1"
+                    >
+                      <Icon name="Edit" size={14} className="mr-1" />
+                      Изменить
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm" 
+                      onClick={() => handleDeleteFaq(faq.id)}
+                      className="flex-1"
+                    >
+                      <Icon name="Trash2" size={14} className="mr-1" />
+                      Удалить
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
         </div>
       </section>
     </div>

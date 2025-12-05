@@ -1,0 +1,24 @@
+{
+  "tests": [
+    {
+      "name": "Get all active FAQs",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "faqs": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all FAQs including inactive",
+      "method": "GET",
+      "path": "/?all=true",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "faqs": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
