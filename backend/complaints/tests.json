@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Create complaint",
+      "method": "POST",
+      "body": {
+        "name": "Алексей Козлов",
+        "email": "kozlov@example.com",
+        "message": "Долгое ожидание в очереди"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all complaints",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "complaints": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

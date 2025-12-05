@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Create consultation request",
+      "method": "POST",
+      "body": {
+        "name": "Мария Сидорова",
+        "phone": "+7 (999) 555-66-77",
+        "issue": "Повышенное давление и головные боли"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all consultations",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "consultations": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

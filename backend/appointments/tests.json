@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Create appointment",
+      "method": "POST",
+      "body": {
+        "name": "Иван Петров",
+        "phone": "+7 (999) 123-45-67",
+        "doctor": "Др. Иванова Мария",
+        "date": "2024-12-15"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "id": "number",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get all appointments",
+      "method": "GET",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "appointments": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -8,11 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
+const BACKEND_URLS = {
+  appointments: 'https://functions.poehali.dev/2147bb97-ded9-4502-b750-cc52ffabe545',
+  consultations: 'https://functions.poehali.dev/d77bf8b2-a03f-4774-81ca-c6ae5f643a02',
+  complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
+};
+
 const Index = () => {
   const { toast } = useToast();
   const [appointmentForm, setAppointmentForm] = useState({ name: '', phone: '', doctor: '', date: '' });
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', message: '' });
   const [consultationForm, setConsultationForm] = useState({ name: '', phone: '', issue: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const doctors = [
     { name: 'Др. Иванова Мария', specialty: 'Терапевт', schedule: 'Пн-Пт: 9:00-17:00', experience: '15 лет' },
@@ -21,31 +28,115 @@ const Index = () => {
     { name: 'Др. Козлов Дмитрий', specialty: 'Хирург', schedule: 'Ср-Вс: 11:00-19:00', experience: '18 лет' },
   ];
 
-  const handleAppointment = (e: React.FormEvent) => {
+  const handleAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Запись успешна!",
-      description: "Мы свяжемся с вами для подтверждения приема.",
-    });
-    setAppointmentForm({ name: '', phone: '', doctor: '', date: '' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(BACKEND_URLS.appointments, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(appointmentForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Запись успешна!",
+          description: "Мы свяжемся с вами для подтверждения приема.",
+        });
+        setAppointmentForm({ name: '', phone: '', doctor: '', date: '' });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось создать запись",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleComplaint = (e: React.FormEvent) => {
+  const handleComplaint = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Жалоба отправлена",
-      description: "Мы рассмотрим ваше обращение в ближайшее время.",
-    });
-    setComplaintForm({ name: '', email: '', message: '' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(BACKEND_URLS.complaints, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(complaintForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Жалоба отправлена",
+          description: "Мы рассмотрим ваше обращение в ближайшее время.",
+        });
+        setComplaintForm({ name: '', email: '', message: '' });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось отправить жалобу",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleConsultation = (e: React.FormEvent) => {
+  const handleConsultation = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Запрос принят!",
-      description: "Врач свяжется с вами в течение 24 часов для онлайн-консультации.",
-    });
-    setConsultationForm({ name: '', phone: '', issue: '' });
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(BACKEND_URLS.consultations, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(consultationForm),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Запрос принят!",
+          description: "Врач свяжется с вами в течение 24 часов для онлайн-консультации.",
+        });
+        setConsultationForm({ name: '', phone: '', issue: '' });
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось создать запрос",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -118,7 +209,9 @@ const Index = () => {
                     onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
                     required
                   />
-                  <Button type="submit" className="w-full">Отправить</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Отправка...' : 'Отправить'}
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -156,7 +249,9 @@ const Index = () => {
                     required
                     rows={4}
                   />
-                  <Button type="submit" className="w-full">Отправить запрос</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Отправка...' : 'Отправить запрос'}
+                  </Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -362,7 +457,9 @@ const Index = () => {
                     required
                     rows={4}
                   />
-                  <Button type="submit" className="w-full">Отправить</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? 'Отправка...' : 'Отправить'}
+                  </Button>
                 </form>
               </CardContent>
             </Card>
