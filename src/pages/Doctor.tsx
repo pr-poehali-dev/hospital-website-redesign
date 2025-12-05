@@ -28,6 +28,7 @@ const Doctor = () => {
     end_time: '17:00'
   });
   const [isOpen, setIsOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     const auth = localStorage.getItem('doctor_auth');
@@ -181,7 +182,11 @@ const Doctor = () => {
     );
   }
 
-  const groupedAppointments = appointments.reduce((acc: any, app: any) => {
+  const filteredAppointments = statusFilter === 'all' 
+    ? appointments 
+    : appointments.filter((app: any) => app.status === statusFilter);
+
+  const groupedAppointments = filteredAppointments.reduce((acc: any, app: any) => {
     if (!acc[app.appointment_date]) {
       acc[app.appointment_date] = [];
     }
@@ -305,12 +310,56 @@ const Doctor = () => {
             </TabsContent>
 
             <TabsContent value="appointments" className="mt-6">
-              <h2 className="text-3xl font-bold mb-6">Записи пациентов</h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h2 className="text-3xl font-bold">Записи пациентов</h2>
+                <div className="flex gap-2">
+                  <Button 
+                    variant={statusFilter === 'all' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('all')}
+                  >
+                    Все
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'scheduled' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('scheduled')}
+                    className={statusFilter === 'scheduled' ? '' : 'hover:bg-green-50'}
+                  >
+                    <Icon name="Clock" size={14} className="mr-1" />
+                    Запланировано
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'completed' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('completed')}
+                    className={statusFilter === 'completed' ? '' : 'hover:bg-blue-50'}
+                  >
+                    <Icon name="CheckCircle" size={14} className="mr-1" />
+                    Завершено
+                  </Button>
+                  <Button 
+                    variant={statusFilter === 'cancelled' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => setStatusFilter('cancelled')}
+                    className={statusFilter === 'cancelled' ? '' : 'hover:bg-gray-50'}
+                  >
+                    <Icon name="XCircle" size={14} className="mr-1" />
+                    Отменено
+                  </Button>
+                </div>
+              </div>
               
               {Object.keys(groupedAppointments).length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
-                    Нет записей на ближайшие 7 дней
+                    {statusFilter === 'all' 
+                      ? 'Нет записей на ближайшие 7 дней'
+                      : `Нет записей со статусом "${
+                          statusFilter === 'scheduled' ? 'Запланировано' :
+                          statusFilter === 'completed' ? 'Завершено' : 'Отменено'
+                        }"`
+                    }
                   </CardContent>
                 </Card>
               ) : (
