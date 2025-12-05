@@ -454,6 +454,74 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="mt-8 max-w-4xl mx-auto bg-primary/5 border-2 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <Icon name="Info" size={28} className="text-primary" />
+                Как записаться на прием
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">1</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Позвоните в приемную</p>
+                      <p className="text-sm text-muted-foreground">Телефон: +7-857-312-51-02</p>
+                      <p className="text-sm text-muted-foreground">Время работы: Пн-Пт 09:00-17:00</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">2</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Укажите данные</p>
+                      <p className="text-sm text-muted-foreground">ФИО, контактный телефон, суть вопроса</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">3</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Выберите должностное лицо</p>
+                      <p className="text-sm text-muted-foreground">Специалист запишет вас на удобное время приема</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                      <span className="text-white font-bold text-sm">4</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Получите подтверждение</p>
+                      <p className="text-sm text-muted-foreground">Вам сообщат дату, время и место приема</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 p-4 bg-white rounded-lg border border-primary/20">
+                <div className="flex items-start gap-3">
+                  <Icon name="AlertCircle" size={24} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold mb-2">Важная информация:</p>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Прием осуществляется строго по предварительной записи</li>
+                      <li>При себе иметь документ, удостоверяющий личность</li>
+                      <li>Просьба приходить за 5-10 минут до назначенного времени</li>
+                      <li>В случае невозможности прийти, просьба заранее предупредить по телефону</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
