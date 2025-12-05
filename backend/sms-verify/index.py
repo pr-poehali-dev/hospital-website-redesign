@@ -85,14 +85,40 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
             
             cursor.execute(
-                "DELETE FROM t_p30358746_hospital_website_red.sms_verification_codes WHERE phone_number = %s",
+                "SELECT daily_send_count, last_daily_reset FROM t_p30358746_hospital_website_red.sms_verification_codes WHERE phone_number = %s",
                 (clean_phone,)
             )
+            existing_record = cursor.fetchone()
             
-            cursor.execute(
-                "INSERT INTO t_p30358746_hospital_website_red.sms_verification_codes (phone_number, code, expires_at) VALUES (%s, %s, %s)",
-                (clean_phone, code, expires_at)
-            )
+            if existing_record:
+                today = datetime.now().date()
+                last_reset = existing_record['last_daily_reset']
+                
+                if last_reset == today:
+                    if existing_record['daily_send_count'] >= 3:
+                        cursor.close()
+                        return {
+                            'statusCode': 429,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': 'Превышен лимит отправки SMS на сегодня (максимум 3). Попробуйте завтра.'}),
+                            'isBase64Encoded': False
+                        }
+                    
+                    cursor.execute(
+                        "UPDATE t_p30358746_hospital_website_red.sms_verification_codes SET code = %s, expires_at = %s, verified = false, attempts = 0, daily_send_count = daily_send_count + 1 WHERE phone_number = %s",
+                        (code, expires_at, clean_phone)
+                    )
+                else:
+                    cursor.execute(
+                        "UPDATE t_p30358746_hospital_website_red.sms_verification_codes SET code = %s, expires_at = %s, verified = false, attempts = 0, daily_send_count = 1, last_daily_reset = CURRENT_DATE WHERE phone_number = %s",
+                        (code, expires_at, clean_phone)
+                    )
+            else:
+                cursor.execute(
+                    "INSERT INTO t_p30358746_hospital_website_red.sms_verification_codes (phone_number, code, expires_at, daily_send_count, last_daily_reset) VALUES (%s, %s, %s, 1, CURRENT_DATE)",
+                    (clean_phone, code, expires_at)
+                )
+            
             conn.commit()
             
             message = f"Код подтверждения для записи в больницу: {code}. Действителен 10 минут."
