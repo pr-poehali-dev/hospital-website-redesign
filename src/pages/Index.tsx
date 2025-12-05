@@ -386,18 +386,23 @@ const Index = () => {
                     <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                       {getNext7Days().map((day) => {
                         const isAvailable = isDayAvailable(day.date);
+                        const availableCount = allSlots[day.date]?.available?.length || 0;
                         return (
                           <Button
                             key={day.date}
                             variant="outline"
-                            className={`h-20 flex flex-col ${!isAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            className={`h-24 flex flex-col ${!isAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
                             onClick={() => isAvailable && setSelectedDate(day.date)}
                             disabled={!isAvailable}
                           >
                             <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
                             <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
-                            {!isAvailable && (
+                            {!isAvailable ? (
                               <span className="text-[10px] text-red-500 mt-0.5">Нет приема</span>
+                            ) : (
+                              <span className="text-[10px] text-green-600 mt-0.5 font-semibold">
+                                {availableCount} {availableCount === 1 ? 'место' : availableCount < 5 ? 'места' : 'мест'}
+                              </span>
                             )}
                           </Button>
                         );
