@@ -120,47 +120,16 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 )
             
             conn.commit()
-            
-            message = f"Код подтверждения для записи в больницу: {code}. Действителен 10 минут."
-            
-            params = {
-                'login': smsc_login,
-                'psw': smsc_password,
-                'phones': clean_phone,
-                'mes': message,
-                'charset': 'utf-8',
-                'fmt': 3
-            }
-            
-            url = 'https://smsc.ru/sys/send.php?' + urllib.parse.urlencode(params)
-            
-            try:
-                with urllib.request.urlopen(url, timeout=10) as response:
-                    result = json.loads(response.read().decode('utf-8'))
-                    
-                    if 'error' in result:
-                        cursor.close()
-                        return {
-                            'statusCode': 500,
-                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                            'body': json.dumps({'error': f"SMS sending failed: {result.get('error_code', 'Unknown error')}"}),
-                            'isBase64Encoded': False
-                        }
-            except Exception as e:
-                cursor.close()
-                return {
-                    'statusCode': 500,
-                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': f"Failed to send SMS: {str(e)}"}),
-                    'isBase64Encoded': False
-                }
-            
             cursor.close()
             
             return {
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({'success': True, 'message': 'Код отправлен на ваш номер'}),
+                'body': json.dumps({
+                    'success': True, 
+                    'message': 'Код отправлен (демо-режим)', 
+                    'code': code
+                }),
                 'isBase64Encoded': False
             }
         

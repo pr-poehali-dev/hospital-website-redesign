@@ -230,11 +230,12 @@ const Index = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSentCode(data.code || verificationCode);
+        setSentCode(data.code);
         setVerificationStep('code');
         toast({
-          title: "Код отправлен",
-          description: "Проверьте сообщения в мессенджере MAX",
+          title: "Код отправлен (демо-режим)",
+          description: `Ваш код: ${data.code}`,
+          duration: 15000,
         });
       } else {
         toast({
@@ -746,11 +747,14 @@ const Index = () => {
                             <Card className="bg-blue-50 border-blue-200">
                               <CardContent className="pt-4">
                                 <div className="flex items-start gap-3">
-                                  <Icon name="MessageSquare" size={24} className="text-blue-600 mt-1" />
+                                  <Icon name="Info" size={24} className="text-blue-600 mt-1" />
                                   <div>
-                                    <p className="font-medium text-blue-900 mb-1">Проверьте сообщения в MAX</p>
+                                    <p className="font-medium text-blue-900 mb-1">Демо-режим верификации</p>
                                     <p className="text-sm text-blue-700">
-                                      Мы отправили код подтверждения на номер {appointmentForm.patient_phone} через мессенджер MAX
+                                      Код показан выше в уведомлении. Введите его для завершения записи.
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-2">
+                                      После настройки MAX API коды будут отправляться в мессенджер
                                     </p>
                                   </div>
                                 </div>
