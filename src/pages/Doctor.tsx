@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 
@@ -980,71 +981,73 @@ const Doctor = () => {
                           })}
                         </CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {groupedAppointments[date]
-                            .sort((a: any, b: any) => a.appointment_time.localeCompare(b.appointment_time))
-                            .map((appointment: any) => (
-                            <div 
-                              key={appointment.id} 
-                              className="border-l-4 border-primary pl-4 py-3 bg-muted/30 rounded"
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <p className="font-semibold flex items-center gap-2">
-                                    <Icon name="Clock" size={16} className="text-primary" />
-                                    {appointment.appointment_time.slice(0, 5)}
-                                  </p>
-                                  <p className="text-lg font-medium mt-1">{appointment.patient_name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    <Icon name="Phone" size={14} className="inline mr-1" />
-                                    {appointment.patient_phone}
-                                  </p>
-                                  {appointment.description && (
-                                    <p className="text-sm mt-2 text-muted-foreground">
-                                      {appointment.description}
-                                    </p>
-                                  )}
-                                  
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-[80px]">Время</TableHead>
+                              <TableHead>Пациент</TableHead>
+                              <TableHead>Телефон</TableHead>
+                              <TableHead className="hidden md:table-cell">Описание</TableHead>
+                              <TableHead className="w-[120px]">Статус</TableHead>
+                              <TableHead className="w-[180px] text-right">Действия</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {groupedAppointments[date]
+                              .sort((a: any, b: any) => a.appointment_time.localeCompare(b.appointment_time))
+                              .map((appointment: any) => (
+                              <TableRow key={appointment.id}>
+                                <TableCell className="font-medium">
+                                  {appointment.appointment_time.slice(0, 5)}
+                                </TableCell>
+                                <TableCell className="font-medium">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-sm">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
+                                  {appointment.description || '—'}
+                                </TableCell>
+                                <TableCell>
+                                  <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                                    appointment.status === 'scheduled' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : appointment.status === 'completed'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {appointment.status === 'scheduled' ? 'Запланировано' : 
+                                     appointment.status === 'completed' ? 'Завершено' : 'Отменено'}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
                                   {appointment.status === 'scheduled' && (
-                                    <div className="flex gap-2 mt-3">
+                                    <div className="flex gap-1 justify-end">
                                       <Button 
                                         size="sm" 
-                                        variant="default"
+                                        variant="ghost"
                                         onClick={() => handleUpdateAppointmentStatus(appointment.id, 'completed')}
+                                        title="Завершить прием"
                                       >
-                                        <Icon name="CheckCircle" size={14} className="mr-1" />
-                                        Завершить прием
+                                        <Icon name="CheckCircle" size={16} className="text-green-600" />
                                       </Button>
                                       <Button 
                                         size="sm" 
-                                        variant="destructive"
+                                        variant="ghost"
                                         onClick={() => {
                                           if (confirm('Вы уверены, что хотите отменить эту запись?')) {
                                             handleUpdateAppointmentStatus(appointment.id, 'cancelled');
                                           }
                                         }}
+                                        title="Отменить"
                                       >
-                                        <Icon name="XCircle" size={14} className="mr-1" />
-                                        Отменить
+                                        <Icon name="XCircle" size={16} className="text-red-600" />
                                       </Button>
                                     </div>
                                   )}
-                                </div>
-                                <span className={`px-3 py-1 rounded-full text-xs h-fit ${
-                                  appointment.status === 'scheduled' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : appointment.status === 'completed'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {appointment.status === 'scheduled' ? 'Запланировано' : 
-                                   appointment.status === 'completed' ? 'Завершено' : 'Отменено'}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </CardContent>
                     </Card>
                   ))}
