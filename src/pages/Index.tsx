@@ -221,13 +221,16 @@ const Index = () => {
       const response = await fetch(BACKEND_URLS.smsVerify, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: appointmentForm.patient_phone }),
+        body: JSON.stringify({ 
+          action: 'send',
+          phone_number: appointmentForm.patient_phone 
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSentCode(data.code);
+        setSentCode(data.code || verificationCode);
         setVerificationStep('code');
         toast({
           title: "Код отправлен",
