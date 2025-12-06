@@ -34,6 +34,7 @@ const Index = () => {
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [maxTextIndex, setMaxTextIndex] = useState(0);
   const [isMaxBannerVisible, setIsMaxBannerVisible] = useState(false);
 
@@ -306,14 +307,33 @@ const Index = () => {
                 <h1 className="text-sm font-bold text-primary leading-tight">ГБУЗ Антрацитовская центральная<br />городская многопрофильная больница</h1>
               </div>
             </div>
-            <nav className="hidden lg:flex gap-4 text-sm">
-              <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">О нас</a>
-              <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">График приема граждан</a>
-              <a href="/structure" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Структура ГУ "АЦГМБ" ЛНР</a>
-              <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Контакты</a>
-            </nav>
+            <div className="flex items-center gap-4">
+              <nav className="hidden lg:flex gap-4 text-sm">
+                <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">О нас</a>
+                <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">График приема граждан</a>
+                <a href="/structure" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Структура ГУ "АЦГМБ" ЛНР</a>
+                <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">Контакты</a>
+              </nav>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                <Icon name={isMobileMenuOpen ? "X" : "Menu"} size={24} />
+              </Button>
+            </div>
           </div>
           
+          {isMobileMenuOpen && (
+            <nav className="lg:hidden flex flex-col gap-3 mt-4 pt-4 border-t border-border">
+              <a href="#about" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>О нас</a>
+              <a href="#doctors" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>График приема граждан</a>
+              <a href="/structure" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>Структура ГУ "АЦГМБ" ЛНР</a>
+              <a href="#contacts" className="text-foreground hover:text-primary transition-colors font-medium" onClick={() => setIsMobileMenuOpen(false)}>Контакты</a>
+            </nav>
+          )}
+
           {isMaxBannerVisible && (
             <div className="relative mt-3 animate-in fade-in slide-in-from-top-4 duration-500">
               <a 
@@ -368,7 +388,7 @@ const Index = () => {
           <div className="flex gap-4 justify-center flex-wrap animate-scale-in">
             <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto sm:min-w-[200px]">
                   <Icon name="Calendar" size={20} />
                   Записаться на прием
                 </Button>
@@ -650,7 +670,7 @@ const Index = () => {
 
             <Button 
               size="lg" 
-              className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-red-600 hover:bg-red-700"
+              className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-red-600 hover:bg-red-700 w-full sm:w-auto sm:min-w-[200px]"
               asChild
             >
               <a href="#complaints">
@@ -661,7 +681,7 @@ const Index = () => {
 
             <Button 
               size="lg" 
-              className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-green-600 hover:bg-green-700"
+              className="gap-2 shadow-lg hover:shadow-xl transition-shadow bg-green-600 hover:bg-green-700 w-full sm:w-auto sm:min-w-[200px]"
               asChild
             >
               <a href="/forum">
