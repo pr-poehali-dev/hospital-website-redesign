@@ -1270,9 +1270,11 @@ const Index = () => {
                   <Card className="border-primary/20">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Icon name="UserCheck" size={24} className="text-primary" />
-                        </div>
+                        <img 
+                          src="https://cdn.poehali.dev/files/Бровкин ЕВ.jpg" 
+                          alt="Бровкин Евгений Владимирович"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                        />
                         <div>
                           <p className="font-semibold">Главный врач</p>
                           <p className="text-lg font-bold text-primary">Бровкин Евгений Владимирович</p>
