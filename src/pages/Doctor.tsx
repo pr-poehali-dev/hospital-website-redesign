@@ -47,6 +47,13 @@ const Doctor = () => {
     return saved ? parseInt(saved) : 15;
   });
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string}>({
+    open: false,
+    appointmentId: null,
+    patientName: '',
+    appointmentDate: '',
+    appointmentTime: ''
+  });
 
   useEffect(() => {
     const auth = localStorage.getItem('doctor_auth');
@@ -1024,7 +1031,13 @@ const Doctor = () => {
                                       <Button 
                                         size="sm" 
                                         variant="ghost"
-                                        onClick={() => handleUpdateAppointmentStatus(appointment.id, 'completed')}
+                                        onClick={() => setConfirmDialog({
+                                          open: true,
+                                          appointmentId: appointment.id,
+                                          patientName: appointment.patient_name,
+                                          appointmentDate: new Date(appointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                                          appointmentTime: appointment.appointment_time.slice(0, 5)
+                                        })}
                                         title="Завершить прием"
                                       >
                                         <Icon name="CheckCircle" size={16} className="text-green-600" />
@@ -1057,6 +1070,46 @@ const Doctor = () => {
           </Tabs>
         </div>
       </section>
+
+      <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({...confirmDialog, open})}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">Завершить прием?</DialogTitle>
+            <DialogDescription className="text-center pt-4 space-y-2">
+              <div className="bg-primary/10 rounded-lg p-4 space-y-2">
+                <p className="font-semibold text-foreground text-lg">{confirmDialog.patientName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {confirmDialog.appointmentDate} в {confirmDialog.appointmentTime}
+                </p>
+              </div>
+              <p className="text-base text-foreground pt-2">
+                Вы уверены, что хотите завершить прием этого пациента?
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setConfirmDialog({...confirmDialog, open: false})}
+            >
+              Отмена
+            </Button>
+            <Button
+              className="flex-1 bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                if (confirmDialog.appointmentId) {
+                  handleUpdateAppointmentStatus(confirmDialog.appointmentId, 'completed');
+                  setConfirmDialog({...confirmDialog, open: false});
+                }
+              }}
+            >
+              <Icon name="CheckCircle" size={18} className="mr-2" />
+              Завершить
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
