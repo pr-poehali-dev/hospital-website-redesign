@@ -230,18 +230,17 @@ const Index = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSentCode(data.code);
-        setVerificationStep('code');
-        
         if (data.fallback) {
-          // Пользователь не найден в МАКС - показываем инструкцию
+          // Пользователь не найден в МАКС - показываем инструкцию БЕЗ кода
           toast({
-            title: "Подключите мессенджер МАКС",
-            description: `Для получения кодов через МАКС добавьте бота больницы в контакты. Ваш код сейчас: ${data.code}`,
-            duration: 20000,
+            title: "Установите мессенджер МАКС",
+            description: "Для записи на прием необходим мессенджер МАКС. Скачайте приложение МАКС и добавьте бота больницы, затем попробуйте снова.",
+            duration: 0,
           });
         } else {
           // Код успешно отправлен в МАКС
+          setSentCode(data.code);
+          setVerificationStep('code');
           toast({
             title: "Код отправлен в МАКС",
             description: `Проверьте сообщения в мессенджере МАКС на номере ${appointmentForm.patient_phone}`,

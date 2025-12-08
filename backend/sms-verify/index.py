@@ -177,8 +177,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({
                         'success': True, 
-                        'message': 'Для получения кодов через МАКС, добавьте бота больницы в контакты',
-                        'code': code,
+                        'message': 'Установите мессенджер МАКС для получения кодов',
                         'fallback': True
                     }),
                     'isBase64Encoded': False
