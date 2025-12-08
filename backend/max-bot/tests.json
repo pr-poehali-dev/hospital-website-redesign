@@ -1,0 +1,38 @@
+{
+  "tests": [
+    {
+      "name": "Handle /start command",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "text": "/start",
+        "from": {"id": "79991234567"},
+        "chat": {"id": "79991234567"},
+        "type": "text"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "type": "text",
+        "text": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Handle help command",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "text": "помощь",
+        "from": {"id": "79991234567"},
+        "chat": {"id": "79991234567"},
+        "type": "text"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "type": "text",
+        "text": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
