@@ -232,11 +232,22 @@ const Index = () => {
       if (response.ok && data.success) {
         setSentCode(data.code);
         setVerificationStep('code');
-        toast({
-          title: "Код отправлен (демо-режим)",
-          description: `Ваш код: ${data.code}`,
-          duration: 15000,
-        });
+        
+        if (data.fallback) {
+          // Пользователь не найден в МАКС - показываем инструкцию
+          toast({
+            title: "Подключите мессенджер МАКС",
+            description: `Для получения кодов через МАКС добавьте бота больницы в контакты. Ваш код сейчас: ${data.code}`,
+            duration: 20000,
+          });
+        } else {
+          // Код успешно отправлен в МАКС
+          toast({
+            title: "Код отправлен в МАКС",
+            description: `Проверьте сообщения в мессенджере МАКС на номере ${appointmentForm.patient_phone}`,
+            duration: 10000,
+          });
+        }
       } else {
         toast({
           title: "Ошибка",
