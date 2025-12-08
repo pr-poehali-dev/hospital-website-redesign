@@ -217,6 +217,9 @@ const Index = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    console.log('DEBUG: Отправляемый номер телефона:', appointmentForm.patient_phone);
+    console.log('DEBUG: Полная форма:', appointmentForm);
+
     try {
       const response = await fetch(BACKEND_URLS.smsVerify, {
         method: 'POST',
