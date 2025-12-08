@@ -30,22 +30,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
     
     database_url = os.environ.get('DATABASE_URL')
-    smsc_login = os.environ.get('SMSC_LOGIN')
-    smsc_password = os.environ.get('SMSC_PASSWORD')
     
     if not database_url:
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({'error': 'Database configuration missing'}),
-            'isBase64Encoded': False
-        }
-    
-    if not smsc_login or not smsc_password:
-        return {
-            'statusCode': 500,
-            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'SMSC credentials not configured'}),
             'isBase64Encoded': False
         }
     
@@ -122,48 +112,64 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn.commit()
             cursor.close()
             
-            # Отправка SMS через МАКС
-            message = f"Ваш код подтверждения: {code}"
+            # Отправка сообщения через МАКС мессенджер
+            max_token = os.environ.get('MAX_BOT_TOKEN')
+            
+            if not max_token:
+                return {
+                    'statusCode': 500,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'MAX Bot Token not configured'}),
+                    'isBase64Encoded': False
+                }
+            
+            message_text = f"Ваш код подтверждения для записи на прием: {code}\n\nКод действителен 10 минут."
             
             try:
-                params = {
-                    'login': smsc_login,
-                    'psw': smsc_password,
-                    'phones': clean_phone,
-                    'mes': message,
-                    'charset': 'utf-8',
-                    'fmt': '3'
-                }
+                # Отправка через MAX API
+                request_data = json.dumps({
+                    'chat_id': clean_phone,
+                    'text': message_text
+                }).encode('utf-8')
                 
-                url = 'https://smsc.ru/sys/send.php?' + urllib.parse.urlencode(params)
+                req = urllib.request.Request(
+                    'https://platform-api.max.ru/messages',
+                    data=request_data,
+                    headers={
+                        'Authorization': max_token,
+                        'Content-Type': 'application/json'
+                    },
+                    method='POST'
+                )
                 
-                with urllib.request.urlopen(url, timeout=10) as response:
+                with urllib.request.urlopen(req, timeout=10) as response:
                     result = json.loads(response.read().decode('utf-8'))
                     
-                    if 'error' in result:
-                        return {
-                            'statusCode': 500,
-                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                            'body': json.dumps({'error': f'Ошибка отправки SMS: {result.get("error_code", "unknown")}'}),
-                            'isBase64Encoded': False
-                        }
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'success': True, 
+                            'message': 'Код отправлен в мессенджер МАКС'
+                        }),
+                        'isBase64Encoded': False
+                    }
+                    
+            except urllib.error.HTTPError as e:
+                error_body = e.read().decode('utf-8')
+                return {
+                    'statusCode': 500,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': f'Не удалось отправить сообщение в МАКС: {error_body}'}),
+                    'isBase64Encoded': False
+                }
             except Exception as e:
                 return {
                     'statusCode': 500,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': f'Не удалось отправить SMS: {str(e)}'}),
+                    'body': json.dumps({'error': f'Ошибка отправки: {str(e)}'}),
                     'isBase64Encoded': False
                 }
-            
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({
-                    'success': True, 
-                    'message': 'Код отправлен на ваш телефон'
-                }),
-                'isBase64Encoded': False
-            }
         
         elif action == 'verify':
             phone_number = body.get('phone_number', '').strip()
