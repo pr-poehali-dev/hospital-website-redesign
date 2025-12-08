@@ -122,13 +122,45 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             conn.commit()
             cursor.close()
             
+            # Отправка SMS через МАКС
+            message = f"Ваш код подтверждения: {code}"
+            
+            try:
+                params = {
+                    'login': smsc_login,
+                    'psw': smsc_password,
+                    'phones': clean_phone,
+                    'mes': message,
+                    'charset': 'utf-8',
+                    'fmt': '3'
+                }
+                
+                url = 'https://smsc.ru/sys/send.php?' + urllib.parse.urlencode(params)
+                
+                with urllib.request.urlopen(url, timeout=10) as response:
+                    result = json.loads(response.read().decode('utf-8'))
+                    
+                    if 'error' in result:
+                        return {
+                            'statusCode': 500,
+                            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                            'body': json.dumps({'error': f'Ошибка отправки SMS: {result.get("error_code", "unknown")}'}),
+                            'isBase64Encoded': False
+                        }
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': f'Не удалось отправить SMS: {str(e)}'}),
+                    'isBase64Encoded': False
+                }
+            
             return {
                 'statusCode': 200,
                 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                 'body': json.dumps({
                     'success': True, 
-                    'message': 'Код отправлен (демо-режим)', 
-                    'code': code
+                    'message': 'Код отправлен на ваш телефон'
                 }),
                 'isBase64Encoded': False
             }
