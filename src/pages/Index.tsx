@@ -932,9 +932,11 @@ const Index = () => {
 
             <Card className="hover:shadow-xl transition-shadow">
               <CardHeader>
-                <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mb-4">
-                  <Icon name="Briefcase" size={32} className="text-white" />
-                </div>
+                <img 
+                  src="https://cdn.poehali.dev/files/суялкин.jpg" 
+                  alt="Суялкин О.П."
+                  className="w-16 h-16 rounded-full object-cover border-2 border-primary/20 mb-4"
+                />
                 <CardTitle className="text-lg">Суялкин О.П.</CardTitle>
                 <CardDescription className="text-base font-medium">Зам. главного врача по медицинской части</CardDescription>
               </CardHeader>
@@ -1294,9 +1296,11 @@ const Index = () => {
                   <Card className="border-primary/20">
                     <CardHeader className="pb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Icon name="Briefcase" size={24} className="text-primary" />
-                        </div>
+                        <img 
+                          src="https://cdn.poehali.dev/files/суялкин.jpg" 
+                          alt="Суялкин Олег Павлович"
+                          className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                        />
                         <div>
                           <p className="font-semibold text-sm">Зам. главного врача</p>
                           <p className="text-sm text-muted-foreground">по медицинской части</p>
