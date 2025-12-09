@@ -19,6 +19,7 @@ const BACKEND_URLS = {
 const Index = () => {
   const { toast } = useToast();
   const [doctors, setDoctors] = useState([]);
+  const [selectedClinic, setSelectedClinic] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [doctorSchedule, setDoctorSchedule] = useState<any[]>([]);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
@@ -487,11 +488,53 @@ const Index = () => {
                   <DialogDescription>Выберите врача, дату и время приема</DialogDescription>
                 </DialogHeader>
                 
-                {!selectedDoctor ? (
+                {!selectedClinic ? (
                   <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Выберите поликлинику:</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <Card 
+                        className="cursor-pointer hover:shadow-xl transition-all hover:border-primary"
+                        onClick={() => setSelectedClinic('Центральная городская поликлиника')}
+                      >
+                        <CardHeader className="text-center">
+                          <div className="w-20 h-20 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                            <Icon name="Building2" size={40} className="text-blue-600" />
+                          </div>
+                          <CardTitle className="text-xl">Центральная городская поликлиника</CardTitle>
+                          <CardDescription className="text-base">Взрослое отделение</CardDescription>
+                        </CardHeader>
+                      </Card>
+                      
+                      <Card 
+                        className="cursor-pointer hover:shadow-xl transition-all hover:border-primary"
+                        onClick={() => setSelectedClinic('Детская городская поликлиника')}
+                      >
+                        <CardHeader className="text-center">
+                          <div className="w-20 h-20 mx-auto bg-pink-100 rounded-full flex items-center justify-center mb-3">
+                            <Icon name="Baby" size={40} className="text-pink-600" />
+                          </div>
+                          <CardTitle className="text-xl">Детская городская поликлиника</CardTitle>
+                          <CardDescription className="text-base">Детское отделение</CardDescription>
+                        </CardHeader>
+                      </Card>
+                    </div>
+                  </div>
+                ) : !selectedDoctor ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">
+                        {selectedClinic}
+                      </h3>
+                      <Button variant="outline" size="sm" onClick={() => setSelectedClinic(null)}>
+                        <Icon name="ArrowLeft" size={16} className="mr-1" />
+                        Назад
+                      </Button>
+                    </div>
                     <h3 className="font-semibold">Выберите врача:</h3>
                     <div className="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                      {doctors.map((doctor: any) => (
+                      {doctors
+                        .filter((doctor: any) => doctor.clinic === selectedClinic)
+                        .map((doctor: any) => (
                         <Card 
                           key={doctor.id} 
                           className="cursor-pointer hover:shadow-lg transition-shadow"
@@ -551,7 +594,7 @@ const Index = () => {
                           <p className="text-sm text-muted-foreground">{selectedDoctor.position}</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedDoctor(null)}>
+                      <Button variant="outline" size="sm" onClick={() => { setSelectedDoctor(null); setSelectedClinic(null); }}>
                         Изменить
                       </Button>
                     </div>

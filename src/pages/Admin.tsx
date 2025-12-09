@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const API_URLS = {
   auth: 'https://functions.poehali.dev/b51b3f73-d83d-4a55-828e-5feec95d1227',
@@ -29,7 +30,8 @@ const Admin = () => {
     specialization: '',
     login: '',
     password: '',
-    photo_url: ''
+    photo_url: '',
+    clinic: 'Центральная городская поликлиника'
   });
   const [isOpen, setIsOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<any>(null);
@@ -837,6 +839,25 @@ const Admin = () => {
                     value={doctorForm.specialization}
                     onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
                   />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Поликлиника</label>
+                    <Select 
+                      value={doctorForm.clinic} 
+                      onValueChange={(value) => setDoctorForm({ ...doctorForm, clinic: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите поликлинику" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Центральная городская поликлиника">
+                          Центральная городская поликлиника
+                        </SelectItem>
+                        <SelectItem value="Детская городская поликлиника">
+                          Детская городская поликлиника
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Input
                     placeholder="Логин для входа"
                     value={doctorForm.login}
@@ -944,6 +965,25 @@ const Admin = () => {
                     value={doctorForm.specialization}
                     onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
                   />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Поликлиника</label>
+                    <Select 
+                      value={doctorForm.clinic} 
+                      onValueChange={(value) => setDoctorForm({ ...doctorForm, clinic: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Выберите поликлинику" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Центральная городская поликлиника">
+                          Центральная городская поликлиника
+                        </SelectItem>
+                        <SelectItem value="Детская городская поликлиника">
+                          Детская городская поликлиника
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-3">
                     <label className="text-sm font-medium">Фотография врача</label>
                     <div
@@ -1017,31 +1057,41 @@ const Admin = () => {
             </Dialog>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {doctors.map((doctor: any) => (
-              <Card key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    {doctor.photo_url ? (
-                      <img 
-                        src={doctor.photo_url} 
-                        alt={doctor.full_name} 
-                        className="w-10 h-10 rounded-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <Icon name="User" size={20} className="text-primary" />
-                    )}
-                    {doctor.full_name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm"><strong>Должность:</strong> {doctor.position}</p>
-                  {doctor.specialization && <p className="text-sm"><strong>Специализация:</strong> {doctor.specialization}</p>}
-                  {doctor.phone && <p className="text-sm"><strong>Телефон:</strong> {doctor.phone}</p>}
-                  <p className="text-sm"><strong>Логин:</strong> {doctor.login}</p>
+          {['Центральная городская поликлиника', 'Детская городская поликлиника'].map(clinic => {
+            const clinicDoctors = doctors.filter((d: any) => d.clinic === clinic);
+            if (clinicDoctors.length === 0) return null;
+            
+            return (
+              <div key={clinic} className="mb-8">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <Icon name={clinic.includes('Детская') ? 'Baby' : 'Building2'} size={28} className="text-primary" />
+                  {clinic}
+                </h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {clinicDoctors.map((doctor: any) => (
+                    <Card key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          {doctor.photo_url ? (
+                            <img 
+                              src={doctor.photo_url} 
+                              alt={doctor.full_name} 
+                              className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <Icon name="User" size={20} className="text-primary" />
+                          )}
+                          {doctor.full_name}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <p className="text-sm"><strong>Должность:</strong> {doctor.position}</p>
+                        {doctor.specialization && <p className="text-sm"><strong>Специализация:</strong> {doctor.specialization}</p>}
+                        {doctor.phone && <p className="text-sm"><strong>Телефон:</strong> {doctor.phone}</p>}
+                        <p className="text-sm"><strong>Логин:</strong> {doctor.login}</p>
                   <div className="flex items-center justify-between mt-3 p-3 bg-muted/30 rounded">
                     <span className="text-sm font-medium">Статус:</span>
                     <button
@@ -1062,31 +1112,34 @@ const Admin = () => {
                       {doctor.is_active ? 'Активен' : 'Неактивен'}
                     </span>
                   </div>
-                  <div className="flex gap-2 mt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => openEditDialog(doctor)}
-                      className="flex-1"
-                    >
-                      <Icon name="Edit" size={14} className="mr-1" />
-                      Изменить
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => handleDeleteDoctor(doctor.id)}
-                      className="flex-1"
-                      disabled={!doctor.is_active}
-                    >
-                      <Icon name="Trash2" size={14} className="mr-1" />
-                      Удалить
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                        <div className="flex gap-2 mt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openEditDialog(doctor)}
+                            className="flex-1"
+                          >
+                            <Icon name="Edit" size={14} className="mr-1" />
+                            Изменить
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => handleDeleteDoctor(doctor.id)}
+                            className="flex-1"
+                            disabled={!doctor.is_active}
+                          >
+                            <Icon name="Trash2" size={14} className="mr-1" />
+                            Удалить
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </TabsContent>
 
         <TabsContent value="faq">
