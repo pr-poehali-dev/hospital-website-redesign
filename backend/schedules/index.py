@@ -69,8 +69,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             day_of_week = body.get('day_of_week')
             start_time = body.get('start_time')
             end_time = body.get('end_time')
-            break_start_time = body.get('break_start_time')
-            break_end_time = body.get('break_end_time')
+            break_start_time = body.get('break_start_time') or None
+            break_end_time = body.get('break_end_time') or None
             
             if not all([doctor_id, day_of_week is not None, start_time, end_time]):
                 return {
@@ -113,8 +113,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             is_active = body.get('is_active')
             start_time = body.get('start_time')
             end_time = body.get('end_time')
-            break_start_time = body.get('break_start_time')
-            break_end_time = body.get('break_end_time')
+            break_start_time = body.get('break_start_time') or None
+            break_end_time = body.get('break_end_time') or None
             
             if not schedule_id:
                 return {
