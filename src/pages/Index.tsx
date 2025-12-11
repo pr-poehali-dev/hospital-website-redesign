@@ -496,9 +496,9 @@ const Index = () => {
             alt="Логотип АЦГМБ ЛНР" 
             className="w-48 h-48 mx-auto mb-8 object-contain animate-fade-in mix-blend-multiply"
           />
-          <h2 className="font-bold mb-2 text-foreground animate-fade-in text-4xl">ГБУЗ "Антрацитовская центральная городская многопрофильная больница"</h2>
-          <p className="text-lg text-muted-foreground mb-8 animate-fade-in">Луганской Народной Республики</p>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
+          <h2 className="font-bold mb-2 text-foreground animate-fade-in text-2xl md:text-4xl">ГБУЗ "Антрацитовская центральная городская многопрофильная больница"</h2>
+          <p className="text-sm md:text-lg text-muted-foreground mb-8 animate-fade-in">Луганской Народной Республики</p>
+          <p className="text-base md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
             Современная медицинская помощь с заботой о каждом пациенте. Квалифицированные специалисты и передовые технологии.
           </p>
           <div className="flex flex-col items-center gap-3 animate-scale-in">
