@@ -761,11 +761,15 @@ const Admin = () => {
       const data = await response.json();
       const newChats = data.chats || [];
       
+      const counts: {[key: number]: number} = {};
       let hasNewMessages = false;
+      
       const newCount = newChats.filter((chat: any) => {
-        const prevCount = lastMessageCountRef.current[chat.id] || 0;
+        const prevCount = lastMessageCountRef.current[chat.id];
         const currentCount = chat.patient_message_count;
-        if (currentCount > prevCount) {
+        counts[chat.id] = currentCount;
+        
+        if (prevCount !== undefined && currentCount > prevCount) {
           hasNewMessages = true;
           return true;
         }
@@ -785,10 +789,6 @@ const Admin = () => {
       setChats(newChats);
       setPreviousChatCount(newChats.length);
       
-      const counts: {[key: number]: number} = {};
-      newChats.forEach((chat: any) => {
-        counts[chat.id] = chat.patient_message_count;
-      });
       lastMessageCountRef.current = counts;
       setLastMessageCount(counts);
     } catch (error) {
