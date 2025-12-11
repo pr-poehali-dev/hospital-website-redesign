@@ -234,23 +234,22 @@ const Index = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        if (data.fallback) {
-          // Пользователь не найден в МАКС - показываем инструкцию БЕЗ кода
+        if (data.show_code) {
+          // Fallback: показываем код на экране, если не удалось отправить в MAX
           toast({
-            title: "Установите мессенджер МАКС",
-            description: "Для записи на прием необходим мессенджер МАКС. Скачайте приложение МАКС и добавьте бота больницы, затем попробуйте снова.",
+            title: "Ваш код верификации",
+            description: `Код: ${data.show_code}. Не удалось отправить в MAX, используйте этот код для подтверждения.`,
             duration: 0,
           });
         } else {
-          // Код успешно отправлен в МАКС
-          setSentCode(data.code);
-          setVerificationStep('code');
+          // Код успешно отправлен в MAX
           toast({
-            title: "Код отправлен в МАКС",
-            description: `Проверьте сообщения в мессенджере МАКС на номере ${appointmentForm.patient_phone}`,
+            title: "Код отправлен в MAX",
+            description: `Проверьте сообщения в мессенджере MAX на номере ${appointmentForm.patient_phone}`,
             duration: 10000,
           });
         }
+        setVerificationStep('code');
       } else {
         toast({
           title: "Ошибка",
@@ -269,21 +268,44 @@ const Index = () => {
     }
   };
 
-  const handleVerifyCode = (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    if (verificationCode === sentCode) {
-      setVerificationStep('verified');
-      toast({
-        title: "Номер подтвержден",
-        description: "Теперь вы можете завершить запись",
+    try {
+      const response = await fetch(BACKEND_URLS.smsVerify, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'verify',
+          phone_number: appointmentForm.patient_phone,
+          code: verificationCode
+        }),
       });
-    } else {
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setVerificationStep('verified');
+        toast({
+          title: "Номер подтвержден",
+          description: "Теперь вы можете завершить запись",
+        });
+      } else {
+        toast({
+          title: "Неверный код",
+          description: data.error || "Проверьте введенный код и попробуйте снова",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Неверный код",
-        description: "Проверьте введенный код и попробуйте снова",
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -805,30 +827,29 @@ const Index = () => {
                                 <div className="flex items-start gap-3">
                                   <Icon name="Info" size={24} className="text-blue-600 mt-1" />
                                   <div>
-                                    <p className="font-medium text-blue-900 mb-1">Демо-режим верификации</p>
+                                    <p className="font-medium text-blue-900 mb-1">Проверьте MAX</p>
                                     <p className="text-sm text-blue-700">
-                                      Код показан выше в уведомлении. Введите его для завершения записи.
-                                    </p>
-                                    <p className="text-xs text-blue-600 mt-2">
-                                      После настройки MAX API коды будут отправляться в мессенджер
+                                      Код отправлен в мессенджер MAX на ваш номер. Введите полученный код.
                                     </p>
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
                             <Input
-                              placeholder="Введите код из MAX"
+                              placeholder="Введите 6-значный код"
                               value={verificationCode}
                               onChange={(e) => setVerificationCode(e.target.value)}
                               required
                               maxLength={6}
+                              pattern="[0-9]{6}"
                             />
                             <div className="flex gap-2">
                               <Button 
                                 type="submit" 
                                 className="flex-1"
+                                disabled={isSubmitting}
                               >
-                                Подтвердить
+                                {isSubmitting ? 'Проверка...' : 'Подтвердить'}
                               </Button>
                               <Button 
                                 type="button"
