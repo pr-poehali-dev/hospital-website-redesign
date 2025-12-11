@@ -42,6 +42,9 @@ const Forum = () => {
   const [postImages, setPostImages] = useState<string[]>([]);
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [editPostContent, setEditPostContent] = useState('');
+  const [editPostImages, setEditPostImages] = useState<string[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -528,6 +531,143 @@ const Forum = () => {
     setPostImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  const removeEditImage = (index: number) => {
+    setEditPostImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleEditPost = (post: any) => {
+    setEditingPostId(post.id);
+    setEditPostContent(post.content);
+    setEditPostImages(post.images ? JSON.parse(post.images) : []);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPostId(null);
+    setEditPostContent('');
+    setEditPostImages([]);
+  };
+
+  const handleUpdatePost = async (postId: number) => {
+    if (!editPostContent.trim()) {
+      toast({
+        title: "Ошибка",
+        description: "Сообщение не может быть пустым",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const token = localStorage.getItem('forum_token');
+
+    try {
+      const response = await fetch(API_URLS.posts, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-User-Token': token || '',
+        },
+        body: JSON.stringify({
+          id: postId,
+          content: editPostContent,
+          images: editPostImages,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "Сообщение обновлено!",
+          description: "Изменения сохранены",
+        });
+        setEditingPostId(null);
+        setEditPostContent('');
+        setEditPostImages([]);
+        loadPosts(topicId!);
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось обновить сообщение",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!confirm('Вы уверены, что хотите удалить это сообщение?')) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    const token = localStorage.getItem('forum_token');
+
+    try {
+      const response = await fetch(`${API_URLS.posts}?id=${postId}`, {
+        method: 'DELETE',
+        headers: { 
+          'X-User-Token': token || '',
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "Сообщение удалено",
+          description: "Ваше сообщение было удалено",
+        });
+        loadPosts(topicId!);
+      } else {
+        toast({
+          title: "Ошибка",
+          description: data.error || "Не удалось удалить сообщение",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Ошибка",
+        description: "Проблема с подключением к серверу",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Ошибка",
+        description: "Можно загружать только изображения",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageUploadLoading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setEditPostImages(prev => [...prev, base64]);
+      setImageUploadLoading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ru-RU', {
       day: '2-digit',
@@ -914,23 +1054,111 @@ const Forum = () => {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                               <strong className="text-sm">{post.author_username || 'Неизвестен'}</strong>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(post.created_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm whitespace-pre-wrap">{post.content}</p>
-                            {post.images && JSON.parse(post.images).length > 0 && (
-                              <div className="mt-3 grid grid-cols-2 gap-2">
-                                {JSON.parse(post.images).map((img: string, idx: number) => (
-                                  <img 
-                                    key={idx} 
-                                    src={img} 
-                                    alt={`Изображение ${idx + 1}`}
-                                    className="rounded-lg border border-border max-h-48 object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                                    onClick={() => window.open(img, '_blank')}
-                                  />
-                                ))}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {formatDate(post.created_at)}
+                                </span>
+                                {user && user.id === post.author_id && (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2"
+                                      onClick={() => handleEditPost(post)}
+                                    >
+                                      <Icon name="Edit" size={14} />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeletePost(post.id)}
+                                    >
+                                      <Icon name="Trash2" size={14} />
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
+                            </div>
+                            {editingPostId === post.id ? (
+                              <div className="space-y-3">
+                                <Textarea
+                                  value={editPostContent}
+                                  onChange={(e) => setEditPostContent(e.target.value)}
+                                  rows={4}
+                                  className="text-sm"
+                                />
+                                {editPostImages.length > 0 && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {editPostImages.map((img, idx) => (
+                                      <div key={idx} className="relative group">
+                                        <img 
+                                          src={img} 
+                                          alt={`Изображение ${idx + 1}`}
+                                          className="rounded-lg border border-border h-32 w-full object-cover"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeEditImage(idx)}
+                                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          <Icon name="X" size={16} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="flex gap-2">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleEditImageUpload}
+                                    className="hidden"
+                                    id={`edit-image-upload-${post.id}`}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => document.getElementById(`edit-image-upload-${post.id}`)?.click()}
+                                    disabled={imageUploadLoading || editPostImages.length >= 4}
+                                  >
+                                    <Icon name="Image" size={14} className="mr-1" />
+                                    Фото
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleUpdatePost(post.id)}
+                                    disabled={isSubmitting}
+                                  >
+                                    {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCancelEdit}
+                                  >
+                                    Отмена
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm whitespace-pre-wrap">{post.content}</p>
+                                {post.images && JSON.parse(post.images).length > 0 && (
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                    {JSON.parse(post.images).map((img: string, idx: number) => (
+                                      <img 
+                                        key={idx} 
+                                        src={img} 
+                                        alt={`Изображение ${idx + 1}`}
+                                        className="rounded-lg border border-border max-h-48 object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                                        onClick={() => window.open(img, '_blank')}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>
