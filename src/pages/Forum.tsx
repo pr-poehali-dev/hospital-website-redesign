@@ -281,14 +281,14 @@ const Forum = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setVerificationCode(data.verification_code);
-        setVerifyForm({ ...verifyForm, user_id: data.user_id });
+        localStorage.setItem('forum_token', data.token);
+        localStorage.setItem('forum_user', JSON.stringify(data.user));
+        setUser(data.user);
         setIsRegisterOpen(false);
-        setIsVerifyOpen(true);
         
         toast({
           title: "Регистрация успешна!",
-          description: `Ваш код подтверждения: ${data.verification_code}`,
+          description: `Добро пожаловать, ${data.user.username}!`,
         });
       } else {
         toast({

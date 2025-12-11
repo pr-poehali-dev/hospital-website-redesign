@@ -107,15 +107,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     }
                 
                 password_hash = hashlib.sha256(password.encode()).hexdigest()
-                verification_code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
-                
                 email_value = email if email else f"user_{username}@noemail.local"
+                user_token = secrets.token_urlsafe(32)
                 
                 cursor.execute(
-                    "INSERT INTO forum_users (email, username, password_hash, verification_code, is_verified, is_blocked, created_at) VALUES (%s, %s, %s, %s, FALSE, FALSE, CURRENT_TIMESTAMP) RETURNING id",
-                    (email_value, username, password_hash, verification_code)
+                    "INSERT INTO forum_users (email, username, password_hash, auth_token, is_verified, is_blocked, created_at, last_login) VALUES (%s, %s, %s, %s, TRUE, FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) RETURNING id",
+                    (email_value, username, password_hash, user_token)
                 )
-                user_id = cursor.fetchone()['id']
+                user_data = cursor.fetchone()
+                user_id = user_data['id']
                 conn.commit()
                 cursor.close()
                 
@@ -124,9 +124,13 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
                     'body': json.dumps({
                         'success': True,
-                        'message': 'Регистрация успешна! Используйте код для подтверждения',
-                        'verification_code': verification_code,
-                        'user_id': user_id
+                        'message': 'Регистрация успешна!',
+                        'token': user_token,
+                        'user': {
+                            'id': user_id,
+                            'username': username,
+                            'email': email_value
+                        }
                     }),
                     'isBase64Encoded': False
                 }
