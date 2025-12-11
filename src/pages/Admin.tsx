@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +66,7 @@ const Admin = () => {
   const [operatorName, setOperatorName] = useState('');
   const [newChatsCount, setNewChatsCount] = useState(0);
   const [lastMessageCount, setLastMessageCount] = useState<{[key: number]: number}>({});
+  const lastMessageCountRef = useRef<{[key: number]: number}>({});
   const [previousChatCount, setPreviousChatCount] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
   const notificationSound = typeof Audio !== 'undefined' ? new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ0PVqzn7bViFg==') : null;
@@ -762,7 +763,7 @@ const Admin = () => {
       
       let hasNewMessages = false;
       const newCount = newChats.filter((chat: any) => {
-        const prevCount = lastMessageCount[chat.id] || 0;
+        const prevCount = lastMessageCountRef.current[chat.id] || 0;
         const currentCount = chat.patient_message_count;
         if (currentCount > prevCount) {
           hasNewMessages = true;
@@ -788,6 +789,7 @@ const Admin = () => {
       newChats.forEach((chat: any) => {
         counts[chat.id] = chat.patient_message_count;
       });
+      lastMessageCountRef.current = counts;
       setLastMessageCount(counts);
     } catch (error) {
       console.error('Failed to load chats:', error);
@@ -811,9 +813,14 @@ const Admin = () => {
       setChatMessages(data.messages || []);
       
       if (!silent) {
+        const patientMessagesCount = data.messages.filter((m: any) => m.sender_type === 'patient').length;
+        lastMessageCountRef.current = {
+          ...lastMessageCountRef.current,
+          [chatId]: patientMessagesCount
+        };
         setLastMessageCount(prev => ({
           ...prev,
-          [chatId]: data.messages.length
+          [chatId]: patientMessagesCount
         }));
       }
     } catch (error) {
@@ -1996,7 +2003,14 @@ const Admin = () => {
                       <div className="text-left w-full">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-semibold">{chat.patient_name}</span>
-                          <span className="text-xs">{chat.message_count}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs">{chat.message_count}</span>
+                            {!showArchived && (chat.patient_message_count - (lastMessageCount[chat.id] || 0)) > 0 && (
+                              <span className="bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                /{chat.patient_message_count - (lastMessageCount[chat.id] || 0)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         {chat.patient_phone && (
                           <p className="text-xs opacity-70">{chat.patient_phone}</p>
