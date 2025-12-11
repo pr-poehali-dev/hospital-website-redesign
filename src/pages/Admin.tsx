@@ -760,12 +760,18 @@ const Admin = () => {
       const data = await response.json();
       const newChats = data.chats || [];
       
+      let hasNewMessages = false;
       const newCount = newChats.filter((chat: any) => {
         const prevCount = lastMessageCount[chat.id] || 0;
-        return chat.patient_message_count > prevCount;
+        const currentCount = chat.patient_message_count;
+        if (currentCount > prevCount) {
+          hasNewMessages = true;
+          return true;
+        }
+        return false;
       }).length;
       
-      if (silent && newCount > 0) {
+      if (silent && hasNewMessages) {
         if (notificationSound) {
           notificationSound.play().catch(err => console.log('Sound play failed:', err));
         }
