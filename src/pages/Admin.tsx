@@ -761,16 +761,14 @@ const Admin = () => {
       const data = await response.json();
       const newChats = data.chats || [];
       
-      const counts: {[key: number]: number} = {};
       let hasNewMessages = false;
-      
       const newCount = newChats.filter((chat: any) => {
         const prevCount = lastMessageCountRef.current[chat.id];
         const currentCount = chat.patient_message_count;
-        counts[chat.id] = currentCount;
         
         if (prevCount !== undefined && currentCount > prevCount) {
           hasNewMessages = true;
+          lastMessageCountRef.current[chat.id] = currentCount;
           return true;
         }
         return false;
@@ -788,9 +786,7 @@ const Admin = () => {
       
       setChats(newChats);
       setPreviousChatCount(newChats.length);
-      
-      lastMessageCountRef.current = counts;
-      setLastMessageCount(counts);
+      setLastMessageCount({ ...lastMessageCountRef.current });
     } catch (error) {
       console.error('Failed to load chats:', error);
     }
