@@ -12,6 +12,7 @@ import DoctorGuide from "./pages/DoctorGuide";
 import Faq from "./pages/Faq";
 import Forum from "./pages/Forum";
 import HowToBook from "./pages/HowToBook";
+import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 import SupportChat from "./components/SupportChat";
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/forum" element={<Forum />} />
           <Route path="/forum/:topicId" element={<Forum />} />
           <Route path="/how-to-book" element={<HowToBook />} />
+          <Route path="/security" element={<Security />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
