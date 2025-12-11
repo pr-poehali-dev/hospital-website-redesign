@@ -1646,69 +1646,103 @@ const Index = () => {
                           <head>
                             <title>Талон на прием</title>
                             <style>
+                              @page {
+                                size: A5;
+                                margin: 10mm;
+                              }
                               body { 
                                 font-family: Arial, sans-serif; 
-                                padding: 40px;
-                                max-width: 800px;
+                                padding: 10px;
+                                max-width: 148mm;
                                 margin: 0 auto;
+                                font-size: 11px;
                               }
                               .header {
                                 text-align: center;
-                                margin-bottom: 30px;
-                                padding-bottom: 20px;
-                                border-bottom: 3px solid #22c55e;
+                                margin-bottom: 12px;
+                                padding-bottom: 8px;
+                                border-bottom: 2px solid #22c55e;
                               }
                               .header h1 {
                                 color: #22c55e;
+                                margin: 0 0 4px 0;
+                                font-size: 16px;
+                              }
+                              .header p {
                                 margin: 0;
-                                font-size: 28px;
+                                font-size: 10px;
+                                color: #666;
                               }
                               .doctor-info {
                                 display: flex;
                                 align-items: center;
-                                gap: 20px;
-                                margin-bottom: 30px;
-                                padding: 20px;
+                                gap: 12px;
+                                margin-bottom: 12px;
+                                padding: 10px;
                                 background: #f0fdf4;
-                                border-radius: 10px;
+                                border-radius: 6px;
                               }
                               .doctor-info img {
-                                width: 100px;
-                                height: 100px;
-                                border-radius: 50%;
+                                width: 3cm;
+                                height: 4cm;
                                 object-fit: cover;
-                                border: 4px solid white;
+                                border: 2px solid white;
+                                border-radius: 4px;
+                              }
+                              .doctor-info .doctor-details {
+                                flex: 1;
+                              }
+                              .doctor-info .doctor-details p {
+                                margin: 2px 0;
+                              }
+                              .doctor-name {
+                                font-size: 13px;
+                                font-weight: bold;
+                                color: #111827;
+                              }
+                              .doctor-spec {
+                                font-size: 10px;
+                                color: #6b7280;
                               }
                               .info-grid {
                                 display: grid;
                                 grid-template-columns: 1fr 1fr;
-                                gap: 20px;
-                                margin-top: 20px;
+                                gap: 8px;
+                                margin-top: 8px;
                               }
                               .info-item {
-                                padding: 15px;
+                                padding: 6px 8px;
                                 background: #f9fafb;
-                                border-radius: 8px;
+                                border-radius: 4px;
                               }
                               .info-label {
-                                font-size: 12px;
+                                font-size: 9px;
                                 color: #6b7280;
-                                margin-bottom: 5px;
+                                margin-bottom: 2px;
                               }
                               .info-value {
-                                font-size: 16px;
+                                font-size: 11px;
                                 font-weight: bold;
                                 color: #111827;
                               }
                               .description {
-                                margin-top: 20px;
-                                padding: 15px;
+                                margin-top: 8px;
+                                padding: 8px;
                                 background: #f9fafb;
-                                border-radius: 8px;
-                                border-left: 4px solid #22c55e;
+                                border-radius: 4px;
+                                border-left: 3px solid #22c55e;
+                                font-size: 10px;
+                              }
+                              .footer {
+                                margin-top: 15px;
+                                padding-top: 8px;
+                                border-top: 1px solid #e5e7eb;
+                                text-align: center;
+                                color: #6b7280;
+                                font-size: 8px;
                               }
                               @media print {
-                                body { padding: 20px; }
+                                body { padding: 5mm; }
                               }
                             </style>
                           </head>
@@ -1718,9 +1752,9 @@ const Index = () => {
                               <p>ГБУЗ «Антрацитовская ЦГМБ» ЛНР</p>
                             </div>
                             ${printContent.innerHTML}
-                            <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 12px;">
-                              <p>Сохраните этот талон и предъявите его при визите к врачу</p>
-                              <p>Дата печати: ${new Date().toLocaleString('ru-RU')}</p>
+                            <div class="footer">
+                              <p style="margin: 0 0 2px 0;">Сохраните этот талон и предъявите его при визите к врачу</p>
+                              <p style="margin: 0;">Дата печати: ${new Date().toLocaleString('ru-RU')}</p>
                             </div>
                           </body>
                         </html>
