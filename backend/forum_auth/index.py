@@ -69,15 +69,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             elif action == 'register':
-                email = body.get('email', '').strip().lower()
+                email = body.get('email', '').strip().lower() if body.get('email') else None
                 username = body.get('username', '').strip()
                 password = body.get('password', '').strip()
                 
-                if not all([email, username, password]):
+                if not all([username, password]):
                     return {
                         'statusCode': 400,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Все поля обязательны'}),
+                        'body': json.dumps({'error': 'Имя пользователя и пароль обязательны'}),
                         'isBase64Encoded': False
                     }
                 
@@ -91,7 +91,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cursor = conn.cursor(cursor_factory=RealDictCursor)
                 
-                cursor.execute("SELECT id FROM forum_users WHERE email = %s OR username = %s", (email, username))
+                if email:
+                    cursor.execute("SELECT id FROM forum_users WHERE email = %s OR username = %s", (email, username))
+                else:
+                    cursor.execute("SELECT id FROM forum_users WHERE username = %s", (username,))
                 existing = cursor.fetchone()
                 
                 if existing:
@@ -99,7 +102,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     return {
                         'statusCode': 400,
                         'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                        'body': json.dumps({'error': 'Email или имя пользователя уже заняты'}),
+                        'body': json.dumps({'error': 'Имя пользователя уже занято'}),
                         'isBase64Encoded': False
                     }
                 

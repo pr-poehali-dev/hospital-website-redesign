@@ -102,7 +102,7 @@ const Forum = () => {
     e.preventDefault();
     
     // Валидация перед отправкой SMS
-    if (!registerForm.email || !registerForm.username || !registerForm.password || !registerForm.phone) {
+    if (!registerForm.username || !registerForm.password || !registerForm.phone) {
       toast({
         title: "Ошибка",
         description: "Заполните все поля",
@@ -111,15 +111,17 @@ const Forum = () => {
       return;
     }
 
-    // Проверка формата email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerForm.email)) {
-      toast({
-        title: "Ошибка",
-        description: "Введите корректный email адрес",
-        variant: "destructive",
-      });
-      return;
+    // Проверка формата email (если указан)
+    if (registerForm.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(registerForm.email)) {
+        toast({
+          title: "Ошибка",
+          description: "Введите корректный email адрес",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Проверка длины пароля
@@ -142,29 +144,31 @@ const Forum = () => {
       return;
     }
 
-    // Проверяем, не занят ли email (через бэкенд)
+    // Проверяем, не занят ли email (если указан)
     setIsSubmitting(true);
     
     try {
-      const checkResponse = await fetch(API_URLS.auth, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'check_email',
-          email: registerForm.email 
-        }),
-      });
-
-      const checkData = await checkResponse.json();
-
-      if (!checkResponse.ok || (checkData.exists)) {
-        toast({
-          title: "Ошибка",
-          description: "Этот email уже зарегистрирован",
-          variant: "destructive",
+      if (registerForm.email) {
+        const checkResponse = await fetch(API_URLS.auth, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            action: 'check_email',
+            email: registerForm.email 
+          }),
         });
-        setIsSubmitting(false);
-        return;
+
+        const checkData = await checkResponse.json();
+
+        if (!checkResponse.ok || (checkData.exists)) {
+          toast({
+            title: "Ошибка",
+            description: "Этот email уже зарегистрирован",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       // Если все проверки пройдены - отправляем SMS
@@ -652,10 +656,9 @@ const Forum = () => {
                         />
                         <Input
                           type="email"
-                          placeholder="Email"
+                          placeholder="Email (необязательно)"
                           value={registerForm.email}
                           onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                          required
                         />
                         <Input
                           type="tel"
