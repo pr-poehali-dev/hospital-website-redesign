@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Check rate limit for valid IP",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "check",
+        "ip": "192.168.1.1",
+        "endpoint": "test-endpoint",
+        "fingerprint": "test-fingerprint-123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "allowed": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Record request",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "record",
+        "ip": "192.168.1.1",
+        "endpoint": "test-endpoint",
+        "fingerprint": "test-fingerprint-123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

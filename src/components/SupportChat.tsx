@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { useRateLimiter } from '@/hooks/use-rate-limiter';
 
 const CHAT_URL = 'https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057';
 
@@ -17,6 +18,10 @@ interface Message {
 
 const SupportChat = () => {
   const { toast } = useToast();
+  const { checkRateLimit } = useRateLimiter({ 
+    endpoint: 'support-chat',
+    maxRequestsPerMinute: 10
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [chatId, setChatId] = useState<number | null>(null);
   const [patientName, setPatientName] = useState('');
@@ -101,6 +106,17 @@ const SupportChat = () => {
 
   const handleStartChat = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const rateLimitCheck = await checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      toast({
+        title: 'Ограничение запросов',
+        description: rateLimitCheck.reason || 'Слишком много запросов. Подождите немного.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -139,6 +155,16 @@ const SupportChat = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !chatId) return;
+
+    const rateLimitCheck = await checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      toast({
+        title: 'Ограничение запросов',
+        description: rateLimitCheck.reason || 'Слишком много запросов. Подождите немного.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsLoading(true);
 
