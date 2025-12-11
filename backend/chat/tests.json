@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Create new chat",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "action": "create-chat",
+        "patient_name": "Тестовый Пациент",
+        "patient_phone": "+79991234567"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "chat_id": "number"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get active chats",
+      "method": "GET",
+      "path": "/?action=get-chats",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "chats": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

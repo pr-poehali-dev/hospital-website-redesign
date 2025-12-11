@@ -16,6 +16,7 @@ const API_URLS = {
   userQuestions: 'https://functions.poehali.dev/816ff0e8-3dcc-4eeb-a985-36603a12894c',
   forumModeration: 'https://functions.poehali.dev/70286923-439c-45b7-9744-403f0827a0c1',
   complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
+  chat: 'https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057',
 };
 
 const Admin = () => {
@@ -57,6 +58,11 @@ const Admin = () => {
   const [complaints, setComplaints] = useState([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [chats, setChats] = useState([]);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [operatorMessage, setOperatorMessage] = useState('');
+  const [operatorName, setOperatorName] = useState('');
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -68,6 +74,9 @@ const Admin = () => {
       loadForumUsers();
       loadForumTopics();
       loadComplaints();
+      loadChats();
+      const adminData = JSON.parse(auth);
+      setOperatorName(adminData.full_name || 'Оператор');
     }
   }, []);
 
@@ -728,6 +737,78 @@ const Admin = () => {
     }
   };
 
+  const loadChats = async () => {
+    try {
+      const response = await fetch(`${API_URLS.chat}?action=get-chats`);
+      const data = await response.json();
+      setChats(data.chats || []);
+    } catch (error) {
+      console.error('Failed to load chats:', error);
+    }
+  };
+
+  const loadChatMessages = async (chatId: number) => {
+    try {
+      const response = await fetch(`${API_URLS.chat}?action=get-messages&chat_id=${chatId}`);
+      const data = await response.json();
+      setChatMessages(data.messages || []);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  };
+
+  const handleSendOperatorMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!operatorMessage.trim() || !selectedChat) return;
+
+    try {
+      const response = await fetch(API_URLS.chat, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send-message',
+          chat_id: selectedChat.id,
+          sender_type: 'operator',
+          sender_name: operatorName,
+          message: operatorMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setOperatorMessage('');
+        loadChatMessages(selectedChat.id);
+        loadChats();
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось отправить сообщение", variant: "destructive" });
+    }
+  };
+
+  const handleCloseChat = async (chatId: number) => {
+    try {
+      const response = await fetch(API_URLS.chat, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'close-chat',
+          chat_id: chatId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({ title: "Успешно", description: "Чат закрыт" });
+        setSelectedChat(null);
+        loadChats();
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось закрыть чат", variant: "destructive" });
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -787,7 +868,7 @@ const Admin = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="doctors" className="w-full">
-            <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-5 mb-8">
+            <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-6 mb-8">
               <TabsTrigger value="doctors">Врачи</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
               <TabsTrigger value="questions" className="relative">
@@ -798,6 +879,7 @@ const Admin = () => {
                   </span>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="chats">Чаты</TabsTrigger>
               <TabsTrigger value="forum">Форум</TabsTrigger>
               <TabsTrigger value="complaints">Жалобы</TabsTrigger>
             </TabsList>
@@ -1662,6 +1744,127 @@ const Admin = () => {
                 Всего жалоб: {getFilteredComplaints().length}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="chats">
+          <h2 className="text-3xl font-bold mb-6">Чаты службы поддержки</h2>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="MessageCircle" size={20} />
+                  Активные чаты ({chats.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
+                {chats.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Нет активных чатов</p>
+                ) : (
+                  chats.map((chat: any) => (
+                    <Button
+                      key={chat.id}
+                      variant={selectedChat?.id === chat.id ? "default" : "outline"}
+                      className="w-full justify-start h-auto py-3"
+                      onClick={() => {
+                        setSelectedChat(chat);
+                        loadChatMessages(chat.id);
+                      }}
+                    >
+                      <div className="text-left w-full">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold">{chat.patient_name}</span>
+                          <span className="text-xs">{chat.message_count}</span>
+                        </div>
+                        {chat.patient_phone && (
+                          <p className="text-xs opacity-70">{chat.patient_phone}</p>
+                        )}
+                        {chat.last_message && (
+                          <p className="text-xs opacity-70 truncate mt-1">{chat.last_message}</p>
+                        )}
+                      </div>
+                    </Button>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="md:col-span-2">
+              {selectedChat ? (
+                <>
+                  <CardHeader className="border-b">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>{selectedChat.patient_name}</CardTitle>
+                        <CardDescription>{selectedChat.patient_phone}</CardDescription>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleCloseChat(selectedChat.id)}
+                      >
+                        <Icon name="X" size={16} className="mr-2" />
+                        Закрыть чат
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="h-[400px] overflow-y-auto p-4 space-y-3 bg-muted/20">
+                      {chatMessages.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          <Icon name="MessageSquare" size={32} className="mx-auto mb-2 opacity-50" />
+                          Сообщений пока нет
+                        </div>
+                      ) : (
+                        chatMessages.map((msg: any) => (
+                          <div
+                            key={msg.id}
+                            className={`flex ${msg.sender_type === 'patient' ? 'justify-start' : 'justify-end'}`}
+                          >
+                            <div
+                              className={`max-w-[75%] rounded-lg p-3 ${
+                                msg.sender_type === 'patient'
+                                  ? 'bg-white border border-border'
+                                  : 'bg-primary text-primary-foreground'
+                              }`}
+                            >
+                              <p className="text-xs font-semibold mb-1">
+                                {msg.sender_type === 'patient' ? msg.sender_name : 'Оператор'}
+                              </p>
+                              <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                              <p className={`text-[10px] mt-1 ${msg.sender_type === 'patient' ? 'text-muted-foreground' : 'text-primary-foreground/70'}`}>
+                                {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <form onSubmit={handleSendOperatorMessage} className="p-4 border-t bg-white">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Введите сообщение..."
+                          value={operatorMessage}
+                          onChange={(e) => setOperatorMessage(e.target.value)}
+                        />
+                        <Button type="submit" size="icon" disabled={!operatorMessage.trim()}>
+                          <Icon name="Send" size={18} />
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </>
+              ) : (
+                <CardContent className="py-20 text-center text-muted-foreground">
+                  <Icon name="MessageCircle" size={64} className="mx-auto mb-4 opacity-30" />
+                  <p>Выберите чат для просмотра</p>
+                </CardContent>
+              )}
+            </Card>
           </div>
         </TabsContent>
       </Tabs>

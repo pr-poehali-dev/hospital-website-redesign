@@ -13,6 +13,7 @@ import Faq from "./pages/Faq";
 import Forum from "./pages/Forum";
 import HowToBook from "./pages/HowToBook";
 import NotFound from "./pages/NotFound";
+import SupportChat from "./components/SupportChat";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SupportChat />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
