@@ -500,14 +500,15 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in">
             Современная медицинская помощь с заботой о каждом пациенте. Квалифицированные специалисты и передовые технологии.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap animate-scale-in">
-            <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto sm:min-w-[200px]">
-                  <Icon name="Calendar" size={20} />
-                  Записаться на прием
-                </Button>
-              </DialogTrigger>
+          <div className="flex flex-col items-center gap-3 animate-scale-in">
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto sm:min-w-[200px]">
+                    <Icon name="Calendar" size={20} />
+                    Записаться на прием
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Запись на прием</DialogTitle>
@@ -923,6 +924,18 @@ const Index = () => {
                 Больничный форум
               </a>
             </Button>
+            </div>
+            
+            <a 
+              href="/how-to-book" 
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group"
+            >
+              <Icon name="HelpCircle" size={18} className="group-hover:scale-110 transition-transform" />
+              <span className="text-sm font-medium underline underline-offset-4 decoration-primary/30 group-hover:decoration-primary">
+                Как записаться на прием?
+              </span>
+              <Icon name="ArrowRight" size={16} className="group-hover:translate-x-1 transition-transform" />
+            </a>
           </div>
         </div>
       </section>
