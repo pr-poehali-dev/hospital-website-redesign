@@ -1648,13 +1648,13 @@ const Index = () => {
                             <style>
                               @page {
                                 size: A5;
-                                margin: 10mm;
+                                margin: 10mm 10mm 10mm 10mm;
                               }
                               body { 
                                 font-family: Arial, sans-serif; 
-                                padding: 10px;
+                                padding: 0;
                                 max-width: 148mm;
-                                margin: 0 auto;
+                                margin: 0;
                                 font-size: 12pt;
                               }
                               .header {
@@ -1742,7 +1742,10 @@ const Index = () => {
                                 font-size: 8px;
                               }
                               @media print {
-                                body { padding: 5mm; }
+                                body { 
+                                  padding: 0;
+                                  margin: 0;
+                                }
                               }
                             </style>
                           </head>
