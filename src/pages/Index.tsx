@@ -1655,83 +1655,83 @@ const Index = () => {
                                 padding: 10px;
                                 max-width: 148mm;
                                 margin: 0 auto;
-                                font-size: 11px;
+                                font-size: 12pt;
                               }
                               .header {
                                 text-align: center;
-                                margin-bottom: 12px;
-                                padding-bottom: 8px;
+                                margin-bottom: 15px;
+                                padding-bottom: 10px;
                                 border-bottom: 2px solid #22c55e;
                               }
                               .header h1 {
                                 color: #22c55e;
-                                margin: 0 0 4px 0;
-                                font-size: 16px;
+                                margin: 0 0 5px 0;
+                                font-size: 18pt;
                               }
                               .header p {
                                 margin: 0;
-                                font-size: 10px;
+                                font-size: 11pt;
                                 color: #666;
                               }
-                              .doctor-info {
+                              .content-wrapper {
                                 display: flex;
-                                align-items: center;
-                                gap: 12px;
-                                margin-bottom: 12px;
-                                padding: 10px;
-                                background: #f0fdf4;
-                                border-radius: 6px;
+                                gap: 15px;
+                                margin-bottom: 15px;
                               }
-                              .doctor-info img {
+                              .doctor-photo {
+                                flex-shrink: 0;
+                                width: 3cm;
+                                height: 4cm;
+                              }
+                              .doctor-photo img {
                                 width: 3cm;
                                 height: 4cm;
                                 object-fit: cover;
-                                border: 2px solid white;
+                                border: 2px solid #22c55e;
                                 border-radius: 4px;
                               }
-                              .doctor-info .doctor-details {
+                              .content-info {
                                 flex: 1;
                               }
-                              .doctor-info .doctor-details p {
-                                margin: 2px 0;
-                              }
                               .doctor-name {
-                                font-size: 13px;
+                                font-size: 14pt;
                                 font-weight: bold;
                                 color: #111827;
+                                margin: 0 0 3px 0;
                               }
                               .doctor-spec {
-                                font-size: 10px;
+                                font-size: 12pt;
                                 color: #6b7280;
+                                margin: 0 0 10px 0;
                               }
                               .info-grid {
                                 display: grid;
                                 grid-template-columns: 1fr 1fr;
-                                gap: 8px;
-                                margin-top: 8px;
+                                gap: 10px;
+                                margin-top: 0;
                               }
                               .info-item {
-                                padding: 6px 8px;
+                                padding: 8px 10px;
                                 background: #f9fafb;
                                 border-radius: 4px;
                               }
                               .info-label {
-                                font-size: 9px;
+                                font-size: 10pt;
                                 color: #6b7280;
-                                margin-bottom: 2px;
+                                margin-bottom: 3px;
                               }
                               .info-value {
-                                font-size: 11px;
+                                font-size: 12pt;
                                 font-weight: bold;
                                 color: #111827;
                               }
                               .description {
-                                margin-top: 8px;
-                                padding: 8px;
+                                margin-top: 10px;
+                                padding: 10px;
                                 background: #f9fafb;
                                 border-radius: 4px;
                                 border-left: 3px solid #22c55e;
-                                font-size: 10px;
+                                font-size: 11pt;
                               }
                               .footer {
                                 margin-top: 15px;
@@ -1751,7 +1751,34 @@ const Index = () => {
                               <h1>Талон на прием к врачу</h1>
                               <p>ГБУЗ «Антрацитовская ЦГМБ» ЛНР</p>
                             </div>
-                            ${printContent.innerHTML}
+                            <div class="content-wrapper">
+                              <div class="doctor-photo">
+                                <img src="${successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/113x151'}" alt="${successAppointmentData.doctor.full_name}" />
+                              </div>
+                              <div class="content-info">
+                                <p class="doctor-name">${successAppointmentData.doctor.full_name}</p>
+                                <p class="doctor-spec">${successAppointmentData.doctor.specialization}</p>
+                                <div class="info-grid">
+                                  <div class="info-item">
+                                    <div class="info-label">Дата приема</div>
+                                    <div class="info-value">${new Date(successAppointmentData.date + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                                  </div>
+                                  <div class="info-item">
+                                    <div class="info-label">Время приема</div>
+                                    <div class="info-value">${successAppointmentData.time}</div>
+                                  </div>
+                                  <div class="info-item">
+                                    <div class="info-label">ФИО пациента</div>
+                                    <div class="info-value">${successAppointmentData.patient_name}</div>
+                                  </div>
+                                  <div class="info-item">
+                                    <div class="info-label">Телефон</div>
+                                    <div class="info-value">${successAppointmentData.patient_phone}</div>
+                                  </div>
+                                </div>
+                                ${successAppointmentData.description ? `<div class="description"><strong>Описание:</strong> ${successAppointmentData.description}</div>` : ''}
+                              </div>
+                            </div>
                             <div class="footer">
                               <p style="margin: 0 0 2px 0;">Сохраните этот талон и предъявите его при визите к врачу</p>
                               <p style="margin: 0;">Дата печати: ${new Date().toLocaleString('ru-RU')}</p>
