@@ -38,6 +38,8 @@ const Index = () => {
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successAppointmentData, setSuccessAppointmentData] = useState<any>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [maxTextIndex, setMaxTextIndex] = useState(0);
   const [isMaxBannerVisible, setIsMaxBannerVisible] = useState(false);
@@ -337,16 +339,18 @@ const Index = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast({
-          title: "Запись успешна!",
-          description: `Вы записаны к ${selectedDoctor.full_name} на ${selectedDate} в ${appointmentForm.appointment_time}`,
+        const successAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ4NVqzn77FgHA==');
+        successAudio.play().catch(() => {});
+        
+        setSuccessAppointmentData({
+          doctor: selectedDoctor,
+          date: selectedDate,
+          time: appointmentForm.appointment_time,
+          patient_name: appointmentForm.patient_name,
+          patient_phone: appointmentForm.patient_phone,
+          description: appointmentForm.description
         });
-        setAppointmentForm({ patient_name: '', patient_phone: '', appointment_time: '', description: '' });
-        setVerificationStep('form');
-        setVerificationCode('');
-        setSentCode('');
-        setSelectedDoctor(null);
-        setSelectedDate('');
+        setShowSuccessModal(true);
         setIsAppointmentOpen(false);
       } else {
         toast({
@@ -1543,6 +1547,221 @@ const Index = () => {
           animation: fall linear infinite;
         }
       `}</style>
+
+      <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
+        <DialogContent className="max-w-2xl">
+          <div className="text-center py-8 space-y-6">
+            <div className="flex justify-center">
+              <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                <Icon name="CheckCircle" size={80} className="text-green-600" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-green-600">Запись успешно создана!</h2>
+              <p className="text-lg text-muted-foreground">
+                Вы успешно записаны на прием
+              </p>
+            </div>
+
+            <div id="print-content" className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 space-y-4 border-2 border-green-200">
+              {successAppointmentData && (
+                <>
+                  <div className="flex items-center gap-4 justify-center pb-4 border-b-2 border-green-200">
+                    <img 
+                      src={successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/100'} 
+                      alt={successAppointmentData.doctor.full_name}
+                      className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                    <div className="text-left">
+                      <p className="text-sm text-muted-foreground">Врач</p>
+                      <p className="text-xl font-bold text-primary">{successAppointmentData.doctor.full_name}</p>
+                      <p className="text-sm text-muted-foreground">{successAppointmentData.doctor.specialization}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-left">
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Calendar" size={16} className="text-primary" />
+                        Дата приема
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {new Date(successAppointmentData.date + 'T00:00:00').toLocaleDateString('ru-RU', { 
+                          day: 'numeric', 
+                          month: 'long', 
+                          year: 'numeric' 
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Clock" size={16} className="text-primary" />
+                        Время приема
+                      </p>
+                      <p className="text-lg font-semibold">{successAppointmentData.time}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="User" size={16} className="text-primary" />
+                        ФИО пациента
+                      </p>
+                      <p className="text-base font-medium">{successAppointmentData.patient_name}</p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Phone" size={16} className="text-primary" />
+                        Телефон
+                      </p>
+                      <p className="text-base font-medium">{successAppointmentData.patient_phone}</p>
+                    </div>
+                  </div>
+
+                  {successAppointmentData.description && (
+                    <div className="space-y-1 text-left pt-2 border-t-2 border-green-200">
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="FileText" size={16} className="text-primary" />
+                        Описание
+                      </p>
+                      <p className="text-sm">{successAppointmentData.description}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-center pt-4">
+              <Button
+                size="lg"
+                onClick={() => {
+                  const printContent = document.getElementById('print-content');
+                  if (printContent) {
+                    const printWindow = window.open('', '', 'width=800,height=600');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <html>
+                          <head>
+                            <title>Талон на прием</title>
+                            <style>
+                              body { 
+                                font-family: Arial, sans-serif; 
+                                padding: 40px;
+                                max-width: 800px;
+                                margin: 0 auto;
+                              }
+                              .header {
+                                text-align: center;
+                                margin-bottom: 30px;
+                                padding-bottom: 20px;
+                                border-bottom: 3px solid #22c55e;
+                              }
+                              .header h1 {
+                                color: #22c55e;
+                                margin: 0;
+                                font-size: 28px;
+                              }
+                              .doctor-info {
+                                display: flex;
+                                align-items: center;
+                                gap: 20px;
+                                margin-bottom: 30px;
+                                padding: 20px;
+                                background: #f0fdf4;
+                                border-radius: 10px;
+                              }
+                              .doctor-info img {
+                                width: 100px;
+                                height: 100px;
+                                border-radius: 50%;
+                                object-fit: cover;
+                                border: 4px solid white;
+                              }
+                              .info-grid {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 20px;
+                                margin-top: 20px;
+                              }
+                              .info-item {
+                                padding: 15px;
+                                background: #f9fafb;
+                                border-radius: 8px;
+                              }
+                              .info-label {
+                                font-size: 12px;
+                                color: #6b7280;
+                                margin-bottom: 5px;
+                              }
+                              .info-value {
+                                font-size: 16px;
+                                font-weight: bold;
+                                color: #111827;
+                              }
+                              .description {
+                                margin-top: 20px;
+                                padding: 15px;
+                                background: #f9fafb;
+                                border-radius: 8px;
+                                border-left: 4px solid #22c55e;
+                              }
+                              @media print {
+                                body { padding: 20px; }
+                              }
+                            </style>
+                          </head>
+                          <body>
+                            <div class="header">
+                              <h1>Талон на прием к врачу</h1>
+                              <p>ГБУЗ «Антрацитовская ЦГМБ» ЛНР</p>
+                            </div>
+                            ${printContent.innerHTML}
+                            <div style="margin-top: 40px; text-align: center; color: #6b7280; font-size: 12px;">
+                              <p>Сохраните этот талон и предъявите его при визите к врачу</p>
+                              <p>Дата печати: ${new Date().toLocaleString('ru-RU')}</p>
+                            </div>
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                      printWindow.focus();
+                      setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                      }, 250);
+                    }
+                  }
+                }}
+                variant="outline"
+                className="gap-2"
+              >
+                <Icon name="Printer" size={20} />
+                Распечатать талон
+              </Button>
+
+              <Button
+                size="lg"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setAppointmentForm({ patient_name: '', patient_phone: '', appointment_time: '', description: '' });
+                  setVerificationStep('form');
+                  setVerificationCode('');
+                  setSentCode('');
+                  setSelectedDoctor(null);
+                  setSelectedDate('');
+                  setSuccessAppointmentData(null);
+                }}
+                className="gap-2 bg-green-600 hover:bg-green-700"
+              >
+                <Icon name="X" size={20} />
+                Закрыть
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
