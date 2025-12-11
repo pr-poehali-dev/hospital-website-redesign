@@ -37,6 +37,7 @@ const Index = () => {
   const [sentCode, setSentCode] = useState('');
   const [complaintForm, setComplaintForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successAppointmentData, setSuccessAppointmentData] = useState<any>(null);
@@ -815,10 +816,31 @@ const Index = () => {
                               onChange={(e) => setAppointmentForm({ ...appointmentForm, description: e.target.value })}
                               rows={3}
                             />
+                            <div className="flex items-start gap-2 p-3 border rounded-lg bg-muted/30">
+                              <input
+                                type="checkbox"
+                                id="gdpr-consent"
+                                checked={gdprConsent}
+                                onChange={(e) => setGdprConsent(e.target.checked)}
+                                className="mt-1 w-4 h-4 cursor-pointer"
+                                required
+                              />
+                              <label htmlFor="gdpr-consent" className="text-sm text-muted-foreground cursor-pointer">
+                                Я даю согласие на обработку персональных данных в соответствии с{' '}
+                                <a 
+                                  href="http://www.consultant.ru/document/cons_doc_LAW_61801/" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline font-medium"
+                                >
+                                  ФЗ-152 «О персональных данных»
+                                </a>
+                              </label>
+                            </div>
                             <Button 
                               type="submit" 
                               className="w-full" 
-                              disabled={isSubmitting}
+                              disabled={isSubmitting || !gdprConsent}
                             >
                               {isSubmitting ? 'Отправка кода...' : 'Отправить код в MAX'}
                             </Button>
@@ -886,6 +908,20 @@ const Index = () => {
                               {appointmentForm.description && (
                                 <p><strong>Описание:</strong> {appointmentForm.description}</p>
                               )}
+                            </div>
+                            <div className="flex items-start gap-2 p-3 border rounded-lg bg-muted/30">
+                              <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                              <p className="text-xs text-muted-foreground">
+                                Согласие на обработку персональных данных получено в соответствии с{' '}
+                                <a 
+                                  href="http://www.consultant.ru/document/cons_doc_LAW_61801/" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline font-medium"
+                                >
+                                  ФЗ-152
+                                </a>
+                              </p>
                             </div>
                             <Button 
                               type="submit" 
