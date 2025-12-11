@@ -1598,44 +1598,44 @@ const Index = () => {
       `}</style>
 
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="max-w-2xl">
-          <div className="text-center py-8 space-y-6">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="text-center py-3 sm:py-6 space-y-3 sm:space-y-5">
             <div className="flex justify-center">
-              <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
-                <Icon name="CheckCircle" size={80} className="text-green-600" />
+              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
+                <Icon name="CheckCircle" size={40} className="text-green-600 sm:w-16 sm:h-16" />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-green-600">Запись успешно создана!</h2>
-              <p className="text-lg text-muted-foreground">
+            <div className="space-y-1 sm:space-y-2 px-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">Запись успешно создана!</h2>
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                 Вы успешно записаны на прием
               </p>
             </div>
 
-            <div id="print-content" className="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 space-y-4 border-2 border-green-200">
+            <div id="print-content" className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-5 md:p-6 space-y-3 sm:space-y-4 border-2 border-green-200">
               {successAppointmentData && (
                 <>
-                  <div className="flex items-center gap-4 justify-center pb-4 border-b-2 border-green-200">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center pb-3 sm:pb-4 border-b-2 border-green-200">
                     <img 
                       src={successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/100'} 
                       alt={successAppointmentData.doctor.full_name}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg"
                     />
-                    <div className="text-left">
-                      <p className="text-sm text-muted-foreground">Врач</p>
-                      <p className="text-xl font-bold text-primary">{successAppointmentData.doctor.full_name}</p>
-                      <p className="text-sm text-muted-foreground">{successAppointmentData.doctor.specialization}</p>
+                    <div className="text-center sm:text-left">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Врач</p>
+                      <p className="text-base sm:text-lg md:text-xl font-bold text-primary">{successAppointmentData.doctor.full_name}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{successAppointmentData.doctor.specialization}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-left">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-left">
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Calendar" size={16} className="text-primary" />
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Calendar" size={14} className="text-primary sm:w-4 sm:h-4" />
                         Дата приема
                       </p>
-                      <p className="text-lg font-semibold">
+                      <p className="text-sm sm:text-base md:text-lg font-semibold">
                         {new Date(successAppointmentData.date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                           day: 'numeric', 
                           month: 'long', 
@@ -1645,46 +1645,47 @@ const Index = () => {
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Clock" size={16} className="text-primary" />
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Clock" size={14} className="text-primary sm:w-4 sm:h-4" />
                         Время приема
                       </p>
-                      <p className="text-lg font-semibold">{successAppointmentData.time}</p>
+                      <p className="text-sm sm:text-base md:text-lg font-semibold">{successAppointmentData.time}</p>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="User" size={16} className="text-primary" />
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="User" size={14} className="text-primary sm:w-4 sm:h-4" />
                         ФИО пациента
                       </p>
-                      <p className="text-base font-medium">{successAppointmentData.patient_name}</p>
+                      <p className="text-xs sm:text-sm md:text-base font-medium break-words">{successAppointmentData.patient_name}</p>
                     </div>
 
                     <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Phone" size={16} className="text-primary" />
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="Phone" size={14} className="text-primary sm:w-4 sm:h-4" />
                         Телефон
                       </p>
-                      <p className="text-base font-medium">{successAppointmentData.patient_phone}</p>
+                      <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_phone}</p>
                     </div>
                   </div>
 
                   {successAppointmentData.description && (
                     <div className="space-y-1 text-left pt-2 border-t-2 border-green-200">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="FileText" size={16} className="text-primary" />
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                        <Icon name="FileText" size={14} className="text-primary sm:w-4 sm:h-4" />
                         Описание
                       </p>
-                      <p className="text-sm">{successAppointmentData.description}</p>
+                      <p className="text-xs sm:text-sm break-words">{successAppointmentData.description}</p>
                     </div>
                   )}
                 </>
               )}
             </div>
 
-            <div className="flex gap-3 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center pt-3 sm:pt-4 px-2">
               <Button
-                size="lg"
+                size="sm"
+                className="sm:text-base"
                 onClick={() => {
                   const printContent = document.getElementById('print-content');
                   if (printContent) {
@@ -1848,14 +1849,15 @@ const Index = () => {
                   }
                 }}
                 variant="outline"
-                className="gap-2"
+                className="gap-2 text-xs sm:text-sm"
               >
-                <Icon name="Printer" size={20} />
+                <Icon name="Printer" size={16} className="sm:w-5 sm:h-5" />
                 Распечатать талон
               </Button>
 
               <Button
-                size="lg"
+                size="sm"
+                className="sm:text-base"
                 onClick={() => {
                   setShowSuccessModal(false);
                   setAppointmentForm({ patient_name: '', patient_phone: '', appointment_time: '', description: '' });
@@ -1866,9 +1868,9 @@ const Index = () => {
                   setSelectedDate('');
                   setSuccessAppointmentData(null);
                 }}
-                className="gap-2 bg-green-600 hover:bg-green-700"
+                className="gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
               >
-                <Icon name="X" size={20} />
+                <Icon name="X" size={16} className="sm:w-5 sm:h-5" />
                 Закрыть
               </Button>
             </div>
