@@ -867,6 +867,124 @@ const Admin = () => {
     }
   };
 
+  const exportChatToText = (chat: any, messages: any[]) => {
+    const lines = [];
+    lines.push('=' .repeat(60));
+    lines.push('ИСТОРИЯ ЧАТА СЛУЖБЫ ПОДДЕРЖКИ');
+    lines.push('ГБУЗ Антрацитовская ЦГМБ ЛНР');
+    lines.push('=' .repeat(60));
+    lines.push('');
+    lines.push(`Пациент: ${chat.patient_name}`);
+    lines.push(`Телефон: ${chat.patient_phone || 'Не указан'}`);
+    lines.push(`Дата создания: ${new Date(chat.created_at).toLocaleString('ru-RU')}`);
+    if (chat.status === 'closed') {
+      lines.push(`Дата закрытия: ${new Date(chat.updated_at).toLocaleString('ru-RU')}`);
+    }
+    lines.push(`Статус: ${chat.status === 'active' ? 'Активен' : 'Закрыт'}`);
+    lines.push('');
+    lines.push('-'.repeat(60));
+    lines.push('СООБЩЕНИЯ');
+    lines.push('-'.repeat(60));
+    lines.push('');
+    
+    if (messages.length === 0) {
+      lines.push('Нет сообщений');
+    } else {
+      messages.forEach((msg: any, idx: number) => {
+        lines.push(`[${new Date(msg.created_at).toLocaleString('ru-RU')}]`);
+        lines.push(`${msg.sender_type === 'patient' ? 'Пациент' : 'Оператор'}: ${msg.sender_name}`);
+        lines.push(msg.message);
+        if (idx < messages.length - 1) {
+          lines.push('');
+        }
+      });
+    }
+    
+    lines.push('');
+    lines.push('=' .repeat(60));
+    lines.push(`Экспортировано: ${new Date().toLocaleString('ru-RU')}`);
+    lines.push('=' .repeat(60));
+    
+    return lines.join('\n');
+  };
+
+  const handleExportChat = () => {
+    if (!selectedChat || !chatMessages) return;
+    
+    const textContent = exportChatToText(selectedChat, chatMessages);
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `chat_${selectedChat.patient_name}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Успешно", description: "Чат экспортирован в текстовый файл" });
+  };
+
+  const handleExportAllChats = async () => {
+    const chatsToExport = showArchived ? archivedChats : chats;
+    
+    if (chatsToExport.length === 0) {
+      toast({ title: "Ошибка", description: "Нет чатов для экспорта", variant: "destructive" });
+      return;
+    }
+    
+    const lines = [];
+    lines.push('=' .repeat(80));
+    lines.push('ЭКСПОРТ ВСЕХ ЧАТОВ СЛУЖБЫ ПОДДЕРЖКИ');
+    lines.push('ГБУЗ Антрацитовская ЦГМБ ЛНР');
+    lines.push('=' .repeat(80));
+    lines.push('');
+    lines.push(`Тип: ${showArchived ? 'Архивные чаты' : 'Активные чаты'}`);
+    lines.push(`Всего чатов: ${chatsToExport.length}`);
+    lines.push(`Дата экспорта: ${new Date().toLocaleString('ru-RU')}`);
+    lines.push('');
+    lines.push('=' .repeat(80));
+    lines.push('');
+    
+    for (let i = 0; i < chatsToExport.length; i++) {
+      const chat = chatsToExport[i];
+      
+      try {
+        const response = await fetch(`${API_URLS.chat}?action=get-messages&chat_id=${chat.id}`);
+        const data = await response.json();
+        const messages = data.messages || [];
+        
+        lines.push('');
+        lines.push(`ЧАТ ${i + 1} из ${chatsToExport.length}`);
+        lines.push('');
+        lines.push(exportChatToText(chat, messages));
+        lines.push('');
+        lines.push('');
+        
+        if (i < chatsToExport.length - 1) {
+          lines.push('\n' + '═'.repeat(80) + '\n');
+        }
+      } catch (error) {
+        lines.push(`Ошибка загрузки чата ${chat.patient_name}`);
+        lines.push('');
+      }
+    }
+    
+    const textContent = lines.join('\n');
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fileName = showArchived ? 'archived_chats' : 'active_chats';
+    link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Успешно", description: `Экспортировано ${chatsToExport.length} чатов` });
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -1817,6 +1935,14 @@ const Admin = () => {
             <h2 className="text-3xl font-bold">Чаты службы поддержки</h2>
             <div className="flex gap-2">
               <Button
+                variant="outline"
+                onClick={handleExportAllChats}
+                disabled={(showArchived ? archivedChats : chats).length === 0}
+              >
+                <Icon name="Download" size={18} className="mr-2" />
+                Экспорт всех
+              </Button>
+              <Button
                 variant={!showArchived ? "default" : "outline"}
                 onClick={() => setShowArchived(false)}
               >
@@ -1901,6 +2027,14 @@ const Admin = () => {
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleExportChat}
+                        >
+                          <Icon name="Download" size={16} className="mr-2" />
+                          Экспорт
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
