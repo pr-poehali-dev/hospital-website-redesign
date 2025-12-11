@@ -63,6 +63,8 @@ const Admin = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [operatorMessage, setOperatorMessage] = useState('');
   const [operatorName, setOperatorName] = useState('');
+  const [newChatsCount, setNewChatsCount] = useState(0);
+  const [lastMessageCount, setLastMessageCount] = useState<{[key: number]: number}>({});
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_auth');
@@ -85,10 +87,21 @@ const Admin = () => {
     
     const interval = setInterval(() => {
       loadUserQuestions(true);
+      loadChats(true);
+      if (selectedChat) {
+        loadChatMessages(selectedChat.id, true);
+      }
     }, 30000);
     
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const container = document.getElementById('chat-scroll-anchor');
+    if (container && chatMessages.length > 0) {
+      container.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -737,21 +750,45 @@ const Admin = () => {
     }
   };
 
-  const loadChats = async () => {
+  const loadChats = async (silent = false) => {
     try {
       const response = await fetch(`${API_URLS.chat}?action=get-chats`);
       const data = await response.json();
-      setChats(data.chats || []);
+      const newChats = data.chats || [];
+      
+      const newCount = newChats.filter((chat: any) => {
+        const prevCount = lastMessageCount[chat.id] || 0;
+        return chat.message_count > prevCount;
+      }).length;
+      
+      if (!silent) {
+        setNewChatsCount(newCount);
+      }
+      
+      setChats(newChats);
+      
+      const counts: {[key: number]: number} = {};
+      newChats.forEach((chat: any) => {
+        counts[chat.id] = chat.message_count;
+      });
+      setLastMessageCount(counts);
     } catch (error) {
       console.error('Failed to load chats:', error);
     }
   };
 
-  const loadChatMessages = async (chatId: number) => {
+  const loadChatMessages = async (chatId: number, silent = false) => {
     try {
       const response = await fetch(`${API_URLS.chat}?action=get-messages&chat_id=${chatId}`);
       const data = await response.json();
       setChatMessages(data.messages || []);
+      
+      if (!silent) {
+        setLastMessageCount(prev => ({
+          ...prev,
+          [chatId]: data.messages.length
+        }));
+      }
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
@@ -879,7 +916,14 @@ const Admin = () => {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="chats">Чаты</TabsTrigger>
+              <TabsTrigger value="chats" className="relative">
+                Чаты
+                {newChatsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {newChatsCount}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="forum">Форум</TabsTrigger>
               <TabsTrigger value="complaints">Жалобы</TabsTrigger>
             </TabsList>
@@ -1747,7 +1791,7 @@ const Admin = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="chats">
+        <TabsContent value="chats" onFocus={() => setNewChatsCount(0)}>
           <h2 className="text-3xl font-bold mb-6">Чаты службы поддержки</h2>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -1770,6 +1814,7 @@ const Admin = () => {
                       onClick={() => {
                         setSelectedChat(chat);
                         loadChatMessages(chat.id);
+                        setNewChatsCount(0);
                       }}
                     >
                       <div className="text-left w-full">
@@ -1810,38 +1855,41 @@ const Admin = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="h-[400px] overflow-y-auto p-4 space-y-3 bg-muted/20">
+                    <div className="h-[400px] overflow-y-auto p-4 space-y-3 bg-muted/20" id="chat-messages-container">
                       {chatMessages.length === 0 ? (
                         <div className="text-center text-muted-foreground py-8">
                           <Icon name="MessageSquare" size={32} className="mx-auto mb-2 opacity-50" />
                           Сообщений пока нет
                         </div>
                       ) : (
-                        chatMessages.map((msg: any) => (
-                          <div
-                            key={msg.id}
-                            className={`flex ${msg.sender_type === 'patient' ? 'justify-start' : 'justify-end'}`}
-                          >
+                        <>
+                          {chatMessages.map((msg: any) => (
                             <div
-                              className={`max-w-[75%] rounded-lg p-3 ${
-                                msg.sender_type === 'patient'
-                                  ? 'bg-white border border-border'
-                                  : 'bg-primary text-primary-foreground'
-                              }`}
+                              key={msg.id}
+                              className={`flex ${msg.sender_type === 'patient' ? 'justify-start' : 'justify-end'}`}
                             >
-                              <p className="text-xs font-semibold mb-1">
-                                {msg.sender_type === 'patient' ? msg.sender_name : 'Оператор'}
-                              </p>
-                              <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
-                              <p className={`text-[10px] mt-1 ${msg.sender_type === 'patient' ? 'text-muted-foreground' : 'text-primary-foreground/70'}`}>
-                                {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </p>
+                              <div
+                                className={`max-w-[75%] rounded-lg p-3 ${
+                                  msg.sender_type === 'patient'
+                                    ? 'bg-white border border-border'
+                                    : 'bg-primary text-primary-foreground'
+                                }`}
+                              >
+                                <p className="text-xs font-semibold mb-1">
+                                  {msg.sender_type === 'patient' ? msg.sender_name : 'Оператор'}
+                                </p>
+                                <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                                <p className={`text-[10px] mt-1 ${msg.sender_type === 'patient' ? 'text-muted-foreground' : 'text-primary-foreground/70'}`}>
+                                  {new Date(msg.created_at).toLocaleTimeString('ru-RU', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          ))}
+                          <div id="chat-scroll-anchor" />
+                        </>
                       )}
                     </div>
                     <form onSubmit={handleSendOperatorMessage} className="p-4 border-t bg-white">
