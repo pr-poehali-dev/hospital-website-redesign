@@ -547,6 +547,12 @@ const Doctor = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="default" asChild className="bg-blue-600 hover:bg-blue-700">
+              <a href="/doctor-guide">
+                <Icon name="BookOpen" size={18} className="mr-2" />
+                Инструкция
+              </a>
+            </Button>
             <Button variant="outline" asChild>
               <a href="/">
                 <Icon name="Home" size={18} className="mr-2" />
@@ -563,24 +569,29 @@ const Doctor = () => {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="mb-6 flex justify-center">
-            <a 
-              href="/doctor-guide" 
-              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors group bg-blue-50 hover:bg-blue-100 px-4 py-3 rounded-lg border-2 border-blue-200 hover:border-blue-300"
-            >
-              <Icon name="BookOpen" size={20} className="group-hover:scale-110 transition-transform" />
-              <span className="text-sm font-medium">
-                Инструкция по работе с системой
-              </span>
-              <Icon name="ArrowRight" size={16} className="group-hover:translate-x-1 transition-transform" />
-            </a>
-          </div>
-
           <Tabs defaultValue="calendar">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="calendar">Календарь</TabsTrigger>
-              <TabsTrigger value="schedule">Расписание</TabsTrigger>
-              <TabsTrigger value="appointments">Записи пациентов</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 h-auto p-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+              <TabsTrigger 
+                value="calendar"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg py-3 px-6 font-semibold text-base transition-all hover:scale-105"
+              >
+                <Icon name="Calendar" size={20} className="mr-2" />
+                Календарь
+              </TabsTrigger>
+              <TabsTrigger 
+                value="schedule"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg py-3 px-6 font-semibold text-base transition-all hover:scale-105"
+              >
+                <Icon name="Clock" size={20} className="mr-2" />
+                Расписание
+              </TabsTrigger>
+              <TabsTrigger 
+                value="appointments"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg py-3 px-6 font-semibold text-base transition-all hover:scale-105"
+              >
+                <Icon name="Users" size={20} className="mr-2" />
+                Записи пациентов
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="calendar" className="mt-6">
