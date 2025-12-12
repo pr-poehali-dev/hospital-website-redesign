@@ -62,14 +62,15 @@ const Security = () => {
       setAdminToken(token);
       setIsAuthenticated(true);
       loadStatistics(token);
+      loadAdmins(token);
     }
   }, []);
 
   useEffect(() => {
-    if (!autoRefresh || !isAuthenticated) return;
+    if (!autoRefresh || !isAuthenticated || !adminToken) return;
 
     const interval = setInterval(() => {
-      loadStatistics();
+      loadStatistics(adminToken);
     }, 30000);
 
     return () => clearInterval(interval);
