@@ -1,11 +1,12 @@
 {
   "tests": [
     {
-      "name": "Check auth with wrong password",
+      "name": "Check auth with wrong credentials",
       "method": "POST",
       "path": "/",
       "body": {
-        "password": "wrong_password"
+        "login": "nonexistent",
+        "password": "wrongpassword"
       },
       "expectedStatus": 401,
       "expectedBody": {

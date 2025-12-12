@@ -1,4 +1,5 @@
 {
+  "admin-management": "https://functions.poehali.dev/41b28850-cf23-4959-9bd7-7f728c1ad124",
   "security-auth": "https://functions.poehali.dev/c5b009b8-4d0d-4b09-91f5-1ab8bdf740bb",
   "rate_limiter": "https://functions.poehali.dev/dd760420-6c65-41e9-bd95-171dec0f3ac9",
   "chat": "https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057",

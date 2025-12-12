@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const RATE_LIMITER_URL = 'https://functions.poehali.dev/dd760420-6c65-41e9-bd95-171dec0f3ac9';
 const AUTH_URL = 'https://functions.poehali.dev/c5b009b8-4d0d-4b09-91f5-1ab8bdf740bb';
+const ADMIN_MANAGEMENT_URL = 'https://functions.poehali.dev/41b28850-cf23-4959-9bd7-7f728c1ad124';
 
 interface EndpointStat {
   endpoint: string;
@@ -28,6 +29,17 @@ interface Statistics {
   suspicious_ips: SuspiciousIP[];
 }
 
+interface Admin {
+  id: number;
+  login: string;
+  email: string;
+  full_name?: string;
+  created_at?: string;
+  updated_at?: string;
+  is_active: boolean;
+  last_login?: string;
+}
+
 const Security = () => {
   const { toast } = useToast();
   const [stats, setStats] = useState<Statistics | null>(null);
@@ -35,8 +47,14 @@ const Security = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [searchIP, setSearchIP] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'stats' | 'admins'>('stats');
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [newAdmin, setNewAdmin] = useState({ login: '', email: '', password: '', full_name: '' });
 
   useEffect(() => {
     const token = localStorage.getItem('security_token');
@@ -64,7 +82,7 @@ const Security = () => {
       const response = await fetch(AUTH_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ login, password }),
       });
       
       const data = await response.json();
@@ -75,6 +93,7 @@ const Security = () => {
         setAdminToken(token);
         setIsAuthenticated(true);
         loadStatistics(token);
+        loadAdmins(token);
         toast({
           title: 'Вход выполнен',
           description: 'Добро пожаловать в панель безопасности',
@@ -100,10 +119,149 @@ const Security = () => {
     setIsAuthenticated(false);
     setAdminToken(null);
     setStats(null);
+    setAdmins([]);
     toast({
       title: 'Выход выполнен',
       description: 'До встречи!',
     });
+  };
+
+  const loadAdmins = async (token?: string) => {
+    const authToken = token || adminToken;
+    if (!authToken) return;
+    
+    try {
+      const response = await fetch(ADMIN_MANAGEMENT_URL, {
+        headers: {
+          'X-Admin-Token': authToken,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAdmins(data.admins);
+      }
+    } catch (error) {
+      console.error('Failed to load admins:', error);
+    }
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!adminToken) return;
+    
+    try {
+      const response = await fetch(ADMIN_MANAGEMENT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': adminToken,
+        },
+        body: JSON.stringify(newAdmin),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: 'Успех',
+          description: 'Администратор добавлен',
+        });
+        setShowAddAdmin(false);
+        setNewAdmin({ login: '', email: '', password: '', full_name: '' });
+        loadAdmins();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось добавить администратора',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось подключиться к серверу',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!adminToken || !editingAdmin) return;
+    
+    try {
+      const response = await fetch(ADMIN_MANAGEMENT_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Token': adminToken,
+        },
+        body: JSON.stringify(editingAdmin),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: 'Успех',
+          description: 'Администратор обновлен',
+        });
+        setEditingAdmin(null);
+        loadAdmins();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось обновить администратора',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось подключиться к серверу',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteAdmin = async (id: number) => {
+    if (!adminToken) return;
+    
+    if (!confirm('Вы уверены, что хотите удалить этого администратора?')) return;
+    
+    try {
+      const response = await fetch(`${ADMIN_MANAGEMENT_URL}?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Token': adminToken,
+        },
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: 'Успех',
+          description: 'Администратор удален',
+        });
+        loadAdmins();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось удалить администратора',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Не удалось подключиться к серверу',
+        variant: 'destructive',
+      });
+    }
   };
 
   const loadStatistics = async (token?: string) => {
@@ -172,11 +330,19 @@ const Security = () => {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <Input
+                  type="text"
+                  placeholder="Логин"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <Input
                   type="password"
                   placeholder="Пароль администратора"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  autoFocus
                 />
               </div>
               <Button type="submit" className="w-full">
@@ -224,7 +390,34 @@ const Security = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex gap-4 border-b mb-6">
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === 'stats'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Icon name="BarChart3" size={16} className="inline mr-2" />
+            Статистика
+          </button>
+          <button
+            onClick={() => setActiveTab('admins')}
+            className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+              activeTab === 'admins'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Icon name="Users" size={16} className="inline mr-2" />
+            Администраторы
+          </button>
+        </div>
+
+        {activeTab === 'stats' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -469,6 +662,224 @@ const Security = () => {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
+
+        {activeTab === 'admins' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Управление администраторами</h2>
+              <Button onClick={() => setShowAddAdmin(true)}>
+                <Icon name="Plus" size={16} className="mr-2" />
+                Добавить администратора
+              </Button>
+            </div>
+
+            {showAddAdmin && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Новый администратор</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleAddAdmin} className="space-y-4">
+                    <Input
+                      placeholder="Логин"
+                      value={newAdmin.login}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, login: e.target.value })}
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={newAdmin.email}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                      required
+                    />
+                    <Input
+                      placeholder="ФИО (необязательно)"
+                      value={newAdmin.full_name}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, full_name: e.target.value })}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Пароль (минимум 8 символов)"
+                      value={newAdmin.password}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                      required
+                      minLength={8}
+                    />
+                    <div className="flex gap-2">
+                      <Button type="submit">Создать</Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowAddAdmin(false);
+                          setNewAdmin({ login: '', email: '', password: '', full_name: '' });
+                        }}
+                      >
+                        Отмена
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            {editingAdmin && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Редактирование администратора</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdateAdmin} className="space-y-4">
+                    <Input
+                      placeholder="Логин"
+                      value={editingAdmin.login}
+                      onChange={(e) => setEditingAdmin({ ...editingAdmin, login: e.target.value })}
+                      required
+                    />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={editingAdmin.email}
+                      onChange={(e) => setEditingAdmin({ ...editingAdmin, email: e.target.value })}
+                      required
+                    />
+                    <Input
+                      placeholder="ФИО (необязательно)"
+                      value={editingAdmin.full_name || ''}
+                      onChange={(e) => setEditingAdmin({ ...editingAdmin, full_name: e.target.value })}
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Новый пароль (оставьте пустым, если не меняете)"
+                      onChange={(e) => setEditingAdmin({ ...editingAdmin, password: e.target.value } as any)}
+                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="is_active"
+                        checked={editingAdmin.is_active}
+                        onChange={(e) => setEditingAdmin({ ...editingAdmin, is_active: e.target.checked })}
+                      />
+                      <label htmlFor="is_active">Аккаунт активен</label>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit">Сохранить</Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setEditingAdmin(null)}
+                      >
+                        Отмена
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Список администраторов ({admins.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {admins.map((admin) => (
+                    <div
+                      key={admin.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold">{admin.login}</span>
+                          <Badge variant={admin.is_active ? 'default' : 'secondary'}>
+                            {admin.is_active ? 'Активен' : 'Неактивен'}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          <div>Email: {admin.email}</div>
+                          {admin.full_name && <div>ФИО: {admin.full_name}</div>}
+                          {admin.last_login && (
+                            <div>Последний вход: {formatDate(admin.last_login)}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingAdmin(admin)}
+                        >
+                          <Icon name="Edit" size={16} className="mr-2" />
+                          Редактировать
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteAdmin(admin.id)}
+                        >
+                          <Icon name="Trash2" size={16} className="mr-2" />
+                          Удалить
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="Shield" size={20} />
+                  Безопасность
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Icon name="CheckCircle2" size={16} className="text-green-500" />
+                    Защита паролей
+                  </h3>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6">
+                    <li>Пароли хранятся в хешированном виде (bcrypt)</li>
+                    <li>Минимальная длина пароля: 8 символов</li>
+                    <li>Невозможно восстановить исходный пароль из базы</li>
+                    <li>Проверка паролей только на сервере</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Icon name="Shield" size={16} className="text-blue-500" />
+                    Защита от SQL-инъекций
+                  </h3>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6">
+                    <li>Все запросы используют параметризацию (psycopg2)</li>
+                    <li>Нет конкатенации пользовательского ввода с SQL</li>
+                    <li>Валидация данных на уровне Pydantic</li>
+                    <li>Проверка типов данных перед запросами</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Icon name="Lock" size={16} className="text-orange-500" />
+                    Рекомендации
+                  </h3>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground ml-6">
+                    <li>Используйте сложные пароли (буквы, цифры, символы)</li>
+                    <li>Не используйте один пароль для всех админов</li>
+                    <li>Периодически меняйте пароли администраторов</li>
+                    <li>Деактивируйте аккаунты уволенных сотрудников</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </main>
     </div>
   );
