@@ -1309,9 +1309,9 @@ const Doctor = () => {
                 </div>
               )}
             </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+          </div>
+        </section>
+      </Tabs>
 
       <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({...confirmDialog, open})}>
         <DialogContent className="sm:max-w-md">
