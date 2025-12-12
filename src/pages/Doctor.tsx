@@ -1048,9 +1048,7 @@ const Doctor = () => {
                               Интервал: {checkInterval}с
                             </p>
                           ) : (
-                            <p className="text-xs text-gray-600 mt-0.5">
-                              Нажмите "Старт" для экономии ресурсов
-                            </p>
+                            <p className="text-xs text-gray-600 mt-0.5">Нажмите "Старт" для автоматического обновления</p>
                           )}
                         </div>
                       </div>
