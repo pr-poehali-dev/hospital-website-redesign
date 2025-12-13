@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRateLimiter } from '@/hooks/use-rate-limiter';
 
 const CHAT_URL = 'https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057';
+const SMS_VERIFY_URL = 'https://functions.poehali.dev/7ea5c6f5-d200-4cc0-b34b-10144a995d69';
 
 interface Message {
   id: number;
@@ -30,6 +31,8 @@ const SupportChat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasStartedChat, setHasStartedChat] = useState(false);
+  const [verificationStep, setVerificationStep] = useState<'form' | 'code' | 'verified'>('form');
+  const [verificationCode, setVerificationCode] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -104,7 +107,7 @@ const SupportChat = () => {
     }
   };
 
-  const handleStartChat = async (e: React.FormEvent) => {
+  const handleSendVerificationCode = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const rateLimitCheck = await checkRateLimit();
@@ -117,6 +120,96 @@ const SupportChat = () => {
       return;
     }
     
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(SMS_VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'send',
+          phone_number: patientPhone 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        if (data.show_code) {
+          toast({
+            title: 'Ваш код верификации',
+            description: `Код: ${data.show_code}. Не удалось отправить в MAX, используйте этот код для подтверждения.`,
+            duration: 0,
+          });
+        } else {
+          toast({
+            title: 'Код отправлен в MAX',
+            description: `Проверьте сообщения в мессенджере MAX на номере ${patientPhone}`,
+            duration: 10000,
+          });
+        }
+        setVerificationStep('code');
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Не удалось отправить код',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Проблема с подключением к серверу',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(SMS_VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'verify',
+          phone_number: patientPhone,
+          code: verificationCode
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setVerificationStep('verified');
+        toast({
+          title: 'Номер подтвержден',
+          description: 'Создаём чат...',
+        });
+        await handleStartChat();
+      } else {
+        toast({
+          title: 'Ошибка',
+          description: data.error || 'Неверный код',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Ошибка',
+        description: 'Проблема с подключением к серверу',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleStartChat = async () => {
     setIsLoading(true);
 
     try {
@@ -205,6 +298,8 @@ const SupportChat = () => {
     setMessages([]);
     setPatientName('');
     setPatientPhone('');
+    setVerificationStep('form');
+    setVerificationCode('');
   };
 
   return (
@@ -251,32 +346,91 @@ const SupportChat = () => {
 
             <CardContent className="flex-1 p-0 flex flex-col overflow-hidden min-h-0">
               {!hasStartedChat ? (
-                <form onSubmit={handleStartChat} className="p-4 space-y-3 md:space-y-4 flex flex-col justify-center flex-1">
+                <div className="p-4 space-y-3 md:space-y-4 flex flex-col justify-center flex-1">
                   <div className="text-center mb-2 md:mb-4">
                     <Icon name="MessageSquare" size={40} className="text-primary mx-auto mb-2 md:mb-3 md:w-12 md:h-12" />
-                    <h3 className="font-semibold text-base md:text-lg mb-1 md:mb-2">Начать чат</h3>
+                    <h3 className="font-semibold text-base md:text-lg mb-1">Начать общение</h3>
                     <p className="text-xs md:text-sm text-muted-foreground">
-                      Задайте вопрос и наш оператор ответит вам
+                      {verificationStep === 'form' && 'Введите ваши данные для начала чата'}
+                      {verificationStep === 'code' && 'Введите код из MAX для подтверждения'}
+                      {verificationStep === 'verified' && 'Создаём чат...'}
                     </p>
                   </div>
-                  <Input
-                    placeholder="Ваше имя"
-                    value={patientName}
-                    onChange={(e) => setPatientName(e.target.value)}
-                    required
-                    className="text-base"
-                  />
-                  <Input
-                    placeholder="Телефон (необязательно)"
-                    type="tel"
-                    value={patientPhone}
-                    onChange={(e) => setPatientPhone(e.target.value)}
-                    className="text-base"
-                  />
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Создание...' : 'Начать чат'}
-                  </Button>
-                </form>
+
+                  {verificationStep === 'form' && (
+                    <form onSubmit={handleSendVerificationCode} className="space-y-3 md:space-y-4">
+                      <Input
+                        placeholder="Ваше имя"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        required
+                        className="text-sm md:text-base"
+                      />
+                      <Input
+                        placeholder="Телефон (+79991234567)"
+                        type="tel"
+                        value={patientPhone}
+                        onChange={(e) => setPatientPhone(e.target.value)}
+                        required
+                        className="text-sm md:text-base"
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full text-sm md:text-base" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? 'Отправка кода...' : 'Отправить код в MAX'}
+                      </Button>
+                    </form>
+                  )}
+
+                  {verificationStep === 'code' && (
+                    <form onSubmit={handleVerifyCode} className="space-y-3 md:space-y-4">
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardContent className="pt-3 md:pt-4">
+                          <div className="flex items-start gap-2 md:gap-3">
+                            <Icon name="Info" size={20} className="text-blue-600 mt-1 md:w-6 md:h-6" />
+                            <div>
+                              <p className="font-medium text-blue-900 mb-1 text-xs md:text-sm">Проверьте MAX</p>
+                              <p className="text-xs text-blue-700">
+                                Код отправлен в мессенджер MAX на ваш номер. Введите полученный код.
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Input
+                        placeholder="Введите 6-значный код"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        required
+                        maxLength={6}
+                        pattern="[0-9]{6}"
+                        className="text-sm md:text-base"
+                      />
+                      <div className="flex gap-2">
+                        <Button 
+                          type="submit" 
+                          className="flex-1 text-sm md:text-base"
+                          disabled={isLoading}
+                        >
+                          {isLoading ? 'Проверка...' : 'Подтвердить'}
+                        </Button>
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setVerificationStep('form');
+                            setVerificationCode('');
+                          }}
+                          className="text-sm md:text-base"
+                        >
+                          Назад
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
               ) : (
                 <>
                   <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3 bg-muted/20 min-h-0">
