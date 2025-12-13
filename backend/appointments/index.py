@@ -42,6 +42,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             doctor_id = body.get('doctor_id')
             patient_name = body.get('patient_name')
             patient_phone = body.get('patient_phone')
+            patient_snils = body.get('patient_snils', '')
             appointment_date = body.get('appointment_date')
             appointment_time = body.get('appointment_time')
             description = body.get('description', '')
@@ -57,10 +58,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """INSERT INTO t_p30358746_hospital_website_red.appointments_v2 
-                   (doctor_id, patient_name, patient_phone, appointment_date, appointment_time, description, status) 
-                   VALUES (%s, %s, %s, %s, %s, %s, 'scheduled') 
+                   (doctor_id, patient_name, patient_phone, patient_snils, appointment_date, appointment_time, description, status) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, 'scheduled') 
                    RETURNING id, created_at""",
-                (doctor_id, patient_name, patient_phone, appointment_date, appointment_time, description)
+                (doctor_id, patient_name, patient_phone, patient_snils, appointment_date, appointment_time, description)
             )
             result = cursor.fetchone()
             conn.commit()

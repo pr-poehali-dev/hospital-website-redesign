@@ -4,9 +4,10 @@
       "name": "Create appointment",
       "method": "POST",
       "body": {
-        "doctor_id": 1,
+        "doctor_id": 9,
         "patient_name": "Иван Петров",
         "patient_phone": "+79991234567",
+        "patient_snils": "123-456-789-01",
         "appointment_date": "2025-12-15",
         "appointment_time": "10:00",
         "description": "Головная боль"

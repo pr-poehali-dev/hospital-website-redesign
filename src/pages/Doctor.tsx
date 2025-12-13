@@ -1235,6 +1235,7 @@ const Doctor = () => {
                               <TableHead className="w-[80px]">Время</TableHead>
                               <TableHead>Пациент</TableHead>
                               <TableHead>Телефон</TableHead>
+                              <TableHead className="hidden lg:table-cell">СНИЛС</TableHead>
                               <TableHead className="hidden md:table-cell">Описание</TableHead>
                               <TableHead className="w-[120px]">Статус</TableHead>
                               <TableHead className="w-[180px] text-right">Действия</TableHead>
@@ -1250,6 +1251,7 @@ const Doctor = () => {
                                 </TableCell>
                                 <TableCell className="font-medium">{appointment.patient_name}</TableCell>
                                 <TableCell className="text-sm">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-sm">{appointment.patient_snils || '—'}</TableCell>
                                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
                                   {appointment.description || '—'}
                                 </TableCell>

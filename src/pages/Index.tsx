@@ -31,7 +31,8 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [appointmentForm, setAppointmentForm] = useState({ 
     patient_name: '', 
-    patient_phone: '', 
+    patient_phone: '',
+    patient_snils: '', 
     appointment_time: '',
     description: '' 
   });
@@ -373,10 +374,18 @@ const Index = () => {
           time: appointmentForm.appointment_time,
           patient_name: appointmentForm.patient_name,
           patient_phone: appointmentForm.patient_phone,
+          patient_snils: appointmentForm.patient_snils,
           description: appointmentForm.description
         });
         setShowSuccessModal(true);
         setIsAppointmentOpen(false);
+        setAppointmentForm({ patient_name: '', patient_phone: '', patient_snils: '', appointment_time: '', description: '' });
+        setSelectedDate('');
+        setSelectedDoctor(null);
+        setSelectedClinic(null);
+        setVerificationStep('form');
+        setVerificationCode('');
+        setGdprConsent(false);
       } else {
         toast({
           title: "Ошибка",
@@ -845,6 +854,20 @@ const Index = () => {
                               onChange={(e) => setAppointmentForm({ ...appointmentForm, patient_phone: e.target.value })}
                               required
                             />
+                            <Input
+                              placeholder="СНИЛС (123-456-789-01, необязательно)"
+                              type="text"
+                              value={appointmentForm.patient_snils}
+                              onChange={(e) => {
+                                let value = e.target.value.replace(/\D/g, '');
+                                if (value.length > 11) value = value.slice(0, 11);
+                                if (value.length >= 3) value = value.slice(0, 3) + '-' + value.slice(3);
+                                if (value.length >= 7) value = value.slice(0, 7) + '-' + value.slice(7);
+                                if (value.length >= 11) value = value.slice(0, 11) + '-' + value.slice(11);
+                                setAppointmentForm({ ...appointmentForm, patient_snils: value });
+                              }}
+                              maxLength={14}
+                            />
                             <Textarea
                               placeholder="Краткое описание проблемы (необязательно)"
                               value={appointmentForm.description}
@@ -940,6 +963,9 @@ const Index = () => {
                             <div className="space-y-2 text-sm">
                               <p><strong>ФИО:</strong> {appointmentForm.patient_name}</p>
                               <p><strong>Телефон:</strong> {appointmentForm.patient_phone}</p>
+                              {appointmentForm.patient_snils && (
+                                <p><strong>СНИЛС:</strong> {appointmentForm.patient_snils}</p>
+                              )}
                               {appointmentForm.description && (
                                 <p><strong>Описание:</strong> {appointmentForm.description}</p>
                               )}
@@ -1698,6 +1724,16 @@ const Index = () => {
                       </p>
                       <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_phone}</p>
                     </div>
+
+                    {successAppointmentData.patient_snils && (
+                      <div className="space-y-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                          <Icon name="CreditCard" size={14} className="text-primary sm:w-4 sm:h-4" />
+                          СНИЛС
+                        </p>
+                        <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_snils}</p>
+                      </div>
+                    )}
                   </div>
 
                   {successAppointmentData.description && (
