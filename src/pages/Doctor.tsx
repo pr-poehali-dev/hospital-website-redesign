@@ -667,6 +667,27 @@ const Doctor = () => {
     }
   };
 
+  const getNext14DaysForDoctor = () => {
+    const days = [];
+    for (let i = 0; i <= 13; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOfWeek = (date.getDay() + 6) % 7;
+      
+      const hasSchedule = schedules.some((s: any) => s.day_of_week === dayOfWeek && s.is_active);
+      const calendarOverride = calendarData[dateStr];
+      const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
+      
+      days.push({
+        date: dateStr,
+        label: date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' }),
+        isWorking
+      });
+    }
+    return days;
+  };
+
   const handleCreateNewAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -1833,13 +1854,22 @@ const Doctor = () => {
           <form onSubmit={handleCreateNewAppointment} className="space-y-3">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Дата приема</label>
-              <Input
-                type="date"
-                value={newAppointmentDialog.date}
-                onChange={(e) => setNewAppointmentDialog({...newAppointmentDialog, date: e.target.value, time: ''})}
-                min={new Date().toISOString().split('T')[0]}
-                required
-              />
+              <div className="grid grid-cols-4 gap-1.5">
+                {getNext14DaysForDoctor().map((day) => (
+                  <Button
+                    key={day.date}
+                    type="button"
+                    variant={newAppointmentDialog.date === day.date ? 'default' : 'outline'}
+                    className={`h-14 flex flex-col text-xs p-1 ${!day.isWorking ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    onClick={() => day.isWorking && setNewAppointmentDialog({...newAppointmentDialog, date: day.date, time: ''})}
+                    disabled={!day.isWorking}
+                  >
+                    <span className="text-[10px] text-muted-foreground leading-tight">{day.label.split(',')[0]}</span>
+                    <span className="text-sm font-bold leading-tight">{day.label.split(',')[1]}</span>
+                    {!day.isWorking && <span className="text-[9px] text-red-500 leading-tight">Выходной</span>}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {newAppointmentDialog.date && (
