@@ -80,6 +80,9 @@ const Admin = () => {
   const [isRegistrarEditOpen, setIsRegistrarEditOpen] = useState(false);
   const [registrarLogs, setRegistrarLogs] = useState([]);
   const [selectedRegistrarForLogs, setSelectedRegistrarForLogs] = useState<any>(null);
+  const [logFilterType, setLogFilterType] = useState<string>('all');
+  const [logFilterText, setLogFilterText] = useState<string>('');
+  const [logFilterDate, setLogFilterDate] = useState<string>('');
   const notificationSound = typeof Audio !== 'undefined' ? new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ0PVqzn7bViFg==') : null;
 
   useEffect(() => {
@@ -196,14 +199,45 @@ const Admin = () => {
   const loadRegistrarLogs = async (registrarId?: number) => {
     try {
       const url = registrarId 
-        ? `${API_URLS.registrars}?action=logs&registrar_id=${registrarId}&limit=100`
-        : `${API_URLS.registrars}?action=logs&limit=200`;
+        ? `${API_URLS.registrars}?action=logs&registrar_id=${registrarId}&limit=500`
+        : `${API_URLS.registrars}?action=logs&limit=1000`;
       const response = await fetch(url);
       const data = await response.json();
       setRegistrarLogs(data.logs || []);
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить журнал", variant: "destructive" });
     }
+  };
+
+  const getFilteredLogs = () => {
+    return registrarLogs.filter((log: any) => {
+      if (logFilterType !== 'all' && log.action_type !== logFilterType) return false;
+      
+      if (logFilterText) {
+        const details = log.details || '';
+        const registrarName = log.registrar_name || '';
+        const searchText = logFilterText.toLowerCase();
+        if (!details.toLowerCase().includes(searchText) && 
+            !registrarName.toLowerCase().includes(searchText)) {
+          return false;
+        }
+      }
+      
+      if (logFilterDate) {
+        const logDate = new Date(log.created_at).toISOString().split('T')[0];
+        if (logDate !== logFilterDate) return false;
+      }
+      
+      return true;
+    });
+  };
+
+  const getUniqueActionTypes = () => {
+    const types = new Set<string>();
+    registrarLogs.forEach((log: any) => {
+      if (log.action_type) types.add(log.action_type);
+    });
+    return Array.from(types).sort();
   };
 
   const handleCreateRegistrar = async (e: React.FormEvent) => {
@@ -1740,40 +1774,134 @@ const Admin = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={!!selectedRegistrarForLogs} onOpenChange={() => setSelectedRegistrarForLogs(null)}>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <Dialog open={!!selectedRegistrarForLogs} onOpenChange={() => {
+            setSelectedRegistrarForLogs(null);
+            setLogFilterType('all');
+            setLogFilterText('');
+            setLogFilterDate('');
+          }}>
+            <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="FileText" size={24} className="text-primary" />
                   Журнал действий: {selectedRegistrarForLogs?.full_name}
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-2">
-                {registrarLogs.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Журнал пуст</p>
+              
+              <div className="flex gap-2 items-center pb-4 border-b">
+                <Select value={logFilterType} onValueChange={setLogFilterType}>
+                  <SelectTrigger className="w-[200px] h-9">
+                    <SelectValue placeholder="Тип операции" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все операции</SelectItem>
+                    {getUniqueActionTypes().map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Input
+                  placeholder="Поиск в описании..."
+                  value={logFilterText}
+                  onChange={(e) => setLogFilterText(e.target.value)}
+                  className="w-[250px] h-9"
+                />
+                
+                <Input
+                  type="date"
+                  value={logFilterDate}
+                  onChange={(e) => setLogFilterDate(e.target.value)}
+                  className="w-[150px] h-9"
+                />
+                
+                {(logFilterType !== 'all' || logFilterText || logFilterDate) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setLogFilterType('all');
+                      setLogFilterText('');
+                      setLogFilterDate('');
+                    }}
+                    className="h-9"
+                  >
+                    <Icon name="X" size={14} className="mr-1" />
+                    Сбросить
+                  </Button>
+                )}
+                
+                <div className="ml-auto text-sm text-muted-foreground">
+                  Найдено: {getFilteredLogs().length} из {registrarLogs.length}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {getFilteredLogs().length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    <Icon name="Search" size={48} className="mx-auto mb-4 opacity-20" />
+                    <p>Записей не найдено</p>
+                  </div>
                 ) : (
-                  registrarLogs.map((log: any) => (
-                    <Card key={log.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-semibold">{log.action_type}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(log.created_at).toLocaleString('ru-RU')}
-                          </span>
-                        </div>
-                        {log.details && (
-                          <p className="text-sm text-muted-foreground mb-2">{log.details}</p>
-                        )}
-                        <div className="flex gap-4 text-xs text-muted-foreground">
-                          {log.ip_address && (
-                            <span>IP: {log.ip_address}</span>
-                          )}
-                          {log.computer_name && (
-                            <span>Компьютер: {log.computer_name}</span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-muted/50 backdrop-blur-sm">
+                      <tr className="border-b">
+                        <th className="text-left py-2 px-3 w-12">№</th>
+                        <th className="text-left py-2 px-3 w-24">Дата</th>
+                        <th className="text-left py-2 px-3 w-20">Время</th>
+                        <th className="text-left py-2 px-3 w-40">Тип операции</th>
+                        <th className="text-left py-2 px-3">Описание</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getFilteredLogs().map((log: any, index: number) => {
+                        const date = new Date(log.created_at);
+                        let detailsObj: any = {};
+                        try {
+                          detailsObj = JSON.parse(log.details || '{}');
+                        } catch (e) {
+                          detailsObj = { raw: log.details };
+                        }
+                        
+                        const formatDetails = () => {
+                          const parts = [];
+                          if (detailsObj.patient_name) parts.push(`Пациент: ${detailsObj.patient_name}`);
+                          if (detailsObj.patient_phone) parts.push(`Тел: ${detailsObj.patient_phone}`);
+                          if (detailsObj.doctor_name) parts.push(`Врач: ${detailsObj.doctor_name}`);
+                          if (detailsObj.appointment_date) parts.push(`Дата: ${new Date(detailsObj.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU')}`);
+                          if (detailsObj.appointment_time) parts.push(`Время: ${detailsObj.appointment_time.slice(0, 5)}`);
+                          if (detailsObj.old_date && detailsObj.new_date) {
+                            parts.push(`${new Date(detailsObj.old_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.old_time?.slice(0, 5)} → ${new Date(detailsObj.new_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.new_time?.slice(0, 5)}`);
+                          }
+                          if (detailsObj.raw) parts.push(detailsObj.raw);
+                          return parts.join(' • ');
+                        };
+
+                        return (
+                          <tr key={log.id} className="border-b hover:bg-muted/30 transition-colors">
+                            <td className="py-2 px-3 text-muted-foreground">{index + 1}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              {date.toLocaleDateString('ru-RU')}
+                            </td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              {date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                                {log.action_type}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-muted-foreground">
+                              {formatDetails() || '—'}
+                              {log.registrar_name && (
+                                <span className="ml-2 text-xs opacity-60">({log.registrar_name})</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 )}
               </div>
             </DialogContent>
