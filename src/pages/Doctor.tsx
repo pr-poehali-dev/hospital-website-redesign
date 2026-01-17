@@ -46,6 +46,7 @@ const Doctor = () => {
     date.setDate(date.getDate() + 7);
     return date.toISOString().split('T')[0];
   });
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [copyFromSchedule, setCopyFromSchedule] = useState<any>(null);
   const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
   const [selectedDaysToCopy, setSelectedDaysToCopy] = useState<number[]>([]);
@@ -1599,6 +1600,17 @@ const Doctor = () => {
                 
                 <div className="flex gap-2 items-center flex-wrap">
                   <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border">
+                    <Icon name="Search" size={14} className="text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Поиск по ФИО или телефону..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-7 w-[200px] text-xs"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 bg-muted/30 px-3 py-1.5 rounded-lg border">
                     <Icon name="Calendar" size={14} className="text-muted-foreground" />
                     <span className="text-xs font-medium text-muted-foreground">С</span>
                     <Input
@@ -1743,7 +1755,7 @@ const Doctor = () => {
                           <TableHead className="w-[110px] py-0.5 text-xs">Дата</TableHead>
                           <TableHead className="w-[70px] py-0.5 text-xs">Время</TableHead>
                           <TableHead className="w-[70px] py-0.5 text-xs">Завершено</TableHead>
-                          <TableHead className="py-0.5 text-xs">Пациент</TableHead>
+                          <TableHead className="w-[200px] py-0.5 text-xs">Пациент</TableHead>
                           <TableHead className="py-0.5 text-xs">Телефон</TableHead>
                           <TableHead className="hidden lg:table-cell py-0.5 text-xs">СНИЛС</TableHead>
                           <TableHead className="hidden md:table-cell py-0.5 text-xs">Описание</TableHead>
