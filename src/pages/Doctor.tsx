@@ -1616,48 +1616,51 @@ const Doctor = () => {
                     />
                   </div>
                   
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const today = new Date().toISOString().split('T')[0];
-                        setDateFilterFrom(today);
-                        setDateFilterTo(today);
-                      }}
-                      className="h-8 px-2.5 text-xs"
-                    >
-                      Сегодня
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const today = new Date();
-                        const nextWeek = new Date(today);
-                        nextWeek.setDate(today.getDate() + 7);
-                        setDateFilterFrom(today.toISOString().split('T')[0]);
-                        setDateFilterTo(nextWeek.toISOString().split('T')[0]);
-                      }}
-                      className="h-8 px-2.5 text-xs"
-                    >
-                      Неделя
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const today = new Date();
-                        const nextMonth = new Date(today);
-                        nextMonth.setMonth(today.getMonth() + 1);
-                        setDateFilterFrom(today.toISOString().split('T')[0]);
-                        setDateFilterTo(nextMonth.toISOString().split('T')[0]);
-                      }}
-                      className="h-8 px-2.5 text-xs"
-                    >
-                      Месяц
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                        <Icon name="CalendarRange" size={14} />
+                        Период
+                        <Icon name="ChevronDown" size={14} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          const today = new Date().toISOString().split('T')[0];
+                          setDateFilterFrom(today);
+                          setDateFilterTo(today);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        Сегодня
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          const today = new Date();
+                          const nextWeek = new Date(today);
+                          nextWeek.setDate(today.getDate() + 7);
+                          setDateFilterFrom(today.toISOString().split('T')[0]);
+                          setDateFilterTo(nextWeek.toISOString().split('T')[0]);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        Неделя
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          const today = new Date();
+                          const nextMonth = new Date(today);
+                          nextMonth.setMonth(today.getMonth() + 1);
+                          setDateFilterFrom(today.toISOString().split('T')[0]);
+                          setDateFilterTo(nextMonth.toISOString().split('T')[0]);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        Месяц
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1736,16 +1739,16 @@ const Doctor = () => {
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="h-8">
-                          <TableHead className="w-[110px] py-1 text-xs">Дата</TableHead>
-                          <TableHead className="w-[70px] py-1 text-xs">Время</TableHead>
-                          <TableHead className="w-[70px] py-1 text-xs">Завершено</TableHead>
-                          <TableHead className="py-1 text-xs">Пациент</TableHead>
-                          <TableHead className="py-1 text-xs">Телефон</TableHead>
-                          <TableHead className="hidden lg:table-cell py-1 text-xs">СНИЛС</TableHead>
-                          <TableHead className="hidden md:table-cell py-1 text-xs">Описание</TableHead>
-                          <TableHead className="w-[110px] py-1 text-xs">Статус</TableHead>
-                          <TableHead className="w-[140px] text-right py-1 text-xs">Действия</TableHead>
+                        <TableRow className="h-7">
+                          <TableHead className="w-[110px] py-0.5 text-xs">Дата</TableHead>
+                          <TableHead className="w-[70px] py-0.5 text-xs">Время</TableHead>
+                          <TableHead className="w-[70px] py-0.5 text-xs">Завершено</TableHead>
+                          <TableHead className="py-0.5 text-xs">Пациент</TableHead>
+                          <TableHead className="py-0.5 text-xs">Телефон</TableHead>
+                          <TableHead className="hidden lg:table-cell py-0.5 text-xs">СНИЛС</TableHead>
+                          <TableHead className="hidden md:table-cell py-0.5 text-xs">Описание</TableHead>
+                          <TableHead className="w-[110px] py-0.5 text-xs">Статус</TableHead>
+                          <TableHead className="w-[140px] text-right py-0.5 text-xs">Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1762,19 +1765,19 @@ const Doctor = () => {
                             return (
                               <TableRow 
                                 key={appointment.id} 
-                                className={`h-8 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
+                                className={`h-7 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
                               >
-                                <TableCell className="font-medium text-xs py-1">
+                                <TableCell className="font-medium text-xs py-0.5">
                                   {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                                     day: 'numeric', 
                                     month: 'short',
                                     weekday: 'short'
                                   })}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-1">
+                                <TableCell className="font-medium text-xs py-0.5">
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-1">
+                                <TableCell className="font-medium text-xs py-0.5">
                                   {appointment.status === 'completed' && appointment.completed_at ? (
                                     <span className="text-blue-600">
                                       {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
@@ -1783,10 +1786,10 @@ const Doctor = () => {
                                     <span className="text-muted-foreground">—</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-medium text-sm py-1">{appointment.patient_name}</TableCell>
-                                <TableCell className="text-xs py-1">{appointment.patient_phone}</TableCell>
-                                <TableCell className="hidden lg:table-cell text-xs py-1">{appointment.patient_snils || '—'}</TableCell>
-                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[200px] truncate py-1">
+                                <TableCell className="font-medium text-sm py-0.5">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-xs py-0.5">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-xs py-0.5">{appointment.patient_snils || '—'}</TableCell>
+                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground py-0.5">
                                   {appointment.description || '—'}
                                 </TableCell>
                                 <TableCell>
