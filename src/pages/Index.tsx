@@ -453,7 +453,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(https://cdn.poehali.dev/projects/317e44da-9a2a-46c7-91b6-a5c7dee19b28/files/f3cad472-e990-4101-9d1b-163dee97656f.jpg)' }}>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 bg-cover bg-center bg-fixed" style={{ backgroundImage: 'url(https://cdn.poehali.dev/projects/317e44da-9a2a-46c7-91b6-a5c7dee19b28/files/a13c22eb-38b0-4a04-ad65-321b423b3692.jpg)' }}>
       <header className="bg-white/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -1595,9 +1595,16 @@ const Index = () => {
           <div className="text-center text-white/90">
             <p className="text-sm">© 2024 ГБУЗ «Антрацитовская центральная городская многопрофильная больница» ЛНР</p>
             <p className="text-xs mt-2 text-white/70">Все права защищены</p>
-            <a href="/doctor" className="text-xs mt-2 text-white/70 hover:text-white transition-colors inline-block">
-              Вход для врача
-            </a>
+            <div className="flex gap-4 justify-center mt-3">
+              <a href="/doctor" className="text-xs text-white/70 hover:text-white transition-colors inline-flex items-center gap-1">
+                <Icon name="UserCog" size={14} />
+                Вход для врача
+              </a>
+              <a href="/registrar" className="text-xs text-white/70 hover:text-white transition-colors inline-flex items-center gap-1">
+                <Icon name="ClipboardList" size={14} />
+                Вход для регистратора
+              </a>
+            </div>
           </div>
         </div>
       </footer>
