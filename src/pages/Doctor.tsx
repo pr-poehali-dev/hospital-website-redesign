@@ -840,20 +840,26 @@ const Doctor = () => {
   };
 
   const exportToExcel = () => {
-    const filteredAppointments = statusFilter === 'all' 
-      ? appointments 
-      : appointments.filter((app: any) => app.status === statusFilter);
-
-    const dataForExport = filteredAppointments.map((app: any) => ({
-      'Дата': new Date(app.appointment_date).toLocaleDateString('ru-RU'),
-      'Время': app.appointment_time.slice(0, 5),
-      'ФИО пациента': app.patient_name,
-      'Телефон': app.patient_phone,
-      'СНИЛС': app.patient_snils || '—',
-      'Описание': app.description || '—',
-      'Статус': app.status === 'scheduled' ? 'Запланировано' : 
-                app.status === 'completed' ? 'Завершено' : 'Отменено'
-    }));
+    const dataForExport = filteredAppointments
+      .sort((a: any, b: any) => {
+        const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
+        if (dateCompare !== 0) return dateCompare;
+        return a.appointment_time.localeCompare(b.appointment_time);
+      })
+      .map((app: any) => ({
+        'ID записи': app.id,
+        'Дата': new Date(app.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        'День недели': new Date(app.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long' }),
+        'Время записи': app.appointment_time.slice(0, 5),
+        'Время завершения': app.completed_at ? new Date(app.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—',
+        'ФИО пациента': app.patient_name,
+        'Телефон': app.patient_phone,
+        'СНИЛС': app.patient_snils || '—',
+        'Описание': app.description || '—',
+        'Статус': app.status === 'scheduled' ? 'Запланировано' : 
+                  app.status === 'completed' ? 'Завершено' : 'Отменено',
+        'Дата создания': app.created_at ? new Date(app.created_at).toLocaleString('ru-RU') : '—'
+      }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataForExport);
     const workbook = XLSX.utils.book_new();
@@ -864,7 +870,7 @@ const Doctor = () => {
 
     toast({
       title: "Экспорт завершен",
-      description: `Файл ${fileName} успешно сохранен`,
+      description: `Экспортировано записей: ${dataForExport.length}`,
     });
   };
 
