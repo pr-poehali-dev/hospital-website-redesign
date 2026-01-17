@@ -218,48 +218,34 @@ const Doctor = () => {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
     
-    try {
-      const response = await fetch(`${API_URLS.appointments}?doctor_id=${doctorId}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
-      const data = await response.json();
-      const appointmentsByDate: {[key: string]: number} = {};
-      
-      (data.appointments || []).forEach((app: any) => {
-        if (app.status !== 'cancelled') {
-          appointmentsByDate[app.appointment_date] = (appointmentsByDate[app.appointment_date] || 0) + 1;
-        }
-      });
-      
-      for (let month = 0; month < 12; month++) {
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        for (let day = 1; day <= daysInMonth; day++) {
-          const date = new Date(year, month, day);
-          const dateStr = date.toISOString().split('T')[0];
-          const dayOfWeek = date.getDay();
-          const dayOfWeekAdjusted = (dayOfWeek + 6) % 7;
-          
-          const calendarOverride = calendarData[dateStr];
-          const hasSchedule = schedules.some((s: any) => s.day_of_week === dayOfWeekAdjusted && s.is_active);
-          const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
-          
-          if (isWorking) {
-            try {
-              const slotResponse = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${doctorId}&date=${dateStr}`);
-              const slotData = await slotResponse.json();
-              const available = slotData.available_slots?.length || 0;
-              const total = slotData.all_slots?.length || 0;
-              const booked = total - available;
-              counts[dateStr] = { available, booked };
-            } catch (error) {
-              counts[dateStr] = { available: 0, booked: 0 };
-            }
+    for (let month = 0; month < 12; month++) {
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayOfWeek = date.getDay();
+        const dayOfWeekAdjusted = (dayOfWeek + 6) % 7;
+        
+        const calendarOverride = calendarData[dateStr];
+        const hasSchedule = schedules.some((s: any) => s.day_of_week === dayOfWeekAdjusted && s.is_active);
+        const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
+        
+        if (isWorking) {
+          try {
+            const slotResponse = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${doctorId}&date=${dateStr}`);
+            const slotData = await slotResponse.json();
+            const available = slotData.available_slots?.length || 0;
+            const total = slotData.all_slots?.length || 0;
+            const booked = total - available;
+            counts[dateStr] = { available, booked };
+          } catch (error) {
+            counts[dateStr] = { available: 0, booked: 0 };
           }
         }
       }
-      
-      setCalendarSlotCounts(counts);
-    } catch (error) {
-      console.error('Failed to load calendar slot counts:', error);
     }
+    
+    setCalendarSlotCounts(counts);
   };
 
   const toggleCalendarDay = async (date: string) => {
@@ -1664,18 +1650,7 @@ const Doctor = () => {
                 </Card>
               )}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-3xl font-bold">Записи пациентов</h2>
-                  <Button 
-                    variant={showAutoRefreshPanel ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setShowAutoRefreshPanel(!showAutoRefreshPanel)}
-                    className="gap-1.5"
-                  >
-                    <Icon name={showAutoRefreshPanel ? "ChevronUp" : "ChevronDown"} size={14} />
-                    Автообновление
-                  </Button>
-                </div>
+                <h2 className="text-3xl font-bold">Записи пациентов</h2>
                 <div className="flex gap-1.5 flex-wrap items-center">
                   <Button 
                     variant="default"
@@ -1685,6 +1660,15 @@ const Doctor = () => {
                   >
                     <Icon name="UserPlus" size={14} />
                     Записать пациента
+                  </Button>
+                  <Button 
+                    variant={showAutoRefreshPanel ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowAutoRefreshPanel(!showAutoRefreshPanel)}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <Icon name={showAutoRefreshPanel ? "ChevronUp" : "ChevronDown"} size={14} />
+                    Автообновление
                   </Button>
                   <Button 
                     variant="outline" 
