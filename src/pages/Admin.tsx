@@ -1941,88 +1941,87 @@ const Admin = () => {
                 </DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-3 pb-4 border-b">
-                <div className="flex gap-2 items-center flex-wrap">
-                  <Select value={logFilterType} onValueChange={setLogFilterType}>
-                    <SelectTrigger className="w-[180px] h-9">
-                      <SelectValue placeholder="Тип операции" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Все операции</SelectItem>
-                      {getUniqueActionTypes().map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Input
-                    placeholder="Поиск..."
-                    value={logFilterText}
-                    onChange={(e) => setLogFilterText(e.target.value)}
-                    className="w-[180px] h-9"
-                  />
-                  
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm whitespace-nowrap">с:</label>
+              <div className="pb-3 border-b">
+                <div className="flex gap-2 items-center justify-between flex-wrap">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <Select value={logFilterType} onValueChange={setLogFilterType}>
+                      <SelectTrigger className="w-[150px] h-8 text-xs">
+                        <SelectValue placeholder="Тип операции" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все операции</SelectItem>
+                        {getUniqueActionTypes().map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
                     <Input
-                      type="date"
-                      value={logFilterDateFrom}
-                      onChange={(e) => setLogFilterDateFrom(e.target.value)}
-                      className="w-[140px] h-9"
+                      placeholder="Поиск..."
+                      value={logFilterText}
+                      onChange={(e) => setLogFilterText(e.target.value)}
+                      className="w-[150px] h-8 text-xs"
                     />
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">с:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateFrom}
+                        onChange={(e) => setLogFilterDateFrom(e.target.value)}
+                        className="w-[120px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">по:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateTo}
+                        onChange={(e) => setLogFilterDateTo(e.target.value)}
+                        className="w-[120px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    {(logFilterType !== 'all' || logFilterText || logFilterDateFrom || logFilterDateTo) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLogFilterType('all');
+                          setLogFilterText('');
+                          setLogFilterDateFrom('');
+                          setLogFilterDateTo('');
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        <Icon name="X" size={12} />
+                      </Button>
+                    )}
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm whitespace-nowrap">по:</label>
-                    <Input
-                      type="date"
-                      value={logFilterDateTo}
-                      onChange={(e) => setLogFilterDateTo(e.target.value)}
-                      className="w-[140px] h-9"
-                    />
-                  </div>
-                  
-                  {(logFilterType !== 'all' || logFilterText || logFilterDateFrom || logFilterDateTo) && (
+                  <div className="flex gap-2 items-center">
+                    <div className="text-xs text-muted-foreground">
+                      Найдено: {getFilteredLogs().length} из {registrarLogs.length}
+                    </div>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setLogFilterType('all');
-                        setLogFilterText('');
-                        setLogFilterDateFrom('');
-                        setLogFilterDateTo('');
-                      }}
-                      className="h-9"
-                    >
-                      <Icon name="X" size={14} className="mr-1" />
-                      Сбросить
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={exportLogsToExcel}
-                      className="h-9"
+                      className="h-8 text-xs bg-green-600 hover:bg-green-700"
                     >
-                      <Icon name="FileSpreadsheet" size={16} className="mr-2" />
-                      Экспорт в Excel
+                      <Icon name="FileSpreadsheet" size={14} className="mr-1" />
+                      Экспорт
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={printLogs}
-                      className="h-9"
+                      className="h-8 text-xs"
                     >
-                      <Icon name="Printer" size={16} className="mr-2" />
+                      <Icon name="Printer" size={14} className="mr-1" />
                       Печать
                     </Button>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Найдено: {getFilteredLogs().length} из {registrarLogs.length}
                   </div>
                 </div>
               </div>
@@ -2034,14 +2033,14 @@ const Admin = () => {
                     <p>Записей не найдено</p>
                   </div>
                 ) : (
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead className="sticky top-0 bg-muted/50 backdrop-blur-sm">
                       <tr className="border-b">
-                        <th className="text-left py-2 px-3 w-12">№</th>
-                        <th className="text-left py-2 px-3 w-24">Дата</th>
-                        <th className="text-left py-2 px-3 w-20">Время</th>
-                        <th className="text-left py-2 px-3 w-40">Тип операции</th>
-                        <th className="text-left py-2 px-3">Описание</th>
+                        <th className="text-left py-1.5 px-2 w-10 text-xs font-medium">№</th>
+                        <th className="text-left py-1.5 px-2 w-20 text-xs font-medium">Дата</th>
+                        <th className="text-left py-1.5 px-2 w-16 text-xs font-medium">Время</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Тип операции</th>
+                        <th className="text-left py-1.5 px-2 text-xs font-medium">Описание</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2070,22 +2069,22 @@ const Admin = () => {
 
                         return (
                           <tr key={log.id} className="border-b hover:bg-muted/30 transition-colors">
-                            <td className="py-2 px-3 text-muted-foreground">{index + 1}</td>
-                            <td className="py-2 px-3 whitespace-nowrap">
+                            <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
                               {date.toLocaleDateString('ru-RU')}
                             </td>
-                            <td className="py-2 px-3 whitespace-nowrap">
+                            <td className="py-1.5 px-2 whitespace-nowrap">
                               {date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                             </td>
-                            <td className="py-2 px-3">
-                              <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                            <td className="py-1.5 px-2">
+                              <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
                                 {log.action_type}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-muted-foreground">
+                            <td className="py-1.5 px-2 text-muted-foreground">
                               {formatDetails() || '—'}
                               {log.registrar_name && (
-                                <span className="ml-2 text-xs opacity-60">({log.registrar_name})</span>
+                                <span className="ml-2 text-[10px] opacity-60">({log.registrar_name})</span>
                               )}
                             </td>
                           </tr>
