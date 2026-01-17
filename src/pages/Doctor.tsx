@@ -459,14 +459,21 @@ const Doctor = () => {
 
   const handleUpdateAppointmentStatus = async (appointmentId: number, newStatus: string, description?: string) => {
     try {
+      const body: any = {
+        id: appointmentId,
+        status: newStatus,
+        description: description
+      };
+      
+      if (newStatus === 'completed') {
+        const now = new Date();
+        body.completed_at = now.toISOString();
+      }
+      
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: appointmentId,
-          status: newStatus,
-          description: description
-        }),
+        body: JSON.stringify(body),
       });
       
       const data = await response.json();
@@ -1636,15 +1643,15 @@ const Doctor = () => {
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="h-10">
-                          <TableHead className="w-[120px] py-2 text-xs">Дата</TableHead>
-                          <TableHead className="w-[70px] py-2 text-xs">Время</TableHead>
-                          <TableHead className="py-2 text-xs">Пациент</TableHead>
-                          <TableHead className="py-2 text-xs">Телефон</TableHead>
-                          <TableHead className="hidden lg:table-cell py-2 text-xs">СНИЛС</TableHead>
-                          <TableHead className="hidden md:table-cell py-2 text-xs">Описание</TableHead>
-                          <TableHead className="w-[110px] py-2 text-xs">Статус</TableHead>
-                          <TableHead className="w-[150px] text-right py-2 text-xs">Действия</TableHead>
+                        <TableRow className="h-9">
+                          <TableHead className="w-[110px] py-1.5 text-xs">Дата</TableHead>
+                          <TableHead className="w-[90px] py-1.5 text-xs">Время</TableHead>
+                          <TableHead className="py-1.5 text-xs">Пациент</TableHead>
+                          <TableHead className="py-1.5 text-xs">Телефон</TableHead>
+                          <TableHead className="hidden lg:table-cell py-1.5 text-xs">СНИЛС</TableHead>
+                          <TableHead className="hidden md:table-cell py-1.5 text-xs">Описание</TableHead>
+                          <TableHead className="w-[110px] py-1.5 text-xs">Статус</TableHead>
+                          <TableHead className="w-[140px] text-right py-1.5 text-xs">Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1661,22 +1668,29 @@ const Doctor = () => {
                             return (
                               <TableRow 
                                 key={appointment.id} 
-                                className={`h-12 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
+                                className={`h-10 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
                               >
-                                <TableCell className="font-medium text-sm py-2">
+                                <TableCell className="font-medium text-xs py-1.5">
                                   {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                                     day: 'numeric', 
                                     month: 'short',
                                     weekday: 'short'
                                   })}
                                 </TableCell>
-                                <TableCell className="font-medium text-sm py-2">
-                                  {appointment.appointment_time.slice(0, 5)}
+                                <TableCell className="font-medium text-xs py-1.5">
+                                  <div className="flex flex-col gap-0.5">
+                                    <span>{appointment.appointment_time.slice(0, 5)}</span>
+                                    {appointment.status === 'completed' && appointment.completed_at && (
+                                      <span className="text-[10px] text-blue-600">
+                                        ✓ {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
+                                  </div>
                                 </TableCell>
-                                <TableCell className="font-medium text-sm py-2">{appointment.patient_name}</TableCell>
-                                <TableCell className="text-xs py-2">{appointment.patient_phone}</TableCell>
-                                <TableCell className="hidden lg:table-cell text-xs py-2">{appointment.patient_snils || '—'}</TableCell>
-                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[200px] truncate py-2">
+                                <TableCell className="font-medium text-sm py-1.5">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-xs py-1.5">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-xs py-1.5">{appointment.patient_snils || '—'}</TableCell>
+                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[200px] truncate py-1.5">
                                   {appointment.description || '—'}
                                 </TableCell>
                                 <TableCell>
