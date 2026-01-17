@@ -1619,7 +1619,7 @@ const Doctor = () => {
                 </div>
               </div>
               
-              {Object.keys(groupedAppointments).length === 0 ? (
+              {filteredAppointments.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
                     {statusFilter === 'all' 
@@ -1632,38 +1632,44 @@ const Doctor = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-6">
-                  {Object.keys(groupedAppointments).sort().map((date) => (
-                    <Card key={date}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Icon name="Calendar" size={24} className="text-primary" />
-                          {new Date(date + 'T00:00:00').toLocaleDateString('ru-RU', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="h-10">
-                              <TableHead className="w-[70px] py-2 text-xs">Время</TableHead>
-                              <TableHead className="py-2 text-xs">Пациент</TableHead>
-                              <TableHead className="py-2 text-xs">Телефон</TableHead>
-                              <TableHead className="hidden lg:table-cell py-2 text-xs">СНИЛС</TableHead>
-                              <TableHead className="hidden md:table-cell py-2 text-xs">Описание</TableHead>
-                              <TableHead className="w-[110px] py-2 text-xs">Статус</TableHead>
-                              <TableHead className="w-[150px] text-right py-2 text-xs">Действия</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {groupedAppointments[date]
-                              .sort((a: any, b: any) => a.appointment_time.localeCompare(b.appointment_time))
-                              .map((appointment: any) => (
-                              <TableRow key={appointment.id} className="h-12">
+                <Card>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="h-10">
+                          <TableHead className="w-[120px] py-2 text-xs">Дата</TableHead>
+                          <TableHead className="w-[70px] py-2 text-xs">Время</TableHead>
+                          <TableHead className="py-2 text-xs">Пациент</TableHead>
+                          <TableHead className="py-2 text-xs">Телефон</TableHead>
+                          <TableHead className="hidden lg:table-cell py-2 text-xs">СНИЛС</TableHead>
+                          <TableHead className="hidden md:table-cell py-2 text-xs">Описание</TableHead>
+                          <TableHead className="w-[110px] py-2 text-xs">Статус</TableHead>
+                          <TableHead className="w-[150px] text-right py-2 text-xs">Действия</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAppointments
+                          .sort((a: any, b: any) => {
+                            const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
+                            if (dateCompare !== 0) return dateCompare;
+                            return a.appointment_time.localeCompare(b.appointment_time);
+                          })
+                          .map((appointment: any, index: number, array: any[]) => {
+                            const prevAppointment = index > 0 ? array[index - 1] : null;
+                            const isNewDay = !prevAppointment || prevAppointment.appointment_date !== appointment.appointment_date;
+                            
+                            return (
+                              <TableRow 
+                                key={appointment.id} 
+                                className={`h-12 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
+                              >
+                                <TableCell className="font-medium text-sm py-2">
+                                  {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
+                                    day: 'numeric', 
+                                    month: 'short',
+                                    weekday: 'short'
+                                  })}
+                                </TableCell>
                                 <TableCell className="font-medium text-sm py-2">
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
@@ -1742,13 +1748,12 @@ const Doctor = () => {
                                   )}
                                 </TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                            );
+                          })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               )}
             </TabsContent>
           </div>
