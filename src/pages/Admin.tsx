@@ -32,7 +32,10 @@ const Admin = () => {
     login: '',
     password: '',
     photo_url: '',
-    clinic: 'Центральная городская поликлиника'
+    clinic: 'Центральная городская поликлиника',
+    education: '',
+    work_experience: '',
+    office_number: ''
   });
   const [isOpen, setIsOpen] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<any>(null);
@@ -510,7 +513,7 @@ const Admin = () => {
       
       if (response.ok && data.success) {
         toast({ title: "Успешно", description: "Врач добавлен" });
-        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '' });
+        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '', clinic: 'Центральная городская поликлиника', education: '', work_experience: '', office_number: '' });
         setIsOpen(false);
         loadDoctors();
       } else {
@@ -538,7 +541,7 @@ const Admin = () => {
       
       if (response.ok && data.success) {
         toast({ title: "Успешно", description: "Данные врача обновлены" });
-        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '' });
+        setDoctorForm({ full_name: '', phone: '', position: '', specialization: '', login: '', password: '', photo_url: '', clinic: 'Центральная городская поликлиника', education: '', work_experience: '', office_number: '' });
         setIsEditOpen(false);
         setEditingDoctor(null);
         loadDoctors();
@@ -681,7 +684,11 @@ const Admin = () => {
       specialization: doctor.specialization || '',
       login: doctor.login,
       password: '',
-      photo_url: doctor.photo_url || ''
+      photo_url: doctor.photo_url || '',
+      clinic: doctor.clinic || 'Центральная городская поликлиника',
+      education: doctor.education || '',
+      work_experience: doctor.work_experience || '',
+      office_number: doctor.office_number || ''
     });
     setIsEditOpen(true);
   };
@@ -1369,40 +1376,86 @@ const Admin = () => {
                   Добавить врача
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Добавить нового врача</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleCreateDoctor} className="space-y-4">
-                  <Input
-                    placeholder="ФИО врача"
-                    value={doctorForm.full_name}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, full_name: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Телефон"
-                    value={doctorForm.phone}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Должность"
-                    value={doctorForm.position}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, position: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Специализация"
-                    value={doctorForm.specialization}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
-                  />
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Поликлиника</label>
+                <form onSubmit={handleCreateDoctor} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">ФИО врача *</label>
+                      <Input
+                        value={doctorForm.full_name}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, full_name: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Телефон</label>
+                      <Input
+                        value={doctorForm.phone}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Должность *</label>
+                      <Input
+                        value={doctorForm.position}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, position: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Специализация</label>
+                      <Input
+                        value={doctorForm.specialization}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Учебное заведение</label>
+                      <Input
+                        value={doctorForm.education}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, education: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Стаж работы (лет)</label>
+                      <Input
+                        type="number"
+                        value={doctorForm.work_experience}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, work_experience: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Номер кабинета</label>
+                      <Input
+                        value={doctorForm.office_number}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, office_number: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Поликлиника</label>
                     <Select 
                       value={doctorForm.clinic} 
                       onValueChange={(value) => setDoctorForm({ ...doctorForm, clinic: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="Выберите поликлинику" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1415,35 +1468,44 @@ const Admin = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Input
-                    placeholder="Логин для входа"
-                    value={doctorForm.login}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, login: e.target.value })}
-                    required
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Пароль"
-                    value={doctorForm.password}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
-                    required
-                  />
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Фотография врача</label>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Логин *</label>
+                      <Input
+                        value={doctorForm.login}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, login: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Пароль *</label>
+                      <Input
+                        type="password"
+                        value={doctorForm.password}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Фотография врача</label>
                     <div
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
-                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                         isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
                       }`}
                     >
                       {doctorForm.photo_url ? (
-                        <div className="space-y-3">
+                        <div className="flex items-center gap-3">
                           <img 
                             src={doctorForm.photo_url} 
                             alt="Предпросмотр" 
-                            className="w-32 h-32 object-cover rounded-lg mx-auto"
+                            className="w-16 h-16 object-cover rounded-lg"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '';
                             }}
@@ -1455,16 +1517,12 @@ const Admin = () => {
                             onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
                           >
                             <Icon name="Trash2" size={14} className="mr-1" />
-                            Удалить фото
+                            Удалить
                           </Button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <Icon name="Upload" size={40} className="mx-auto text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Перетащите изображение сюда</p>
-                            <p className="text-xs text-muted-foreground">или</p>
-                          </div>
+                        <div className="flex items-center justify-center gap-3">
+                          <Icon name="Upload" size={24} className="text-muted-foreground" />
                           <label className="cursor-pointer">
                             <input
                               type="file"
@@ -1479,56 +1537,102 @@ const Admin = () => {
                               </span>
                             </Button>
                           </label>
-                          <p className="text-xs text-muted-foreground">До 5 МБ, JPG, PNG, GIF</p>
+                          <Input
+                            placeholder="или URL"
+                            value={doctorForm.photo_url}
+                            onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                            className="h-9 max-w-[200px]"
+                          />
                         </div>
                       )}
                     </div>
-                    <Input
-                      placeholder="Или введите URL изображения"
-                      value={doctorForm.photo_url}
-                      onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
-                    />
                   </div>
-                  <Button type="submit" className="w-full">Создать врача</Button>
+                  <Button type="submit" className="w-full h-9">Создать врача</Button>
                 </form>
               </DialogContent>
             </Dialog>
 
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Редактировать врача</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleUpdateDoctor} className="space-y-4">
-                  <Input
-                    placeholder="ФИО врача"
-                    value={doctorForm.full_name}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, full_name: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Телефон"
-                    value={doctorForm.phone}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Должность"
-                    value={doctorForm.position}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, position: e.target.value })}
-                    required
-                  />
-                  <Input
-                    placeholder="Специализация"
-                    value={doctorForm.specialization}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
-                  />
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Поликлиника</label>
+                <form onSubmit={handleUpdateDoctor} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">ФИО врача *</label>
+                      <Input
+                        value={doctorForm.full_name}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, full_name: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Телефон</label>
+                      <Input
+                        value={doctorForm.phone}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Должность *</label>
+                      <Input
+                        value={doctorForm.position}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, position: e.target.value })}
+                        required
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Специализация</label>
+                      <Input
+                        value={doctorForm.specialization}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Учебное заведение</label>
+                      <Input
+                        value={doctorForm.education}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, education: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Стаж работы (лет)</label>
+                      <Input
+                        type="number"
+                        value={doctorForm.work_experience}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, work_experience: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Номер кабинета</label>
+                      <Input
+                        value={doctorForm.office_number}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, office_number: e.target.value })}
+                        className="h-9"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Поликлиника</label>
                     <Select 
                       value={doctorForm.clinic} 
                       onValueChange={(value) => setDoctorForm({ ...doctorForm, clinic: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="Выберите поликлинику" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1541,22 +1645,22 @@ const Admin = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium">Фотография врача</label>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Фотография врача</label>
                     <div
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
-                      className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                      className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                         isDragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'
                       }`}
                     >
                       {doctorForm.photo_url ? (
-                        <div className="space-y-3">
+                        <div className="flex items-center gap-3">
                           <img 
                             src={doctorForm.photo_url} 
                             alt="Предпросмотр" 
-                            className="w-32 h-32 object-cover rounded-lg mx-auto"
+                            className="w-16 h-16 object-cover rounded-lg"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = '';
                             }}
@@ -1568,16 +1672,12 @@ const Admin = () => {
                             onClick={() => setDoctorForm({ ...doctorForm, photo_url: '' })}
                           >
                             <Icon name="Trash2" size={14} className="mr-1" />
-                            Удалить фото
+                            Удалить
                           </Button>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <Icon name="Upload" size={40} className="mx-auto text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">Перетащите изображение сюда</p>
-                            <p className="text-xs text-muted-foreground">или</p>
-                          </div>
+                        <div className="flex items-center justify-center gap-3">
+                          <Icon name="Upload" size={24} className="text-muted-foreground" />
                           <label className="cursor-pointer">
                             <input
                               type="file"
@@ -1592,23 +1692,26 @@ const Admin = () => {
                               </span>
                             </Button>
                           </label>
-                          <p className="text-xs text-muted-foreground">До 5 МБ, JPG, PNG, GIF</p>
+                          <Input
+                            placeholder="или URL"
+                            value={doctorForm.photo_url}
+                            onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                            className="h-9 max-w-[200px]"
+                          />
                         </div>
                       )}
                     </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Новый пароль (оставьте пустым)</label>
                     <Input
-                      placeholder="Или введите URL изображения"
-                      value={doctorForm.photo_url}
-                      onChange={(e) => setDoctorForm({ ...doctorForm, photo_url: e.target.value })}
+                      type="password"
+                      value={doctorForm.password}
+                      onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
+                      className="h-9"
                     />
                   </div>
-                  <Input
-                    type="password"
-                    placeholder="Новый пароль (оставьте пустым, чтобы не менять)"
-                    value={doctorForm.password}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
-                  />
-                  <Button type="submit" className="w-full">Сохранить изменения</Button>
+                  <Button type="submit" className="w-full h-9">Сохранить изменения</Button>
                 </form>
               </DialogContent>
             </Dialog>
@@ -1648,6 +1751,9 @@ const Admin = () => {
                         <p className="text-sm"><strong>Должность:</strong> {doctor.position}</p>
                         {doctor.specialization && <p className="text-sm"><strong>Специализация:</strong> {doctor.specialization}</p>}
                         {doctor.phone && <p className="text-sm"><strong>Телефон:</strong> {doctor.phone}</p>}
+                        {doctor.office_number && <p className="text-sm"><strong>Кабинет:</strong> {doctor.office_number}</p>}
+                        {doctor.education && <p className="text-sm"><strong>Образование:</strong> {doctor.education}</p>}
+                        {doctor.work_experience && <p className="text-sm"><strong>Стаж:</strong> {doctor.work_experience} лет</p>}
                         <p className="text-sm"><strong>Логин:</strong> {doctor.login}</p>
                   <div className="flex items-center justify-between mt-3 p-3 bg-muted/30 rounded">
                     <span className="text-sm font-medium">Статус:</span>

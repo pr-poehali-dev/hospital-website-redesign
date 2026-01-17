@@ -49,7 +49,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
             if doctor_id:
-                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, created_at FROM doctors WHERE id = %s", (doctor_id,))
+                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, education, work_experience, office_number, created_at FROM doctors WHERE id = %s", (doctor_id,))
                 doctor = cursor.fetchone()
                 cursor.close()
                 
@@ -68,7 +68,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'isBase64Encoded': False
                 }
             else:
-                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, created_at FROM doctors ORDER BY clinic, full_name")
+                cursor.execute("SELECT id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, education, work_experience, office_number, created_at FROM doctors ORDER BY clinic, full_name")
                 doctors = cursor.fetchall()
                 cursor.close()
                 
@@ -89,6 +89,9 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             password = body.get('password', 'doctor123')
             photo_url = body.get('photo_url')
             clinic = body.get('clinic', 'Центральная городская поликлиника')
+            education = body.get('education')
+            work_experience = body.get('work_experience')
+            office_number = body.get('office_number')
             
             if not all([full_name, position, login]):
                 return {
@@ -100,8 +103,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "INSERT INTO doctors (full_name, phone, position, specialization, login, password_hash, photo_url, clinic) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, created_at",
-                (full_name, phone, position, specialization, login, password, photo_url, clinic)
+                "INSERT INTO doctors (full_name, phone, position, specialization, login, password_hash, photo_url, clinic, education, work_experience, office_number) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, education, work_experience, office_number, created_at",
+                (full_name, phone, position, specialization, login, password, photo_url, clinic, education, work_experience, office_number)
             )
             doctor = cursor.fetchone()
             conn.commit()
@@ -150,6 +153,15 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             if 'clinic' in body:
                 update_fields.append('clinic = %s')
                 update_values.append(body['clinic'])
+            if 'education' in body:
+                update_fields.append('education = %s')
+                update_values.append(body['education'])
+            if 'work_experience' in body:
+                update_fields.append('work_experience = %s')
+                update_values.append(body['work_experience'])
+            if 'office_number' in body:
+                update_fields.append('office_number = %s')
+                update_values.append(body['office_number'])
             if 'password' in body:
                 update_fields.append('password_hash = %s')
                 update_values.append(body['password'])
@@ -163,7 +175,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             update_values.append(doctor_id)
-            query = f"UPDATE doctors SET {', '.join(update_fields)} WHERE id = %s RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, created_at"
+            query = f"UPDATE doctors SET {', '.join(update_fields)} WHERE id = %s RETURNING id, full_name, phone, position, specialization, login, photo_url, is_active, clinic, education, work_experience, office_number, created_at"
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(query, update_values)

@@ -868,49 +868,63 @@ const Registrar = () => {
       </section>
 
       <Dialog open={newAppointmentDialog.open} onOpenChange={(open) => setNewAppointmentDialog({ ...newAppointmentDialog, open })}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Записать пациента</DialogTitle>
-            <DialogDescription>
-              {selectedDoctor?.full_name} • {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')} • {newAppointmentDialog.time}
-            </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCreateAppointment} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">ФИО пациента *</label>
-              <Input
-                value={newAppointmentDialog.patientName}
-                onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientName: e.target.value })}
-                required
-              />
+          <div className="bg-muted/30 p-3 rounded-lg mb-4 space-y-1 text-sm">
+            <p><strong>Врач:</strong> {selectedDoctor?.full_name}</p>
+            <p><strong>Должность:</strong> {selectedDoctor?.position}</p>
+            {selectedDoctor?.specialization && <p><strong>Специализация:</strong> {selectedDoctor?.specialization}</p>}
+            {selectedDoctor?.office_number && <p><strong>Кабинет:</strong> {selectedDoctor?.office_number}</p>}
+            {selectedDoctor?.education && <p><strong>Образование:</strong> {selectedDoctor?.education}</p>}
+            {selectedDoctor?.work_experience && <p><strong>Стаж:</strong> {selectedDoctor?.work_experience} лет</p>}
+            <p><strong>Дата и время:</strong> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')} в {newAppointmentDialog.time}</p>
+          </div>
+          <form onSubmit={handleCreateAppointment} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">ФИО пациента *</label>
+                <Input
+                  value={newAppointmentDialog.patientName}
+                  onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientName: e.target.value })}
+                  required
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Телефон *</label>
+                <Input
+                  value={newAppointmentDialog.patientPhone}
+                  onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientPhone: e.target.value })}
+                  required
+                  className="h-9"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">Телефон *</label>
-              <Input
-                value={newAppointmentDialog.patientPhone}
-                onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientPhone: e.target.value })}
-                required
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">СНИЛС</label>
+                <Input
+                  value={newAppointmentDialog.patientSnils}
+                  onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientSnils: e.target.value })}
+                  className="h-9"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Описание</label>
+                <Input
+                  value={newAppointmentDialog.description}
+                  onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, description: e.target.value })}
+                  className="h-9"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">СНИЛС</label>
-              <Input
-                value={newAppointmentDialog.patientSnils}
-                onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, patientSnils: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Описание</label>
-              <Input
-                value={newAppointmentDialog.description}
-                onChange={(e) => setNewAppointmentDialog({ ...newAppointmentDialog, description: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setNewAppointmentDialog({ ...newAppointmentDialog, open: false })}>
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setNewAppointmentDialog({ ...newAppointmentDialog, open: false })}>
                 Отмена
               </Button>
-              <Button type="submit" className="flex-1">Записать</Button>
+              <Button type="submit" className="flex-1 h-9">Записать</Button>
             </div>
           </form>
         </DialogContent>
