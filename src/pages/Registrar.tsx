@@ -100,9 +100,22 @@ const Registrar = () => {
     try {
       const response = await fetch(API_URLS.doctors);
       const data = await response.json();
-      const filteredDoctors = (data.doctors || []).filter((d: any) => 
-        d.clinic === clinic && d.is_active
-      );
+      
+      const normalizeClinic = (name: string) => {
+        return name.replace(/\s*\(№\d+\)\s*/g, '').trim();
+      };
+      
+      const normalizedRegistrarClinic = normalizeClinic(clinic);
+      
+      const filteredDoctors = (data.doctors || []).filter((d: any) => {
+        const normalizedDoctorClinic = normalizeClinic(d.clinic || '');
+        return normalizedDoctorClinic === normalizedRegistrarClinic && d.is_active;
+      });
+      
+      console.log('Регистратор поликлиника:', clinic);
+      console.log('Нормализованная:', normalizedRegistrarClinic);
+      console.log('Найдено врачей:', filteredDoctors.length);
+      
       setDoctors(filteredDoctors);
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить врачей", variant: "destructive" });

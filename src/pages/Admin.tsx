@@ -73,7 +73,7 @@ const Admin = () => {
     phone: '',
     login: '',
     password: '',
-    clinic: 'Центральная городская поликлиника (№1)'
+    clinic: 'Центральная городская поликлиника'
   });
   const [isRegistrarOpen, setIsRegistrarOpen] = useState(false);
   const [editingRegistrar, setEditingRegistrar] = useState<any>(null);
@@ -223,7 +223,7 @@ const Admin = () => {
       
       if (response.ok && data.success) {
         toast({ title: "Успешно", description: "Регистратор добавлен" });
-        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника (№1)' });
+        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника' });
         setIsRegistrarOpen(false);
         loadRegistrars();
       } else {
@@ -251,7 +251,7 @@ const Admin = () => {
       
       if (response.ok && data.success) {
         toast({ title: "Успешно", description: "Данные регистратора обновлены" });
-        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника (№1)' });
+        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника' });
         setIsRegistrarEditOpen(false);
         setEditingRegistrar(null);
         loadRegistrars();
@@ -1582,11 +1582,11 @@ const Admin = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Центральная городская поликлиника (№1)">
-                          Центральная городская поликлиника (№1)
+                        <SelectItem value="Центральная городская поликлиника">
+                          Центральная городская поликлиника
                         </SelectItem>
-                        <SelectItem value="Детская городская поликлиника (№2)">
-                          Детская городская поликлиника (№2)
+                        <SelectItem value="Детская городская поликлиника">
+                          Детская городская поликлиника
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -1726,11 +1726,11 @@ const Admin = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Центральная городская поликлиника (№1)">
-                        Центральная городская поликлиника (№1)
+                      <SelectItem value="Центральная городская поликлиника">
+                        Центральная городская поликлиника
                       </SelectItem>
-                      <SelectItem value="Детская городская поликлиника (№2)">
-                        Детская городская поликлиника (№2)
+                      <SelectItem value="Детская городская поликлиника">
+                        Детская городская поликлиника
                       </SelectItem>
                     </SelectContent>
                   </Select>
