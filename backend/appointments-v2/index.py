@@ -245,37 +245,87 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             status = body.get('status')
             description = body.get('description')
             completed_at = body.get('completed_at')
+            appointment_date = body.get('appointment_date')
+            appointment_time = body.get('appointment_time')
             
-            if not appointment_id or not status:
+            if not appointment_id:
                 return {
                     'statusCode': 400,
                     'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Appointment ID and status are required'}),
+                    'body': json.dumps({'error': 'Appointment ID is required'}),
                     'isBase64Encoded': False
                 }
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
             
-            if completed_at is not None and description is not None:
+            # Перенос записи на новую дату/время
+            if appointment_date is not None and appointment_time is not None:
+                # Проверяем, не занят ли новый слот
                 cursor.execute(
-                    "UPDATE appointments_v2 SET status = %s, description = %s, completed_at = %s WHERE id = %s RETURNING *",
-                    (status, description, completed_at, appointment_id)
+                    "SELECT doctor_id FROM appointments_v2 WHERE id = %s",
+                    (appointment_id,)
                 )
-            elif completed_at is not None:
+                current_appointment = cursor.fetchone()
+                
+                if not current_appointment:
+                    cursor.close()
+                    return {
+                        'statusCode': 404,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'Appointment not found'}),
+                        'isBase64Encoded': False
+                    }
+                
                 cursor.execute(
-                    "UPDATE appointments_v2 SET status = %s, completed_at = %s WHERE id = %s RETURNING *",
-                    (status, completed_at, appointment_id)
+                    "SELECT id FROM appointments_v2 WHERE doctor_id = %s AND appointment_date = %s AND appointment_time = %s AND status != 'cancelled' AND id != %s",
+                    (current_appointment['doctor_id'], appointment_date, appointment_time, appointment_id)
                 )
-            elif description is not None:
+                slot_taken = cursor.fetchone()
+                
+                if slot_taken:
+                    cursor.close()
+                    return {
+                        'statusCode': 409,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'This time slot is already booked'}),
+                        'isBase64Encoded': False
+                    }
+                
                 cursor.execute(
-                    "UPDATE appointments_v2 SET status = %s, description = %s WHERE id = %s RETURNING *",
-                    (status, description, appointment_id)
+                    "UPDATE appointments_v2 SET appointment_date = %s, appointment_time = %s WHERE id = %s RETURNING *",
+                    (appointment_date, appointment_time, appointment_id)
                 )
+            
+            # Изменение статуса и описания
+            elif status is not None:
+                if completed_at is not None and description is not None:
+                    cursor.execute(
+                        "UPDATE appointments_v2 SET status = %s, description = %s, completed_at = %s WHERE id = %s RETURNING *",
+                        (status, description, completed_at, appointment_id)
+                    )
+                elif completed_at is not None:
+                    cursor.execute(
+                        "UPDATE appointments_v2 SET status = %s, completed_at = %s WHERE id = %s RETURNING *",
+                        (status, completed_at, appointment_id)
+                    )
+                elif description is not None:
+                    cursor.execute(
+                        "UPDATE appointments_v2 SET status = %s, description = %s WHERE id = %s RETURNING *",
+                        (status, description, appointment_id)
+                    )
+                else:
+                    cursor.execute(
+                        "UPDATE appointments_v2 SET status = %s WHERE id = %s RETURNING *",
+                        (status, appointment_id)
+                    )
             else:
-                cursor.execute(
-                    "UPDATE appointments_v2 SET status = %s WHERE id = %s RETURNING *",
-                    (status, appointment_id)
-                )
+                cursor.close()
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'No fields to update'}),
+                    'isBase64Encoded': False
+                }
             
             appointment = cursor.fetchone()
             conn.commit()
