@@ -92,6 +92,26 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                         'isBase64Encoded': False
                     }
             
+            elif user_type == 'registrar':
+                cursor.execute(
+                    "SELECT id, login, full_name, phone, clinic FROM registrars WHERE login = %s AND password = %s AND is_blocked = false",
+                    (login, password)
+                )
+                user = cursor.fetchone()
+                
+                if user:
+                    cursor.close()
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'success': True,
+                            'user': dict(user),
+                            'type': 'registrar'
+                        }),
+                        'isBase64Encoded': False
+                    }
+            
             cursor.close()
             
             return {
