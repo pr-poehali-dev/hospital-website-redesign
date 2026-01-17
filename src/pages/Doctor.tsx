@@ -67,7 +67,7 @@ const Doctor = () => {
     appointmentDate: '',
     appointmentTime: ''
   });
-  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [calendarData, setCalendarData] = useState<{[key: string]: {is_working: boolean, note?: string}}>({});
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [bulkSlotDialogOpen, setBulkSlotDialogOpen] = useState(false);
