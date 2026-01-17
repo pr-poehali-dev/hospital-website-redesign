@@ -44,9 +44,6 @@ const Registrar = () => {
     const auth = localStorage.getItem('registrar_auth');
     if (auth) {
       const registrar = JSON.parse(auth);
-      const normalizedClinic = registrar.clinic.replace(/\s*\(№\d+\)\s*/g, '').trim();
-      registrar.clinic = normalizedClinic;
-      localStorage.setItem('registrar_auth', JSON.stringify(registrar));
       setRegistrarInfo(registrar);
       setIsAuthenticated(true);
       loadDoctors(registrar.clinic);
@@ -109,19 +106,11 @@ const Registrar = () => {
       const response = await fetch(API_URLS.doctors);
       const data = await response.json();
       
-      const normalizeClinic = (name: string) => {
-        return name.replace(/\s*\(№\d+\)\s*/g, '').trim();
-      };
-      
-      const normalizedRegistrarClinic = normalizeClinic(clinic);
-      
       const filteredDoctors = (data.doctors || []).filter((d: any) => {
-        const normalizedDoctorClinic = normalizeClinic(d.clinic || '');
-        return normalizedDoctorClinic === normalizedRegistrarClinic && d.is_active;
+        return d.clinic === clinic && d.is_active;
       });
       
       console.log('Регистратор поликлиника:', clinic);
-      console.log('Нормализованная:', normalizedRegistrarClinic);
       console.log('Найдено врачей:', filteredDoctors.length);
       
       setDoctors(filteredDoctors);
