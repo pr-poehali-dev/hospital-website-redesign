@@ -340,7 +340,6 @@ const Registrar = () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'update',
           id: rescheduleDialog.id,
           appointment_date: rescheduleSelectedDate,
           appointment_time: rescheduleSelectedSlot
