@@ -44,6 +44,9 @@ const Registrar = () => {
     const auth = localStorage.getItem('registrar_auth');
     if (auth) {
       const registrar = JSON.parse(auth);
+      const normalizedClinic = registrar.clinic.replace(/\s*\(№\d+\)\s*/g, '').trim();
+      registrar.clinic = normalizedClinic;
+      localStorage.setItem('registrar_auth', JSON.stringify(registrar));
       setRegistrarInfo(registrar);
       setIsAuthenticated(true);
       loadDoctors(registrar.clinic);
@@ -54,9 +57,14 @@ const Registrar = () => {
     if (selectedDoctor) {
       loadSchedules(selectedDoctor.id);
       loadCalendar(selectedDoctor.id);
-      generateAvailableDates();
     }
   }, [selectedDoctor]);
+
+  useEffect(() => {
+    if (schedules.length > 0 || Object.keys(calendarData).length > 0) {
+      generateAvailableDates();
+    }
+  }, [schedules, calendarData]);
 
   useEffect(() => {
     if (selectedDate && selectedDoctor) {
@@ -159,6 +167,8 @@ const Registrar = () => {
       const calendarOverride = calendarData[dateStr];
       const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
       
+      console.log(`Дата ${dateStr}, день недели ${dayOfWeek}, hasSchedule: ${hasSchedule}, calendar: ${calendarOverride?.is_working}, итог: ${isWorking}`);
+      
       dates.push({
         date: dateStr,
         label: date.toLocaleDateString('ru-RU', { 
@@ -170,6 +180,8 @@ const Registrar = () => {
         slotsCount: 0
       });
     }
+    console.log('Schedules:', schedules);
+    console.log('CalendarData:', calendarData);
     setAvailableDates(dates);
   };
 
@@ -346,30 +358,32 @@ const Registrar = () => {
             {doctors.map((doctor: any) => (
               <Card 
                 key={doctor.id}
-                className={`cursor-pointer transition-all ${
-                  selectedDoctor?.id === doctor.id ? 'ring-2 ring-primary' : ''
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  selectedDoctor?.id === doctor.id ? 'ring-2 ring-primary bg-primary/5' : ''
                 }`}
                 onClick={() => setSelectedDoctor(doctor)}
               >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
                     {doctor.photo_url ? (
                       <img 
                         src={doctor.photo_url} 
                         alt={doctor.full_name} 
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <Icon name="User" size={20} className="text-primary" />
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Icon name="User" size={24} className="text-primary" />
+                      </div>
                     )}
-                    {doctor.full_name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{doctor.position}</p>
-                  {doctor.specialization && (
-                    <p className="text-sm text-muted-foreground">{doctor.specialization}</p>
-                  )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{doctor.full_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{doctor.position}</p>
+                      {doctor.specialization && (
+                        <p className="text-xs text-muted-foreground truncate">{doctor.specialization}</p>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
