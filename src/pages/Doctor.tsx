@@ -109,6 +109,7 @@ const Doctor = () => {
     description: '',
     availableSlots: []
   });
+  const [dateSlotCounts, setDateSlotCounts] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
     const auth = localStorage.getItem('doctor_auth');
@@ -147,6 +148,12 @@ const Doctor = () => {
       loadAvailableSlotsForNewAppointment(newAppointmentDialog.date);
     }
   }, [newAppointmentDialog.date]);
+
+  useEffect(() => {
+    if (newAppointmentDialog.open && doctorInfo) {
+      preloadSlotCounts();
+    }
+  }, [newAppointmentDialog.open]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -665,6 +672,29 @@ const Doctor = () => {
       console.error('Ошибка загрузки слотов:', error);
       toast({ title: "Ошибка", description: "Не удалось загрузить доступные слоты", variant: "destructive" });
     }
+  };
+
+  const preloadSlotCounts = async () => {
+    if (!doctorInfo) return;
+    
+    const counts: {[key: string]: number} = {};
+    const days = getNext14DaysForDoctor();
+    
+    for (const day of days) {
+      if (day.isWorking) {
+        try {
+          const response = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${doctorInfo.id}&date=${day.date}`);
+          const data = await response.json();
+          counts[day.date] = data.available_slots?.length || 0;
+        } catch (error) {
+          counts[day.date] = 0;
+        }
+      } else {
+        counts[day.date] = 0;
+      }
+    }
+    
+    setDateSlotCounts(counts);
   };
 
   const getNext14DaysForDoctor = () => {
@@ -1855,20 +1885,33 @@ const Doctor = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Дата приема</label>
               <div className="grid grid-cols-4 gap-1.5">
-                {getNext14DaysForDoctor().map((day) => (
-                  <Button
-                    key={day.date}
-                    type="button"
-                    variant={newAppointmentDialog.date === day.date ? 'default' : 'outline'}
-                    className={`h-14 flex flex-col text-xs p-1 ${!day.isWorking ? 'opacity-40 cursor-not-allowed' : ''}`}
-                    onClick={() => day.isWorking && setNewAppointmentDialog({...newAppointmentDialog, date: day.date, time: ''})}
-                    disabled={!day.isWorking}
-                  >
-                    <span className="text-[10px] text-muted-foreground leading-tight">{day.label.split(',')[0]}</span>
-                    <span className="text-sm font-bold leading-tight">{day.label.split(',')[1]}</span>
-                    {!day.isWorking && <span className="text-[9px] text-red-500 leading-tight">Выходной</span>}
-                  </Button>
-                ))}
+                {getNext14DaysForDoctor().map((day) => {
+                  const slotCount = dateSlotCounts[day.date];
+                  const hasSlots = slotCount !== undefined && slotCount > 0;
+                  
+                  return (
+                    <Button
+                      key={day.date}
+                      type="button"
+                      variant={newAppointmentDialog.date === day.date ? 'default' : 'outline'}
+                      className={`h-16 flex flex-col text-xs p-1 ${!day.isWorking || !hasSlots ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      onClick={() => day.isWorking && hasSlots && setNewAppointmentDialog({...newAppointmentDialog, date: day.date, time: ''})}
+                      disabled={!day.isWorking || !hasSlots}
+                    >
+                      <span className="text-[10px] text-muted-foreground leading-tight">{day.label.split(',')[0]}</span>
+                      <span className="text-sm font-bold leading-tight">{day.label.split(',')[1]}</span>
+                      {!day.isWorking ? (
+                        <span className="text-[9px] text-red-500 leading-tight">Выходной</span>
+                      ) : slotCount === undefined ? (
+                        <span className="text-[9px] text-muted-foreground leading-tight">...</span>
+                      ) : slotCount === 0 ? (
+                        <span className="text-[9px] text-red-500 leading-tight">Нет мест</span>
+                      ) : (
+                        <span className="text-[9px] text-green-600 leading-tight font-semibold">{slotCount} мест</span>
+                      )}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
 
