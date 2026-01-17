@@ -999,19 +999,19 @@ const Doctor = () => {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {Array.from({ length: 12 }, (_, i) => i).map(monthIndex => {
                   const monthName = new Date(selectedYear, monthIndex).toLocaleString('ru-RU', { month: 'long' });
                   const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
                   const firstDayOfWeek = (new Date(selectedYear, monthIndex, 1).getDay() + 6) % 7;
                   
                   return (
-                    <Card key={monthIndex}>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg capitalize">{monthName} {selectedYear}</CardTitle>
+                    <Card key={monthIndex} className="overflow-hidden">
+                      <CardHeader className="pb-2 pt-3 px-3">
+                        <CardTitle className="text-sm capitalize font-semibold">{monthName} {selectedYear}</CardTitle>
                       </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-7 gap-1 text-center text-xs mb-2">
+                      <CardContent className="px-3 pb-3">
+                        <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] mb-1">
                           <div className="font-semibold">Пн</div>
                           <div className="font-semibold">Вт</div>
                           <div className="font-semibold">Ср</div>
@@ -1020,9 +1020,9 @@ const Doctor = () => {
                           <div className="font-semibold text-red-600">Сб</div>
                           <div className="font-semibold text-red-600">Вс</div>
                         </div>
-                        <div className="grid grid-cols-7 gap-1">
+                        <div className="grid grid-cols-7 gap-0.5">
                           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                            <div key={`empty-${i}`} className="h-12"></div>
+                            <div key={`empty-${i}`} className="h-8"></div>
                           ))}
                           {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                             const date = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -1036,8 +1036,8 @@ const Doctor = () => {
                               <button
                                 key={day}
                                 onClick={() => toggleCalendarDay(date)}
-                                className={`h-12 text-xs rounded transition-all flex flex-col items-center justify-center ${
-                                  isToday ? 'ring-2 ring-primary' : ''
+                                className={`h-8 text-[11px] rounded transition-all flex items-center justify-center ${
+                                  isToday ? 'ring-1 ring-primary' : ''
                                 } ${
                                   isWorking 
                                     ? 'bg-green-100 hover:bg-green-200 text-green-800 border border-green-300' 
@@ -1047,7 +1047,7 @@ const Doctor = () => {
                                 }`}
                                 title={isWorking ? 'Рабочий день (нажмите для выходного)' : 'Выходной (нажмите для рабочего)'}
                               >
-                                <span className="font-semibold">{day}</span>
+                                <span className="font-medium">{day}</span>
                               </button>
                             );
                           })}
