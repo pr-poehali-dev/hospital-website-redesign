@@ -111,6 +111,8 @@ const Doctor = () => {
   });
   const [dateSlotCounts, setDateSlotCounts] = useState<{[key: string]: number}>({});
   const [showAutoRefreshPanel, setShowAutoRefreshPanel] = useState(false);
+  const [calendarSlotCounts, setCalendarSlotCounts] = useState<{[key: string]: {available: number, booked: number}}>({});
+  const [dayOffWarning, setDayOffWarning] = useState<{open: boolean, date: string, appointmentCount: number}>({open: false, date: '', appointmentCount: 0});
 
   useEffect(() => {
     const auth = localStorage.getItem('doctor_auth');
@@ -205,8 +207,58 @@ const Doctor = () => {
         };
       });
       setCalendarData(calendarMap);
+      loadCalendarSlotCounts(doctorId, year);
     } catch (error) {
       console.error('Failed to load calendar:', error);
+    }
+  };
+
+  const loadCalendarSlotCounts = async (doctorId: number, year: number) => {
+    const counts: {[key: string]: {available: number, booked: number}} = {};
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31);
+    
+    try {
+      const response = await fetch(`${API_URLS.appointments}?doctor_id=${doctorId}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`);
+      const data = await response.json();
+      const appointmentsByDate: {[key: string]: number} = {};
+      
+      (data.appointments || []).forEach((app: any) => {
+        if (app.status !== 'cancelled') {
+          appointmentsByDate[app.appointment_date] = (appointmentsByDate[app.appointment_date] || 0) + 1;
+        }
+      });
+      
+      for (let month = 0; month < 12; month++) {
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const dateStr = date.toISOString().split('T')[0];
+          const dayOfWeek = date.getDay();
+          const dayOfWeekAdjusted = (dayOfWeek + 6) % 7;
+          
+          const calendarOverride = calendarData[dateStr];
+          const hasSchedule = schedules.some((s: any) => s.day_of_week === dayOfWeekAdjusted && s.is_active);
+          const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
+          
+          if (isWorking) {
+            try {
+              const slotResponse = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${doctorId}&date=${dateStr}`);
+              const slotData = await slotResponse.json();
+              const available = slotData.available_slots?.length || 0;
+              const total = slotData.all_slots?.length || 0;
+              const booked = total - available;
+              counts[dateStr] = { available, booked };
+            } catch (error) {
+              counts[dateStr] = { available: 0, booked: 0 };
+            }
+          }
+        }
+      }
+      
+      setCalendarSlotCounts(counts);
+    } catch (error) {
+      console.error('Failed to load calendar slot counts:', error);
     }
   };
 
@@ -215,6 +267,21 @@ const Doctor = () => {
     
     const currentStatus = calendarData[date]?.is_working ?? true;
     const newStatus = !currentStatus;
+    
+    if (!newStatus) {
+      try {
+        const response = await fetch(`${API_URLS.appointments}?doctor_id=${doctorInfo.id}&start_date=${date}&end_date=${date}`);
+        const data = await response.json();
+        const appointmentsOnDay = (data.appointments || []).filter((app: any) => app.status === 'scheduled' || app.status === 'completed' || app.status === 'cancelled');
+        
+        if (appointmentsOnDay.length > 0) {
+          setDayOffWarning({open: true, date, appointmentCount: appointmentsOnDay.length});
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to check appointments:', error);
+      }
+    }
     
     try {
       const response = await fetch(API_URLS.schedules, {
@@ -233,10 +300,45 @@ const Doctor = () => {
           ...prev,
           [date]: { is_working: newStatus }
         }));
+        loadCalendarSlotCounts(doctorInfo.id, selectedYear);
       }
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось обновить календарь", variant: "destructive" });
     }
+  };
+
+  const confirmDayOff = async () => {
+    if (!doctorInfo) return;
+    
+    try {
+      const response = await fetch(API_URLS.schedules, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'calendar',
+          doctor_id: doctorInfo.id,
+          calendar_date: dayOffWarning.date,
+          is_working: false
+        })
+      });
+      
+      if (response.ok) {
+        setCalendarData(prev => ({
+          ...prev,
+          [dayOffWarning.date]: { is_working: false }
+        }));
+        toast({ 
+          title: "День отмечен как выходной", 
+          description: "Не забудьте уведомить пациентов о переносе",
+          duration: 5000
+        });
+        loadCalendarSlotCounts(doctorInfo.id, selectedYear);
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось обновить календарь", variant: "destructive" });
+    }
+    
+    setDayOffWarning({open: false, date: '', appointmentCount: 0});
   };
 
   const loadAppointments = async (doctorId: number, checkForNew = false) => {
@@ -858,13 +960,6 @@ const Doctor = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant={showAutoRefreshPanel ? "default" : "outline"}
-              onClick={() => setShowAutoRefreshPanel(!showAutoRefreshPanel)}
-            >
-              <Icon name={showAutoRefreshPanel ? "ChevronUp" : "ChevronDown"} size={18} className="mr-2" />
-              Автообновление
-            </Button>
             <Button variant="default" asChild className="bg-blue-600 hover:bg-blue-700">
               <a href="/doctor-guide">
                 <Icon name="BookOpen" size={18} className="mr-2" />
@@ -980,7 +1075,7 @@ const Doctor = () => {
                         </div>
                         <div className="grid grid-cols-7 gap-1">
                           {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                            <div key={`empty-${i}`} className="h-8"></div>
+                            <div key={`empty-${i}`} className="h-12"></div>
                           ))}
                           {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                             const date = `${selectedYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -989,12 +1084,13 @@ const Doctor = () => {
                             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                             const today = new Date().toISOString().split('T')[0];
                             const isToday = date === today;
+                            const slotInfo = calendarSlotCounts[date];
                             
                             return (
                               <button
                                 key={day}
                                 onClick={() => toggleCalendarDay(date)}
-                                className={`h-8 text-xs rounded transition-all ${
+                                className={`h-12 text-xs rounded transition-all flex flex-col items-center justify-center ${
                                   isToday ? 'ring-2 ring-primary' : ''
                                 } ${
                                   isWorking 
@@ -1005,7 +1101,14 @@ const Doctor = () => {
                                 }`}
                                 title={isWorking ? 'Рабочий день (нажмите для выходного)' : 'Выходной (нажмите для рабочего)'}
                               >
-                                {day}
+                                <span className="font-semibold">{day}</span>
+                                {isWorking && slotInfo && (slotInfo.available > 0 || slotInfo.booked > 0) && (
+                                  <span className="text-[9px] leading-tight mt-0.5">
+                                    <span className="text-green-600 font-bold">{slotInfo.available}</span>
+                                    <span className="text-gray-400">/</span>
+                                    <span className="text-red-600 font-bold">{slotInfo.booked}</span>
+                                  </span>
+                                )}
                               </button>
                             );
                           })}
@@ -1561,7 +1664,18 @@ const Doctor = () => {
                 </Card>
               )}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <h2 className="text-3xl font-bold">Записи пациентов</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-3xl font-bold">Записи пациентов</h2>
+                  <Button 
+                    variant={showAutoRefreshPanel ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowAutoRefreshPanel(!showAutoRefreshPanel)}
+                    className="gap-1.5"
+                  >
+                    <Icon name={showAutoRefreshPanel ? "ChevronUp" : "ChevronDown"} size={14} />
+                    Автообновление
+                  </Button>
+                </div>
                 <div className="flex gap-1.5 flex-wrap items-center">
                   <Button 
                     variant="default"
@@ -1661,28 +1775,28 @@ const Doctor = () => {
                       <CardContent className="p-0">
                         <Table>
                           <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-[80px]">Время</TableHead>
-                              <TableHead>Пациент</TableHead>
-                              <TableHead>Телефон</TableHead>
-                              <TableHead className="hidden lg:table-cell">СНИЛС</TableHead>
-                              <TableHead className="hidden md:table-cell">Описание</TableHead>
-                              <TableHead className="w-[120px]">Статус</TableHead>
-                              <TableHead className="w-[200px] text-right">Действия</TableHead>
+                            <TableRow className="h-10">
+                              <TableHead className="w-[70px] py-2 text-xs">Время</TableHead>
+                              <TableHead className="py-2 text-xs">Пациент</TableHead>
+                              <TableHead className="py-2 text-xs">Телефон</TableHead>
+                              <TableHead className="hidden lg:table-cell py-2 text-xs">СНИЛС</TableHead>
+                              <TableHead className="hidden md:table-cell py-2 text-xs">Описание</TableHead>
+                              <TableHead className="w-[110px] py-2 text-xs">Статус</TableHead>
+                              <TableHead className="w-[150px] text-right py-2 text-xs">Действия</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {groupedAppointments[date]
                               .sort((a: any, b: any) => a.appointment_time.localeCompare(b.appointment_time))
                               .map((appointment: any) => (
-                              <TableRow key={appointment.id}>
-                                <TableCell className="font-medium">
+                              <TableRow key={appointment.id} className="h-12">
+                                <TableCell className="font-medium text-sm py-2">
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
-                                <TableCell className="font-medium">{appointment.patient_name}</TableCell>
-                                <TableCell className="text-sm">{appointment.patient_phone}</TableCell>
-                                <TableCell className="hidden lg:table-cell text-sm">{appointment.patient_snils || '—'}</TableCell>
-                                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
+                                <TableCell className="font-medium text-sm py-2">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-xs py-2">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-xs py-2">{appointment.patient_snils || '—'}</TableCell>
+                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground max-w-[200px] truncate py-2">
                                   {appointment.description || '—'}
                                 </TableCell>
                                 <TableCell>
@@ -2131,6 +2245,56 @@ const Doctor = () => {
               </div>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={dayOffWarning.open} onOpenChange={(open) => setDayOffWarning({...dayOffWarning, open})}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">⚠️ Внимание!</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <img 
+                src="https://cdn.poehali.dev/projects/317e44da-9a2a-46c7-91b6-a5c7dee19b28/files/63fb9e22-96eb-474f-a24c-08bcdfc6cc6a.jpg" 
+                alt="Удивленный врач"
+                className="w-48 h-48 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+            
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold text-foreground">
+                На этот день уже есть записи!
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Найдено записей: <span className="font-bold text-orange-600">{dayOffWarning.appointmentCount}</span>
+              </p>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-3">
+                <p className="text-sm text-orange-900">
+                  Если вы сделаете этот день выходным, не забудьте уведомить пациентов о необходимости переноса записи!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setDayOffWarning({open: false, date: '', appointmentCount: 0})}
+            >
+              Отмена
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={confirmDayOff}
+            >
+              <Icon name="AlertTriangle" size={18} className="mr-2" />
+              Да, сделать выходным
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
