@@ -1645,7 +1645,8 @@ const Doctor = () => {
                       <TableHeader>
                         <TableRow className="h-9">
                           <TableHead className="w-[110px] py-1.5 text-xs">Дата</TableHead>
-                          <TableHead className="w-[90px] py-1.5 text-xs">Время</TableHead>
+                          <TableHead className="w-[70px] py-1.5 text-xs">Время</TableHead>
+                          <TableHead className="w-[70px] py-1.5 text-xs">Завершено</TableHead>
                           <TableHead className="py-1.5 text-xs">Пациент</TableHead>
                           <TableHead className="py-1.5 text-xs">Телефон</TableHead>
                           <TableHead className="hidden lg:table-cell py-1.5 text-xs">СНИЛС</TableHead>
@@ -1678,14 +1679,16 @@ const Doctor = () => {
                                   })}
                                 </TableCell>
                                 <TableCell className="font-medium text-xs py-1.5">
-                                  <div className="flex flex-col gap-0.5">
-                                    <span>{appointment.appointment_time.slice(0, 5)}</span>
-                                    {appointment.status === 'completed' && appointment.completed_at && (
-                                      <span className="text-[10px] text-blue-600">
-                                        ✓ {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                                      </span>
-                                    )}
-                                  </div>
+                                  {appointment.appointment_time.slice(0, 5)}
+                                </TableCell>
+                                <TableCell className="font-medium text-xs py-1.5">
+                                  {appointment.status === 'completed' && appointment.completed_at ? (
+                                    <span className="text-blue-600">
+                                      {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">—</span>
+                                  )}
                                 </TableCell>
                                 <TableCell className="font-medium text-sm py-1.5">{appointment.patient_name}</TableCell>
                                 <TableCell className="text-xs py-1.5">{appointment.patient_phone}</TableCell>
