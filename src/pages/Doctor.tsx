@@ -1896,6 +1896,13 @@ const Doctor = () => {
             <DialogTitle>Записать пациента на прием</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateNewAppointment} className="space-y-3">
+            {newAppointmentDialog.date && newAppointmentDialog.time && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm font-semibold text-blue-900">
+                  📅 {new Date(newAppointmentDialog.date + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })} в {newAppointmentDialog.time}
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Дата приема</label>
@@ -2053,6 +2060,13 @@ const Doctor = () => {
           </DialogHeader>
           {cloneDialog.appointment && (
             <form onSubmit={handleCloneAppointment} className="space-y-4">
+              {cloneDialog.newDate && cloneDialog.newTime && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-green-900">
+                    🔄 Новая запись: {new Date(cloneDialog.newDate + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })} в {cloneDialog.newTime}
+                  </p>
+                </div>
+              )}
               <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                 <p className="text-sm"><strong>Пациент:</strong> {cloneDialog.appointment.patient_name}</p>
                 <p className="text-sm"><strong>Телефон:</strong> {cloneDialog.appointment.patient_phone}</p>
