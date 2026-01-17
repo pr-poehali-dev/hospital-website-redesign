@@ -1969,7 +1969,7 @@ const Admin = () => {
                         type="date"
                         value={logFilterDateFrom}
                         onChange={(e) => setLogFilterDateFrom(e.target.value)}
-                        className="w-[120px] h-8 text-xs"
+                        className="w-[145px] h-8 text-xs"
                       />
                     </div>
                     
@@ -1979,7 +1979,7 @@ const Admin = () => {
                         type="date"
                         value={logFilterDateTo}
                         onChange={(e) => setLogFilterDateTo(e.target.value)}
-                        className="w-[120px] h-8 text-xs"
+                        className="w-[145px] h-8 text-xs"
                       />
                     </div>
                     
