@@ -54,14 +54,20 @@ const Doctor = () => {
     return saved ? parseInt(saved) : 900;
   });
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string, description: string, newDescription: string}>({
+  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentDateRaw: string, appointmentTime: string, description: string, newDescription: string}>({
     open: false,
     appointmentId: null,
     patientName: '',
     appointmentDate: '',
+    appointmentDateRaw: '',
     appointmentTime: '',
     description: '',
     newDescription: ''
+  });
+  const [wrongDateDialog, setWrongDateDialog] = useState<{open: boolean, appointmentDate: string, currentDate: string}>({
+    open: false,
+    appointmentDate: '',
+    currentDate: ''
   });
   const [cancelDialog, setCancelDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string}>({
     open: false,
@@ -1727,6 +1733,7 @@ const Doctor = () => {
                                           appointmentId: appointment.id,
                                           patientName: appointment.patient_name,
                                           appointmentDate: new Date(appointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                                          appointmentDateRaw: appointment.appointment_date,
                                           appointmentTime: appointment.appointment_time.slice(0, 5),
                                           description: appointment.description || '',
                                           newDescription: appointment.description || ''
@@ -1828,6 +1835,28 @@ const Doctor = () => {
               className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={() => {
                 if (confirmDialog.appointmentId) {
+                  const today = new Date().toISOString().split('T')[0];
+                  const appointmentDate = confirmDialog.appointmentDateRaw;
+                  
+                  if (appointmentDate !== today) {
+                    setWrongDateDialog({
+                      open: true,
+                      appointmentDate: confirmDialog.appointmentDate,
+                      currentDate: new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+                    });
+                    setConfirmDialog({
+                      open: false,
+                      appointmentId: null,
+                      patientName: '',
+                      appointmentDate: '',
+                      appointmentDateRaw: '',
+                      appointmentTime: '',
+                      description: '',
+                      newDescription: ''
+                    });
+                    return;
+                  }
+                  
                   handleUpdateAppointmentStatus(
                     confirmDialog.appointmentId, 
                     'completed', 
@@ -1838,6 +1867,7 @@ const Doctor = () => {
                     appointmentId: null,
                     patientName: '',
                     appointmentDate: '',
+                    appointmentDateRaw: '',
                     appointmentTime: '',
                     description: '',
                     newDescription: ''
@@ -1890,6 +1920,48 @@ const Doctor = () => {
               Да
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={wrongDateDialog.open} onOpenChange={(open) => setWrongDateDialog({...wrongDateDialog, open})}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">⚠️ Ошибка!</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <img 
+                src="https://cdn.poehali.dev/projects/317e44da-9a2a-46c7-91b6-a5c7dee19b28/files/9098e103-3bc4-4ea2-aebf-7bfcd56796a7.jpg" 
+                alt="Сердитый врач"
+                className="w-48 h-48 object-cover rounded-lg shadow-lg"
+              />
+            </div>
+            
+            <div className="text-center space-y-3">
+              <p className="text-lg font-semibold text-red-600">
+                Нельзя завершить прием другого дня!
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+                <p className="text-sm text-foreground">
+                  <strong>Дата приема:</strong> {wrongDateDialog.appointmentDate}
+                </p>
+                <p className="text-sm text-foreground">
+                  <strong>Сегодня:</strong> {wrongDateDialog.currentDate}
+                </p>
+              </div>
+              <p className="text-base text-muted-foreground">
+                Вы можете завершить прием только в день его проведения
+              </p>
+            </div>
+          </div>
+
+          <Button
+            className="w-full mt-4"
+            onClick={() => setWrongDateDialog({open: false, appointmentDate: '', currentDate: ''})}
+          >
+            Понятно
+          </Button>
         </DialogContent>
       </Dialog>
 
