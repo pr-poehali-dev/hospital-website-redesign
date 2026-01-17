@@ -34,6 +34,8 @@ const Registrar = () => {
   });
   const [appointments, setAppointments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [editDialog, setEditDialog] = useState<any>(null);
   const [cancelDialog, setCancelDialog] = useState<any>(null);
   const [rescheduleDialog, setRescheduleDialog] = useState<any>(null);
@@ -328,11 +330,17 @@ const Registrar = () => {
       return;
     }
 
+    if (!rescheduleDialog?.id) {
+      toast({ title: "Ошибка", description: "Ошибка данных записи", variant: "destructive" });
+      return;
+    }
+
     try {
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'update',
           id: rescheduleDialog.id,
           appointment_date: rescheduleSelectedDate,
           appointment_time: rescheduleSelectedSlot
@@ -399,7 +407,22 @@ const Registrar = () => {
     const searchMatch = searchQuery === '' || 
       app.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.patient_phone.includes(searchQuery);
-    return searchMatch;
+    
+    if (!searchMatch) return false;
+    
+    if (dateFrom) {
+      const appointmentDate = new Date(app.appointment_date + 'T00:00:00');
+      const fromDate = new Date(dateFrom + 'T00:00:00');
+      if (appointmentDate < fromDate) return false;
+    }
+    
+    if (dateTo) {
+      const appointmentDate = new Date(app.appointment_date + 'T00:00:00');
+      const toDate = new Date(dateTo + 'T23:59:59');
+      if (appointmentDate > toDate) return false;
+    }
+    
+    return true;
   });
 
   if (!isAuthenticated) {
@@ -550,15 +573,50 @@ const Registrar = () => {
                 </>
               )}
 
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-bold">Записи пациентов</h3>
-                <Input
-                  type="text"
-                  placeholder="Поиск по ФИО или телефону..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-[300px]"
-                />
+              <div className="mb-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-bold">Записи пациентов</h3>
+                  <Input
+                    type="text"
+                    placeholder="Поиск по ФИО или телефону..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-[300px]"
+                  />
+                </div>
+                <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium whitespace-nowrap">Дата с:</label>
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-[150px]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium whitespace-nowrap">Дата по:</label>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-[150px]"
+                    />
+                  </div>
+                  {(dateFrom || dateTo) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDateFrom('');
+                        setDateTo('');
+                      }}
+                    >
+                      <Icon name="X" size={14} className="mr-1" />
+                      Сбросить
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <Card>
