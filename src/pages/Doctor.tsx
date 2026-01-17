@@ -904,7 +904,11 @@ const Doctor = () => {
   const filteredAppointments = appointments.filter((app: any) => {
     const statusMatch = statusFilter === 'all' || app.status === statusFilter;
     const dateMatch = app.appointment_date >= dateFilterFrom && app.appointment_date <= dateFilterTo;
-    return statusMatch && dateMatch;
+    const searchMatch = searchQuery === '' || 
+      app.patient_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      app.patient_phone.includes(searchQuery) ||
+      (app.patient_snils && app.patient_snils.includes(searchQuery));
+    return statusMatch && dateMatch && searchMatch;
   });
 
   const groupedAppointments = filteredAppointments.reduce((acc: any, app: any) => {
