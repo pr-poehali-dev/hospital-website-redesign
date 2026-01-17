@@ -16,6 +16,7 @@ const API_URLS = {
   forumModeration: 'https://functions.poehali.dev/70286923-439c-45b7-9744-403f0827a0c1',
   complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
   chat: 'https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057',
+  registrars: 'https://functions.poehali.dev/bda47195-c96f-4fb7-b72c-59d877add3c2',
 };
 
 const Admin = () => {
@@ -66,6 +67,19 @@ const Admin = () => {
   const lastMessageCountRef = useRef<{[key: number]: number}>({});
   const [previousChatCount, setPreviousChatCount] = useState(0);
   const [showArchived, setShowArchived] = useState(false);
+  const [registrars, setRegistrars] = useState([]);
+  const [registrarForm, setRegistrarForm] = useState({
+    full_name: '',
+    phone: '',
+    login: '',
+    password: '',
+    clinic: 'Центральная городская поликлиника (№1)'
+  });
+  const [isRegistrarOpen, setIsRegistrarOpen] = useState(false);
+  const [editingRegistrar, setEditingRegistrar] = useState<any>(null);
+  const [isRegistrarEditOpen, setIsRegistrarEditOpen] = useState(false);
+  const [registrarLogs, setRegistrarLogs] = useState([]);
+  const [selectedRegistrarForLogs, setSelectedRegistrarForLogs] = useState<any>(null);
   const notificationSound = typeof Audio !== 'undefined' ? new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZUQ0PVqzn7bViFg==') : null;
 
   useEffect(() => {
@@ -73,6 +87,7 @@ const Admin = () => {
     if (auth) {
       setIsAuthenticated(true);
       loadDoctors();
+      loadRegistrars();
       loadFaqs();
       loadForumUsers();
       loadForumTopics();
@@ -165,6 +180,133 @@ const Admin = () => {
       setDoctors(data.doctors || []);
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить врачей", variant: "destructive" });
+    }
+  };
+
+  const loadRegistrars = async () => {
+    try {
+      const response = await fetch(`${API_URLS.registrars}?action=list`);
+      const data = await response.json();
+      setRegistrars(data.registrars || []);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось загрузить регистраторов", variant: "destructive" });
+    }
+  };
+
+  const loadRegistrarLogs = async (registrarId?: number) => {
+    try {
+      const url = registrarId 
+        ? `${API_URLS.registrars}?action=logs&registrar_id=${registrarId}&limit=100`
+        : `${API_URLS.registrars}?action=logs&limit=200`;
+      const response = await fetch(url);
+      const data = await response.json();
+      setRegistrarLogs(data.logs || []);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось загрузить журнал", variant: "destructive" });
+    }
+  };
+
+  const handleCreateRegistrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.registrars, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          ...registrarForm
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Регистратор добавлен" });
+        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника (№1)' });
+        setIsRegistrarOpen(false);
+        loadRegistrars();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось создать регистратора", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleUpdateRegistrar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch(API_URLS.registrars, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingRegistrar.id,
+          ...registrarForm
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Данные регистратора обновлены" });
+        setRegistrarForm({ full_name: '', phone: '', login: '', password: '', clinic: 'Центральная городская поликлиника (№1)' });
+        setIsRegistrarEditOpen(false);
+        setEditingRegistrar(null);
+        loadRegistrars();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось обновить регистратора", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleToggleRegistrarBlock = async (id: number, isBlocked: boolean) => {
+    try {
+      const response = await fetch(API_URLS.registrars, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_blocked: !isBlocked }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ 
+          title: "Успешно", 
+          description: `Регистратор ${!isBlocked ? 'заблокирован' : 'разблокирован'}` 
+        });
+        loadRegistrars();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось изменить статус", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteRegistrar = async (id: number) => {
+    if (!confirm('Вы уверены, что хотите удалить этого регистратора?')) return;
+    
+    try {
+      const response = await fetch(API_URLS.registrars, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        toast({ title: "Успешно", description: "Регистратор удален" });
+        loadRegistrars();
+      } else {
+        toast({ title: "Ошибка", description: data.error || "Не удалось удалить регистратора", variant: "destructive" });
+      }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
     }
   };
 
@@ -1023,10 +1165,10 @@ const Admin = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="doctors" className="w-full">
-            <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-4 mb-8">
+            <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-5 mb-8">
               <TabsTrigger value="doctors">Врачи</TabsTrigger>
+              <TabsTrigger value="registrars">Регистраторы</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
-
               <TabsTrigger value="forum">Форум</TabsTrigger>
               <TabsTrigger value="complaints">Жалобы</TabsTrigger>
             </TabsList>
@@ -1369,6 +1511,273 @@ const Admin = () => {
               </div>
             );
           })}
+        </TabsContent>
+
+        <TabsContent value="registrars">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold">Управление регистраторами</h2>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSelectedRegistrarForLogs({ full_name: 'Все регистраторы' });
+                  loadRegistrarLogs();
+                }}
+              >
+                <Icon name="FileText" size={18} className="mr-2" />
+                Общий журнал
+              </Button>
+              <Dialog open={isRegistrarOpen} onOpenChange={setIsRegistrarOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg">
+                  <Icon name="UserPlus" size={18} className="mr-2" />
+                  Добавить регистратора
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Новый регистратор</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateRegistrar} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">ФИО</label>
+                    <Input
+                      value={registrarForm.full_name}
+                      onChange={(e) => setRegistrarForm({...registrarForm, full_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Телефон</label>
+                    <Input
+                      value={registrarForm.phone}
+                      onChange={(e) => setRegistrarForm({...registrarForm, phone: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Логин</label>
+                    <Input
+                      value={registrarForm.login}
+                      onChange={(e) => setRegistrarForm({...registrarForm, login: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Пароль</label>
+                    <Input
+                      type="password"
+                      value={registrarForm.password}
+                      onChange={(e) => setRegistrarForm({...registrarForm, password: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Поликлиника</label>
+                    <Select 
+                      value={registrarForm.clinic} 
+                      onValueChange={(value) => setRegistrarForm({...registrarForm, clinic: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Центральная городская поликлиника (№1)">
+                          Центральная городская поликлиника (№1)
+                        </SelectItem>
+                        <SelectItem value="Детская городская поликлиника (№2)">
+                          Детская городская поликлиника (№2)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button type="submit" className="w-full">Создать</Button>
+                </form>
+              </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {registrars.map((registrar: any) => (
+              <Card key={registrar.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {registrar.full_name}
+                        {registrar.is_blocked && (
+                          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                            Заблокирован
+                          </span>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {registrar.clinic}
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedRegistrarForLogs(registrar);
+                          loadRegistrarLogs(registrar.id);
+                        }}
+                      >
+                        <Icon name="FileText" size={16} className="mr-1" />
+                        Журнал
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingRegistrar(registrar);
+                          setRegistrarForm({
+                            full_name: registrar.full_name,
+                            phone: registrar.phone,
+                            login: registrar.login,
+                            password: '',
+                            clinic: registrar.clinic
+                          });
+                          setIsRegistrarEditOpen(true);
+                        }}
+                      >
+                        <Icon name="Edit" size={16} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={registrar.is_blocked ? "default" : "destructive"}
+                        onClick={() => handleToggleRegistrarBlock(registrar.id, registrar.is_blocked)}
+                      >
+                        <Icon name={registrar.is_blocked ? "Unlock" : "Lock"} size={16} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => handleDeleteRegistrar(registrar.id)}
+                      >
+                        <Icon name="Trash2" size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Телефон:</span>
+                      <p className="font-medium">{registrar.phone}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Логин:</span>
+                      <p className="font-medium">{registrar.login}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <Dialog open={isRegistrarEditOpen} onOpenChange={setIsRegistrarEditOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Редактировать регистратора</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleUpdateRegistrar} className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">ФИО</label>
+                  <Input
+                    value={registrarForm.full_name}
+                    onChange={(e) => setRegistrarForm({...registrarForm, full_name: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Телефон</label>
+                  <Input
+                    value={registrarForm.phone}
+                    onChange={(e) => setRegistrarForm({...registrarForm, phone: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Логин</label>
+                  <Input
+                    value={registrarForm.login}
+                    onChange={(e) => setRegistrarForm({...registrarForm, login: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Новый пароль (оставьте пустым, если не меняете)</label>
+                  <Input
+                    type="password"
+                    value={registrarForm.password}
+                    onChange={(e) => setRegistrarForm({...registrarForm, password: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Поликлиника</label>
+                  <Select 
+                    value={registrarForm.clinic} 
+                    onValueChange={(value) => setRegistrarForm({...registrarForm, clinic: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Центральная городская поликлиника (№1)">
+                        Центральная городская поликлиника (№1)
+                      </SelectItem>
+                      <SelectItem value="Детская городская поликлиника (№2)">
+                        Детская городская поликлиника (№2)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full">Сохранить</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={!!selectedRegistrarForLogs} onOpenChange={() => setSelectedRegistrarForLogs(null)}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  Журнал действий: {selectedRegistrarForLogs?.full_name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                {registrarLogs.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Журнал пуст</p>
+                ) : (
+                  registrarLogs.map((log: any) => (
+                    <Card key={log.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-semibold">{log.action_type}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(log.created_at).toLocaleString('ru-RU')}
+                          </span>
+                        </div>
+                        {log.details && (
+                          <p className="text-sm text-muted-foreground mb-2">{log.details}</p>
+                        )}
+                        <div className="flex gap-4 text-xs text-muted-foreground">
+                          {log.ip_address && (
+                            <span>IP: {log.ip_address}</span>
+                          )}
+                          {log.computer_name && (
+                            <span>Компьютер: {log.computer_name}</span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="faq">

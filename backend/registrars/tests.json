@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get registrars list",
+      "method": "GET",
+      "path": "/?action=list",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "registrars": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get logs",
+      "method": "GET",
+      "path": "/?action=logs&limit=50",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "logs": "array"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
