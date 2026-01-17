@@ -1582,6 +1582,18 @@ const Doctor = () => {
                                       </Button>
                                     </div>
                                   )}
+                                  {appointment.status === 'completed' && (
+                                    <div className="flex gap-1 justify-end">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost"
+                                        onClick={() => handleOpenCloneDialog(appointment)}
+                                        title="Клонировать запись"
+                                      >
+                                        <Icon name="Copy" size={16} className="text-blue-600" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </TableCell>
                               </TableRow>
                             ))}
