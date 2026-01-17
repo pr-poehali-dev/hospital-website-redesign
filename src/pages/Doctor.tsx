@@ -1582,7 +1582,7 @@ const Doctor = () => {
                                       </Button>
                                     </div>
                                   )}
-                                  {appointment.status === 'completed' && (
+                                  {(appointment.status === 'completed' || appointment.status === 'cancelled') && (
                                     <div className="flex gap-1 justify-end">
                                       <Button 
                                         size="sm" 
