@@ -54,6 +54,7 @@ const Registrar = () => {
   const [rescheduleConfirmDialog, setRescheduleConfirmDialog] = useState<{open: boolean, data: any}>({open: false, data: null});
   const [rescheduleSuccessDialog, setRescheduleSuccessDialog] = useState<{open: boolean, data: any}>({open: false, data: null});
   const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+  const [isInstructionOpen, setIsInstructionOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('registrar_auth');
@@ -632,6 +633,13 @@ const Registrar = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => setIsInstructionOpen(true)}
+            >
+              <Icon name="BookOpen" size={18} className="mr-2" />
+              Инструкция
+            </Button>
             <Button variant="outline" asChild>
               <a href="/">
                 <Icon name="Home" size={18} className="mr-2" />
@@ -1230,6 +1238,245 @@ const Registrar = () => {
                 Да, перенести
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isInstructionOpen} onOpenChange={setIsInstructionOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <Icon name="BookOpen" size={28} className="text-green-600" />
+              Инструкция для регистратора
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Icon name="Target" size={20} className="text-green-600" />
+                  Основные задачи регистратора
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Запись пациентов на прием к врачам</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Перенос и отмена записей</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Клонирование записей для повторных визитов</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="CheckCircle" size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>Поиск и просмотр записей пациентов</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">1</span>
+                </div>
+                <h3 className="text-lg font-semibold">Запись пациента на прием</h3>
+              </div>
+              <div className="pl-10 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Icon name="Search" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Найдите нужного врача</p>
+                    <p className="text-sm text-muted-foreground">Используйте поиск по ФИО в правом верхнем углу раздела "Врачи" или прокрутите список</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="MousePointer" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Выберите врача</p>
+                    <p className="text-sm text-muted-foreground">Нажмите на карточку врача. Система автоматически прокрутит к доступным датам</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="Calendar" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Выберите дату</p>
+                    <p className="text-sm text-muted-foreground">Нажмите на дату в календаре. Зеленым отмечены дни с доступными слотами, серым - нерабочие дни</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="Clock" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Выберите время</p>
+                    <p className="text-sm text-muted-foreground">Нажмите на свободный слот времени</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="UserPlus" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Заполните данные пациента</p>
+                    <p className="text-sm text-muted-foreground">Откроется форма. Введите ФИО (обязательно), телефон (обязательно), СНИЛС и описание проблемы (необязательно)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="CheckCircle" size={18} className="text-green-600 mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Подтвердите запись</p>
+                    <p className="text-sm text-muted-foreground">Нажмите кнопку "Записать". Запись появится в таблице ниже</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">2</span>
+                </div>
+                <h3 className="text-lg font-semibold">Работа с записями пациентов</h3>
+              </div>
+              <div className="pl-10 space-y-3">
+                <Card className="border-blue-200 bg-blue-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Icon name="Calendar" size={18} className="text-blue-600" />
+                      Перенос записи
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Найдите запись в таблице "Записи пациентов"</li>
+                      <li>Нажмите синюю иконку календаря <Icon name="Calendar" size={14} className="inline text-blue-600" /></li>
+                      <li>Выберите новую дату в календаре</li>
+                      <li>Выберите новое время</li>
+                      <li>Подтвердите перенос - появится красивое уведомление с деталями</li>
+                    </ol>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-red-200 bg-red-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Icon name="XCircle" size={18} className="text-red-600" />
+                      Отмена записи
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Найдите запись в таблице</li>
+                      <li>Нажмите красную иконку крестика <Icon name="XCircle" size={14} className="inline text-red-600" /></li>
+                      <li>Подтвердите отмену</li>
+                      <li>Статус записи изменится на "Отменено"</li>
+                    </ol>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-gray-200 bg-gray-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Icon name="Copy" size={18} className="text-gray-600" />
+                      Клонирование записи
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm">
+                    <p className="mb-2">Используйте для повторных визитов пациента:</p>
+                    <ol className="list-decimal list-inside space-y-1">
+                      <li>Нажмите серую иконку копирования <Icon name="Copy" size={14} className="inline text-gray-600" /></li>
+                      <li>Все данные пациента скопируются автоматически</li>
+                      <li>Выберите новую дату и время</li>
+                      <li>Подтвердите создание копии</li>
+                    </ol>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-sm">3</span>
+                </div>
+                <h3 className="text-lg font-semibold">Поиск и фильтрация записей</h3>
+              </div>
+              <div className="pl-10 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Icon name="Search" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Поиск по пациенту</p>
+                    <p className="text-sm text-muted-foreground">Введите ФИО или номер телефона в поле "Поиск по ФИО или телефону" над таблицей</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="CalendarRange" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Фильтр по датам</p>
+                    <p className="text-sm text-muted-foreground">Используйте поля "От" и "До" для выбора диапазона дат</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Icon name="X" size={18} className="text-primary mt-1 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Сброс фильтров</p>
+                    <p className="text-sm text-muted-foreground">Нажмите кнопку с крестиком для очистки всех фильтров</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Icon name="AlertCircle" size={20} className="text-yellow-600" />
+                  Важно помнить
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>Записывайте пациентов только на свободные (зеленые) слоты</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>Обязательно проверяйте правильность ФИО и номера телефона</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>При переносе записи обязательно сообщите пациенту новые дату и время</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>Все ваши действия записываются в журнал для контроля администрацией</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="AlertTriangle" size={16} className="text-yellow-600 mt-0.5 flex-shrink-0" />
+                    <span>Вы видите только врачей вашей поликлиники</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Icon name="HelpCircle" size={20} className="text-primary" />
+                  Нужна помощь?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                <p>Если возникли проблемы или вопросы по работе системы, обратитесь к администратору больницы или в техническую поддержку.</p>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="flex justify-end pt-4 border-t">
+            <Button onClick={() => setIsInstructionOpen(false)}>
+              Понятно
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
