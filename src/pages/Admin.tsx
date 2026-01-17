@@ -1023,17 +1023,10 @@ const Admin = () => {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <Tabs defaultValue="doctors" className="w-full">
-            <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-5 mb-8">
+            <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-4 mb-8">
               <TabsTrigger value="doctors">Врачи</TabsTrigger>
               <TabsTrigger value="faq">FAQ</TabsTrigger>
-              <TabsTrigger value="chats" className="relative">
-                Чаты
-                {newChatsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {newChatsCount}
-                  </span>
-                )}
-              </TabsTrigger>
+
               <TabsTrigger value="forum">Форум</TabsTrigger>
               <TabsTrigger value="complaints">Жалобы</TabsTrigger>
             </TabsList>
@@ -1837,8 +1830,6 @@ const Admin = () => {
             )}
           </div>
         </TabsContent>
-
-        <TabsContent value="chats" onFocus={() => setNewChatsCount(0)}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold">Чаты службы поддержки</h2>
             <div className="flex gap-2">
