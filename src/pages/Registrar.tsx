@@ -44,6 +44,10 @@ const Registrar = () => {
   const [rescheduleAvailableSlots, setRescheduleAvailableSlots] = useState<string[]>([]);
   const [rescheduleSelectedSlot, setRescheduleSelectedSlot] = useState<string>('');
   const [cloneDialog, setCloneDialog] = useState<any>(null);
+  const [cloneAvailableDates, setCloneAvailableDates] = useState<any[]>([]);
+  const [cloneSelectedDate, setCloneSelectedDate] = useState<string>('');
+  const [cloneAvailableSlots, setCloneAvailableSlots] = useState<string[]>([]);
+  const [cloneSelectedSlot, setCloneSelectedSlot] = useState<string>('');
   const [calendarData, setCalendarData] = useState<{[key: string]: {is_working: boolean}}>({});
   const [schedules, setSchedules] = useState<any[]>([]);
   const [rescheduleConfirmDialog, setRescheduleConfirmDialog] = useState<{open: boolean, data: any}>({open: false, data: null});
@@ -89,6 +93,12 @@ const Registrar = () => {
       loadRescheduleSlots(rescheduleSelectedDate);
     }
   }, [rescheduleSelectedDate]);
+
+  useEffect(() => {
+    if (cloneSelectedDate) {
+      loadCloneSlots(cloneSelectedDate);
+    }
+  }, [cloneSelectedDate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,6 +365,49 @@ const Registrar = () => {
     }
   };
 
+  const openCloneDialog = (appointment: any) => {
+    setCloneDialog(appointment);
+    setCloneSelectedDate('');
+    setCloneSelectedSlot('');
+    generateCloneDates();
+  };
+
+  const generateCloneDates = () => {
+    const dates = [];
+    for (let i = 0; i <= 20; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOfWeek = (date.getDay() + 6) % 7;
+      
+      const hasSchedule = schedules.some((s: any) => s.day_of_week === dayOfWeek && s.is_active);
+      const calendarOverride = calendarData[dateStr];
+      const isWorking = calendarOverride !== undefined ? calendarOverride.is_working : hasSchedule;
+      
+      dates.push({
+        date: dateStr,
+        label: date.toLocaleDateString('ru-RU', { 
+          weekday: 'short', 
+          day: 'numeric', 
+          month: 'short' 
+        }),
+        isWorking,
+      });
+    }
+    setCloneAvailableDates(dates);
+  };
+
+  const loadCloneSlots = async (date: string) => {
+    if (!cloneDialog) return;
+    try {
+      const response = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${cloneDialog.doctor_id}&date=${date}`);
+      const data = await response.json();
+      setCloneAvailableSlots(data.available_slots || []);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось загрузить слоты", variant: "destructive" });
+    }
+  };
+
   const logAction = async (actionType: string, details: any) => {
     try {
       await fetch(API_URLS.registrars, {
@@ -394,13 +447,18 @@ const Registrar = () => {
     setRescheduleConfirmDialog({open: false, data: null});
 
     try {
+      const oldDate = rescheduleDialog.appointment_date;
+      const oldTime = rescheduleDialog.appointment_time;
+      const newDate = rescheduleSelectedDate;
+      const newTime = rescheduleSelectedSlot;
+
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rescheduleDialog.id,
-          appointment_date: rescheduleSelectedDate,
-          appointment_time: rescheduleSelectedSlot
+          appointment_date: newDate,
+          appointment_time: newTime
         }),
       });
 
@@ -413,19 +471,19 @@ const Registrar = () => {
           patient_phone: rescheduleDialog.patient_phone,
           patient_snils: rescheduleDialog.patient_snils,
           doctor_name: selectedDoctor.full_name,
-          old_date: rescheduleDialog.appointment_date,
-          old_time: rescheduleDialog.appointment_time,
-          new_date: rescheduleSelectedDate,
-          new_time: rescheduleSelectedSlot
+          old_date: oldDate,
+          old_time: oldTime,
+          new_date: newDate,
+          new_time: newTime
         });
 
         setRescheduleSuccessDialog({
           open: true,
           data: {
-            oldDate: rescheduleDialog.appointment_date,
-            oldTime: rescheduleDialog.appointment_time,
-            newDate: rescheduleSelectedDate,
-            newTime: rescheduleSelectedSlot,
+            oldDate: oldDate,
+            oldTime: oldTime,
+            newDate: newDate,
+            newTime: newTime,
             patient: rescheduleDialog.patient_name
           }
         });
@@ -442,9 +500,12 @@ const Registrar = () => {
     }
   };
 
-  const handleCloneAppointment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleCloneAppointment = async () => {
+    if (!cloneSelectedDate || !cloneSelectedSlot) {
+      toast({ title: "Ошибка", description: "Выберите дату и время", variant: "destructive" });
+      return;
+    }
+
     if (!cloneDialog) return;
 
     try {
@@ -456,8 +517,8 @@ const Registrar = () => {
           patient_name: cloneDialog.patient_name,
           patient_phone: cloneDialog.patient_phone,
           patient_snils: cloneDialog.patient_snils,
-          appointment_date: cloneDialog.appointment_date,
-          appointment_time: cloneDialog.appointment_time,
+          appointment_date: cloneSelectedDate,
+          appointment_time: cloneSelectedSlot,
           description: cloneDialog.description
         }),
       });
@@ -472,13 +533,17 @@ const Registrar = () => {
           patient_phone: cloneDialog.patient_phone,
           patient_snils: cloneDialog.patient_snils,
           doctor_name: selectedDoctor.full_name,
-          appointment_date: cloneDialog.appointment_date,
-          appointment_time: cloneDialog.appointment_time,
+          original_date: cloneDialog.appointment_date,
+          original_time: cloneDialog.appointment_time,
+          new_date: cloneSelectedDate,
+          new_time: cloneSelectedSlot,
           description: cloneDialog.description
         });
 
         toast({ title: "Успешно", description: "Запись клонирована" });
         setCloneDialog(null);
+        setCloneSelectedDate('');
+        setCloneSelectedSlot('');
         loadAppointments(selectedDoctor.id);
       } else {
         toast({ title: "Ошибка", description: data.error || "Не удалось клонировать запись", variant: "destructive" });
@@ -634,7 +699,7 @@ const Registrar = () => {
                   >
                     <div className="font-medium">{dateInfo.label}</div>
                     {dateInfo.isWorking && (
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-xs mt-1 font-semibold text-green-600">
                         {dateInfo.slotsCount > 0 ? `${dateInfo.slotsCount} слот` : 'Нет слотов'}
                       </div>
                     )}
@@ -779,7 +844,7 @@ const Registrar = () => {
                                 <Button 
                                   size="sm" 
                                   variant="ghost"
-                                  onClick={() => setCloneDialog(appointment)}
+                                  onClick={() => openCloneDialog(appointment)}
                                   title="Клонировать запись"
                                 >
                                   <Icon name="Copy" size={16} className="text-gray-600" />
@@ -950,30 +1015,96 @@ const Registrar = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!cloneDialog} onOpenChange={() => setCloneDialog(null)}>
-        <DialogContent>
+      <Dialog open={!!cloneDialog} onOpenChange={() => {
+        setCloneDialog(null);
+        setCloneSelectedDate('');
+        setCloneSelectedSlot('');
+      }}>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Клонировать запись</DialogTitle>
             <DialogDescription>
-              Будет создана копия записи с теми же данными
+              Создайте копию записи с новой датой и временем
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleCloneAppointment} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2 p-4 bg-muted/30 rounded-lg">
               <p className="text-sm"><strong>Пациент:</strong> {cloneDialog?.patient_name}</p>
               <p className="text-sm"><strong>Телефон:</strong> {cloneDialog?.patient_phone}</p>
               <p className="text-sm"><strong>СНИЛС:</strong> {cloneDialog?.patient_snils || '—'}</p>
-              <p className="text-sm"><strong>Дата:</strong> {new Date(cloneDialog?.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU')}</p>
-              <p className="text-sm"><strong>Время:</strong> {cloneDialog?.appointment_time.slice(0, 5)}</p>
+              <p className="text-sm"><strong>Оригинальная дата:</strong> {new Date(cloneDialog?.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU')} в {cloneDialog?.appointment_time.slice(0, 5)}</p>
               <p className="text-sm"><strong>Описание:</strong> {cloneDialog?.description || '—'}</p>
             </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => setCloneDialog(null)}>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Выберите новую дату</label>
+              <div className="grid grid-cols-7 gap-2">
+                {cloneAvailableDates.map((dateInfo) => (
+                  <button
+                    key={dateInfo.date}
+                    type="button"
+                    onClick={() => dateInfo.isWorking && setCloneSelectedDate(dateInfo.date)}
+                    disabled={!dateInfo.isWorking}
+                    className={`p-2 rounded-lg border text-xs transition-all ${
+                      cloneSelectedDate === dateInfo.date
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : dateInfo.isWorking
+                        ? 'bg-white hover:bg-gray-50 border-gray-200'
+                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="font-medium">{dateInfo.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {cloneSelectedDate && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Выберите время на {new Date(cloneSelectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}
+                </label>
+                {cloneAvailableSlots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Нет свободных слотов на эту дату</p>
+                ) : (
+                  <div className="grid grid-cols-6 gap-2">
+                    {cloneAvailableSlots.map((time) => (
+                      <Button
+                        key={time}
+                        type="button"
+                        variant={cloneSelectedSlot === time ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCloneSelectedSlot(time)}
+                      >
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => {
+                  setCloneDialog(null);
+                  setCloneSelectedDate('');
+                  setCloneSelectedSlot('');
+                }}
+              >
                 Отмена
               </Button>
-              <Button type="submit" className="flex-1">Клонировать</Button>
+              <Button 
+                className="flex-1" 
+                onClick={handleCloneAppointment}
+                disabled={!cloneSelectedDate || !cloneSelectedSlot}
+              >
+                Клонировать
+              </Button>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
