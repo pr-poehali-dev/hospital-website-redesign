@@ -809,7 +809,12 @@ const Doctor = () => {
                 <div className="flex gap-2">
                   <Dialog open={bulkSlotDialogOpen} onOpenChange={setBulkSlotDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="lg" variant="outline" disabled={schedules.length === 0}>
+                      <Button 
+                        size="lg" 
+                        variant="outline" 
+                        disabled={schedules.length === 0}
+                        title="Установить одинаковую длительность слота для всех рабочих дней"
+                      >
                         <Icon name="Clock" size={20} className="mr-2" />
                         Применить слоты ко всем дням
                       </Button>
@@ -850,7 +855,10 @@ const Doctor = () => {
                   </Dialog>
                   <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                      <Button size="lg">
+                      <Button 
+                        size="lg"
+                        title="Добавить новый рабочий день в расписание"
+                      >
                         <Icon name="Plus" size={20} className="mr-2" />
                         Добавить день
                       </Button>
@@ -1162,6 +1170,7 @@ const Doctor = () => {
                               setIsEditOpen(true);
                             }}
                             className="h-8 text-xs"
+                            title="Изменить время приема, слот или перерыв"
                           >
                             <Icon name="Edit" size={14} />
                           </Button>
@@ -1170,6 +1179,7 @@ const Doctor = () => {
                             variant="secondary"
                             onClick={() => handleCopySchedule(schedule)}
                             className="h-8 text-xs"
+                            title="Копировать расписание на другие дни"
                           >
                             <Icon name="Copy" size={14} />
                           </Button>
@@ -1178,6 +1188,7 @@ const Doctor = () => {
                             variant={schedule.is_active ? "outline" : "default"}
                             onClick={() => handleToggleActive(schedule.id, schedule.is_active)}
                             className="h-8 text-xs"
+                            title={schedule.is_active ? "Деактивировать день (запись будет недоступна)" : "Активировать день (разрешить запись)"}
                           >
                             <Icon name={schedule.is_active ? "PauseCircle" : "PlayCircle"} size={14} />
                           </Button>
@@ -1186,6 +1197,7 @@ const Doctor = () => {
                             variant="destructive"
                             onClick={() => handleDeleteSchedule(schedule.id)}
                             className="h-8 text-xs"
+                            title="Удалить день из расписания"
                           >
                             <Icon name="Trash2" size={14} />
                           </Button>
