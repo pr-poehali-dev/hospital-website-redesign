@@ -110,6 +110,7 @@ const Doctor = () => {
     availableSlots: []
   });
   const [dateSlotCounts, setDateSlotCounts] = useState<{[key: string]: number}>({});
+  const [showAutoRefreshPanel, setShowAutoRefreshPanel] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('doctor_auth');
@@ -857,6 +858,13 @@ const Doctor = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant={showAutoRefreshPanel ? "default" : "outline"}
+              onClick={() => setShowAutoRefreshPanel(!showAutoRefreshPanel)}
+            >
+              <Icon name={showAutoRefreshPanel ? "ChevronUp" : "ChevronDown"} size={18} className="mr-2" />
+              Автообновление
+            </Button>
             <Button variant="default" asChild className="bg-blue-600 hover:bg-blue-700">
               <a href="/doctor-guide">
                 <Icon name="BookOpen" size={18} className="mr-2" />
@@ -1444,8 +1452,9 @@ const Doctor = () => {
             </TabsContent>
 
             <TabsContent value="appointments" className="mt-6">
-              <Card className={`mb-6 border-2 transition-all ${autoRefreshEnabled ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300'}`}>
-                <CardContent className="pt-4">
+              {showAutoRefreshPanel && (
+                <Card className={`mb-6 border-2 transition-all ${autoRefreshEnabled ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-300'}`}>
+                  <CardContent className="pt-4">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -1548,8 +1557,9 @@ const Doctor = () => {
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h2 className="text-3xl font-bold">Записи пациентов</h2>
                 <div className="flex gap-1.5 flex-wrap items-center">
