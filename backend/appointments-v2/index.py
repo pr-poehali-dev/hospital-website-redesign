@@ -243,6 +243,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             body = json.loads(event.get('body', '{}'))
             appointment_id = body.get('id')
             status = body.get('status')
+            description = body.get('description')
             
             if not appointment_id or not status:
                 return {
@@ -253,10 +254,18 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 }
             
             cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute(
-                "UPDATE appointments_v2 SET status = %s WHERE id = %s RETURNING *",
-                (status, appointment_id)
-            )
+            
+            if description is not None:
+                cursor.execute(
+                    "UPDATE appointments_v2 SET status = %s, description = %s WHERE id = %s RETURNING *",
+                    (status, description, appointment_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE appointments_v2 SET status = %s WHERE id = %s RETURNING *",
+                    (status, appointment_id)
+                )
+            
             appointment = cursor.fetchone()
             conn.commit()
             cursor.close()

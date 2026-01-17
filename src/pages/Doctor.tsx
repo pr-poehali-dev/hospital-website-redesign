@@ -54,12 +54,14 @@ const Doctor = () => {
     return saved ? parseInt(saved) : 900;
   });
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string}>({
+  const [confirmDialog, setConfirmDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string, description: string, newDescription: string}>({
     open: false,
     appointmentId: null,
     patientName: '',
     appointmentDate: '',
-    appointmentTime: ''
+    appointmentTime: '',
+    description: '',
+    newDescription: ''
   });
   const [cancelDialog, setCancelDialog] = useState<{open: boolean, appointmentId: number | null, patientName: string, appointmentDate: string, appointmentTime: string}>({
     open: false,
@@ -374,14 +376,15 @@ const Doctor = () => {
     }
   };
 
-  const handleUpdateAppointmentStatus = async (appointmentId: number, newStatus: string) => {
+  const handleUpdateAppointmentStatus = async (appointmentId: number, newStatus: string, description?: string) => {
     try {
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: appointmentId,
-          status: newStatus
+          status: newStatus,
+          description: description
         }),
       });
       
@@ -1555,7 +1558,9 @@ const Doctor = () => {
                                           appointmentId: appointment.id,
                                           patientName: appointment.patient_name,
                                           appointmentDate: new Date(appointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                                          appointmentTime: appointment.appointment_time.slice(0, 5)
+                                          appointmentTime: appointment.appointment_time.slice(0, 5),
+                                          description: appointment.description || '',
+                                          newDescription: appointment.description || ''
                                         })}
                                         title="Завершить прием"
                                       >
@@ -1593,40 +1598,75 @@ const Doctor = () => {
       </Tabs>
 
       <Dialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({...confirmDialog, open})}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-center text-xl">Завершить прием?</DialogTitle>
-            <DialogDescription className="text-center pt-4 space-y-2">
+            <DialogDescription className="text-center pt-2">
               <div className="bg-primary/10 rounded-lg p-4 space-y-2">
                 <p className="font-semibold text-foreground text-lg">{confirmDialog.patientName}</p>
                 <p className="text-sm text-muted-foreground">
                   {confirmDialog.appointmentDate} в {confirmDialog.appointmentTime}
                 </p>
               </div>
-              <p className="text-base text-foreground pt-2">
-                Вы уверены, что хотите завершить прием этого пациента?
-              </p>
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="space-y-4">
+            {confirmDialog.description && (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground mb-1">Исходное описание:</p>
+                <p className="text-sm">{confirmDialog.description}</p>
+              </div>
+            )}
+            
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Комментарий врача (необязательно)
+              </label>
+              <Textarea
+                value={confirmDialog.newDescription}
+                onChange={(e) => setConfirmDialog({...confirmDialog, newDescription: e.target.value})}
+                placeholder="Добавьте комментарий о приёме, диагнозе или рекомендациях..."
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Этот комментарий будет сохранён вместе с записью
+              </p>
+            </div>
+          </div>
+
           <div className="flex gap-3 mt-4">
             <Button
               variant="outline"
               className="flex-1"
               onClick={() => setConfirmDialog({...confirmDialog, open: false})}
             >
-              Нет
+              Отмена
             </Button>
             <Button
               className="flex-1 bg-green-600 hover:bg-green-700"
               onClick={() => {
                 if (confirmDialog.appointmentId) {
-                  handleUpdateAppointmentStatus(confirmDialog.appointmentId, 'completed');
-                  setConfirmDialog({...confirmDialog, open: false});
+                  handleUpdateAppointmentStatus(
+                    confirmDialog.appointmentId, 
+                    'completed', 
+                    confirmDialog.newDescription
+                  );
+                  setConfirmDialog({
+                    open: false,
+                    appointmentId: null,
+                    patientName: '',
+                    appointmentDate: '',
+                    appointmentTime: '',
+                    description: '',
+                    newDescription: ''
+                  });
                 }
               }}
             >
               <Icon name="CheckCircle" size={18} className="mr-2" />
-              Да
+              Завершить прием
             </Button>
           </div>
         </DialogContent>
