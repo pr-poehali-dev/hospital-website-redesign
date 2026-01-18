@@ -657,6 +657,8 @@ const Doctor = () => {
         const allSlots = data.all_slots?.length || 0;
         const bookedSlots = allSlots - availableSlots;
         
+        console.log(`📊 ${dateStr}: available=${availableSlots}, all=${allSlots}, booked=${bookedSlots}`, data);
+        
         setSlotStats(prev => ({
           ...prev,
           [dateStr]: {
@@ -665,6 +667,7 @@ const Doctor = () => {
           }
         }));
       } catch (error) {
+        console.error(`❌ Ошибка загрузки ${dateStr}:`, error);
         setSlotStats(prev => ({
           ...prev,
           [dateStr]: { available: 0, booked: 0 }
