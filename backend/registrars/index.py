@@ -57,7 +57,7 @@ def handler(event: dict, context) -> dict:
                 
                 if registrar_id:
                     cur.execute('''
-                        SELECT id, registrar_id, action_type, details, ip_address, computer_name, created_at
+                        SELECT id, registrar_id, user_login, action_type, details, ip_address, computer_name, created_at
                         FROM registrar_logs
                         WHERE registrar_id = %s
                         ORDER BY created_at DESC
@@ -65,7 +65,7 @@ def handler(event: dict, context) -> dict:
                     ''', (registrar_id, limit))
                 else:
                     cur.execute('''
-                        SELECT rl.id, rl.registrar_id, rl.action_type, rl.details, rl.ip_address, 
+                        SELECT rl.id, rl.registrar_id, rl.user_login, rl.action_type, rl.details, rl.ip_address, 
                                rl.computer_name, rl.created_at, r.full_name
                         FROM registrar_logs rl
                         LEFT JOIN registrars r ON rl.registrar_id = r.id
@@ -78,14 +78,15 @@ def handler(event: dict, context) -> dict:
                     log_entry = {
                         'id': row[0],
                         'registrar_id': row[1],
-                        'action_type': row[2],
-                        'details': row[3],
-                        'ip_address': row[4],
-                        'computer_name': row[5],
-                        'created_at': row[6].isoformat() if row[6] else None
+                        'user_login': row[2],
+                        'action_type': row[3],
+                        'details': row[4],
+                        'ip_address': row[5],
+                        'computer_name': row[6],
+                        'created_at': row[7].isoformat() if row[7] else None
                     }
-                    if len(row) > 7:
-                        log_entry['registrar_name'] = row[7]
+                    if len(row) > 8:
+                        log_entry['registrar_name'] = row[8]
                     logs.append(log_entry)
                 
                 return {
@@ -121,10 +122,11 @@ def handler(event: dict, context) -> dict:
             
             elif action == 'log':
                 cur.execute('''
-                    INSERT INTO registrar_logs (registrar_id, action_type, details, ip_address, computer_name)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO registrar_logs (registrar_id, user_login, action_type, details, ip_address, computer_name)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 ''', (
                     data['registrar_id'],
+                    data.get('user_login'),
                     data['action_type'],
                     data.get('details'),
                     data.get('ip_address'),

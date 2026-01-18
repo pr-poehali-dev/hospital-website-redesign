@@ -2160,8 +2160,11 @@ const Admin = () => {
                         <th className="text-left py-1.5 px-2 w-10 text-xs font-medium">№</th>
                         <th className="text-left py-1.5 px-2 w-20 text-xs font-medium">Дата</th>
                         <th className="text-left py-1.5 px-2 w-16 text-xs font-medium">Время</th>
+                        <th className="text-left py-1.5 px-2 w-24 text-xs font-medium">Логин</th>
                         <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Тип операции</th>
                         <th className="text-left py-1.5 px-2 text-xs font-medium">Описание</th>
+                        <th className="text-left py-1.5 px-2 w-28 text-xs font-medium">IP</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Устройство</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2197,6 +2200,9 @@ const Admin = () => {
                             <td className="py-1.5 px-2 whitespace-nowrap">
                               {date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
                             </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              <span className="text-[10px] font-medium">{log.user_login || '—'}</span>
+                            </td>
                             <td className="py-1.5 px-2">
                               <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
                                 {log.action_type}
@@ -2207,6 +2213,12 @@ const Admin = () => {
                               {log.registrar_name && (
                                 <span className="ml-2 text-[10px] opacity-60">({log.registrar_name})</span>
                               )}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground">
+                              {log.ip_address || '—'}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground max-w-[200px] truncate" title={log.computer_name || '—'}>
+                              {log.computer_name || '—'}
                             </td>
                           </tr>
                         );

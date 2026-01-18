@@ -419,8 +419,11 @@ const Registrar = () => {
         body: JSON.stringify({
           action: 'log',
           registrar_id: registrarInfo.id,
+          user_login: registrarInfo.login || registrarInfo.full_name,
           action_type: actionType,
-          details: JSON.stringify(details)
+          details: JSON.stringify(details),
+          ip_address: '',
+          computer_name: navigator.userAgent
         })
       });
       

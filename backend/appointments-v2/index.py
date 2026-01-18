@@ -236,6 +236,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             # Логирование действий врача
             if action == 'log':
                 doctor_id = body.get('doctor_id')
+                user_login = body.get('user_login')
                 action_type = body.get('action_type')
                 details = body.get('details')
                 ip_address = body.get('ip_address')
@@ -251,10 +252,10 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                 
                 cursor = conn.cursor(cursor_factory=RealDictCursor)
                 cursor.execute(
-                    """INSERT INTO doctor_logs (doctor_id, action_type, details, ip_address, computer_name)
-                       VALUES (%s, %s, %s, %s, %s)
+                    """INSERT INTO doctor_logs (doctor_id, user_login, action_type, details, ip_address, computer_name)
+                       VALUES (%s, %s, %s, %s, %s, %s)
                        RETURNING *""",
-                    (doctor_id, action_type, details, ip_address, computer_name)
+                    (doctor_id, user_login, action_type, details, ip_address, computer_name)
                 )
                 log = cursor.fetchone()
                 conn.commit()

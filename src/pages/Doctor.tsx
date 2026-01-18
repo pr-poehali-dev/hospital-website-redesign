@@ -903,8 +903,11 @@ const Doctor = () => {
         body: JSON.stringify({
           action: 'log',
           doctor_id: doctorInfo.id,
+          user_login: doctorInfo.login || doctorInfo.full_name,
           action_type: actionType,
-          details: JSON.stringify(details)
+          details: JSON.stringify(details),
+          ip_address: '',
+          computer_name: navigator.userAgent
         })
       });
       
