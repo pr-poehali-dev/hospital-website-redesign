@@ -18,6 +18,7 @@ const API_URLS = {
   complaints: 'https://functions.poehali.dev/a6c04c63-0223-4bcc-b146-24acdef33536',
   chat: 'https://functions.poehali.dev/f0120272-0320-4731-8a43-e5c1362e3057',
   registrars: 'https://functions.poehali.dev/bda47195-c96f-4fb7-b72c-59d877add3c2',
+  appointments: 'https://functions.poehali.dev/a7f148cd-e1c2-40e3-9762-cc8b2bc2dffb',
 };
 
 const Admin = () => {
