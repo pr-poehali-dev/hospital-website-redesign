@@ -1398,6 +1398,15 @@ const Doctor = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => loadAppointments(doctorInfo.id)}
+                className="h-7 px-2 bg-orange-500 hover:bg-orange-600 text-white border-orange-600"
+                title="Обновить записи вручную"
+              >
+                <Icon name="RefreshCw" size={14} />
+              </Button>
             </div>
             <Button variant="default" asChild className="bg-blue-600 hover:bg-blue-700">
               <a href="/doctor-guide">
