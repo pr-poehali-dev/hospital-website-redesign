@@ -2364,71 +2364,23 @@ const Doctor = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  
-                  {selectedAppointment && (
-                    <div className="flex gap-2 items-center border-l pl-4 ml-2">
-                      {selectedAppointment.status === 'scheduled' && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5"
-                            onClick={() => openRescheduleDialog(selectedAppointment)}
-                          >
-                            <Icon name="Calendar" size={14} className="text-purple-600" />
-                            Перенести
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5"
-                            onClick={() => handleOpenCloneDialog(selectedAppointment)}
-                          >
-                            <Icon name="Copy" size={14} className="text-blue-600" />
-                            Клонировать
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5"
-                            onClick={() => setConfirmDialog({
-                              open: true,
-                              appointmentId: selectedAppointment.id,
-                              patientName: selectedAppointment.patient_name,
-                              patientPhone: selectedAppointment.patient_phone,
-                              patientSnils: selectedAppointment.patient_snils || '',
-                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                              appointmentDateRaw: selectedAppointment.appointment_date,
-                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
-                              description: selectedAppointment.description || '',
-                              newDescription: selectedAppointment.description || ''
-                            })}
-                          >
-                            <Icon name="CheckCircle" size={14} className="text-green-600" />
-                            Завершить
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5"
-                            onClick={() => setCancelDialog({
-                              open: true,
-                              appointmentId: selectedAppointment.id,
-                              patientName: selectedAppointment.patient_name,
-                              patientPhone: selectedAppointment.patient_phone,
-                              patientSnils: selectedAppointment.patient_snils || '',
-                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                              appointmentDateRaw: selectedAppointment.appointment_date,
-                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
-                              description: selectedAppointment.description || ''
-                            })}
-                          >
-                            <Icon name="XCircle" size={14} className="text-red-600" />
-                            Отменить
-                          </Button>
-                        </>
-                      )}
-                      {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
+                </div>
+              </div>
+              
+              {selectedAppointment && (
+                <div className="flex justify-end mb-4">
+                  <div className="flex gap-2 items-center">
+                    {selectedAppointment.status === 'scheduled' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs gap-1.5"
+                          onClick={() => openRescheduleDialog(selectedAppointment)}
+                        >
+                          <Icon name="Calendar" size={14} className="text-purple-600" />
+                          Перенести
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -2438,11 +2390,59 @@ const Doctor = () => {
                           <Icon name="Copy" size={14} className="text-blue-600" />
                           Клонировать
                         </Button>
-                      )}
-                    </div>
-                  )}
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+                          onClick={() => setConfirmDialog({
+                            open: true,
+                            appointmentId: selectedAppointment.id,
+                            patientName: selectedAppointment.patient_name,
+                            patientPhone: selectedAppointment.patient_phone,
+                            patientSnils: selectedAppointment.patient_snils || '',
+                            appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                            appointmentDateRaw: selectedAppointment.appointment_date,
+                            appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                            description: selectedAppointment.description || '',
+                            newDescription: selectedAppointment.description || ''
+                          })}
+                        >
+                          <Icon name="CheckCircle" size={14} />
+                          Завершить прием
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="h-8 text-xs gap-1.5 bg-red-100 hover:bg-red-200 text-red-800 border-red-300"
+                          onClick={() => setCancelDialog({
+                            open: true,
+                            appointmentId: selectedAppointment.id,
+                            patientName: selectedAppointment.patient_name,
+                            patientPhone: selectedAppointment.patient_phone,
+                            patientSnils: selectedAppointment.patient_snils || '',
+                            appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                            appointmentDateRaw: selectedAppointment.appointment_date,
+                            appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                            description: selectedAppointment.description || ''
+                          })}
+                        >
+                          <Icon name="XCircle" size={14} />
+                          Отменить прием
+                        </Button>
+                      </>
+                    )}
+                    {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs gap-1.5"
+                        onClick={() => handleOpenCloneDialog(selectedAppointment)}
+                      >
+                        <Icon name="Copy" size={14} className="text-blue-600" />
+                        Клонировать
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
               
               {filteredAppointments.length === 0 ? (
                 <Card>
@@ -2461,15 +2461,15 @@ const Doctor = () => {
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="h-6">
-                          <TableHead className="w-[100px] py-0.5 px-2 text-[10px] h-6">Дата</TableHead>
-                          <TableHead className="w-[50px] py-0.5 px-2 text-[10px] h-6">Время</TableHead>
-                          <TableHead className="w-[50px] py-0.5 px-2 text-[10px] h-6">Завер.</TableHead>
-                          <TableHead className="w-[180px] py-0.5 px-2 text-[10px] h-6">Пациент</TableHead>
-                          <TableHead className="py-0.5 px-2 text-[10px] h-6">Телефон</TableHead>
-                          <TableHead className="hidden lg:table-cell py-0.5 px-2 text-[10px] h-6">СНИЛС</TableHead>
-                          <TableHead className="hidden md:table-cell py-0.5 px-2 text-[10px] h-6">Описание</TableHead>
-                          <TableHead className="w-[100px] py-0.5 px-2 text-[10px] h-6">Статус</TableHead>
+                        <TableRow className="h-8">
+                          <TableHead className="w-[100px] py-1 px-2 text-xs h-8">Дата</TableHead>
+                          <TableHead className="w-[50px] py-1 px-2 text-xs h-8">Время</TableHead>
+                          <TableHead className="w-[50px] py-1 px-2 text-xs h-8">Завер.</TableHead>
+                          <TableHead className="w-[180px] py-1 px-2 text-xs h-8">Пациент</TableHead>
+                          <TableHead className="py-1 px-2 text-xs h-8">Телефон</TableHead>
+                          <TableHead className="hidden lg:table-cell py-1 px-2 text-xs h-8">СНИЛС</TableHead>
+                          <TableHead className="hidden md:table-cell py-1 px-2 text-xs h-8">Описание</TableHead>
+                          <TableHead className="w-[100px] py-1 px-2 text-xs h-8">Статус</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2486,24 +2486,24 @@ const Doctor = () => {
                             return (
                               <TableRow 
                                 key={appointment.id} 
-                                className={`h-6 cursor-pointer transition-colors ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''} ${
+                                className={`h-8 cursor-pointer transition-colors ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''} ${
                                   selectedAppointment?.id === appointment.id 
                                     ? 'bg-primary/10 hover:bg-primary/15' 
                                     : 'hover:bg-muted/50'
                                 }`}
                                 onClick={() => setSelectedAppointment(appointment)}
                               >
-                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
+                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
                                   {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                                     day: 'numeric', 
                                     month: 'short',
                                     weekday: 'short'
                                   })}
                                 </TableCell>
-                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
+                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
-                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
+                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
                                   {appointment.status === 'completed' && appointment.completed_at ? (
                                     <span className="text-blue-600">
                                       {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
@@ -2512,14 +2512,14 @@ const Doctor = () => {
                                     <span className="text-muted-foreground">—</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">{appointment.patient_name}</TableCell>
-                                <TableCell className="text-[10px] py-0 px-2 h-6">{appointment.patient_phone}</TableCell>
-                                <TableCell className="hidden lg:table-cell text-[10px] py-0 px-2 h-6">{appointment.patient_snils || '—'}</TableCell>
-                                <TableCell className="hidden md:table-cell text-[10px] text-muted-foreground py-0 px-2 h-6">
+                                <TableCell className="font-medium text-xs py-1 px-2 h-8">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-xs py-1 px-2 h-8">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-xs py-1 px-2 h-8">{appointment.patient_snils || '—'}</TableCell>
+                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground py-1 px-2 h-8">
                                   {appointment.description || '—'}
                                 </TableCell>
-                                <TableCell className="py-0 px-2 h-6">
-                                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] whitespace-nowrap inline-block ${
+                                <TableCell className="py-1 px-2 h-8">
+                                  <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap inline-block ${
                                     appointment.status === 'scheduled' 
                                       ? 'bg-green-100 text-green-800' 
                                       : appointment.status === 'completed'
