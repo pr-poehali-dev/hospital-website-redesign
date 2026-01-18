@@ -945,6 +945,126 @@ const Doctor = () => {
     });
   };
 
+  const printAppointments = () => {
+    const filtered = getFilteredAppointments();
+    
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Записи пациентов - ${doctorInfo.full_name}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            font-size: 12px;
+          }
+          h1 {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 10px;
+          }
+          .info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 11px;
+            color: #666;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+          }
+          tr:nth-child(even) {
+            background-color: #f9f9f9;
+          }
+          .status-scheduled {
+            color: #ca8a04;
+            font-weight: bold;
+          }
+          .status-completed {
+            color: #16a34a;
+            font-weight: bold;
+          }
+          .status-cancelled {
+            color: #dc2626;
+            font-weight: bold;
+          }
+          @media print {
+            body { margin: 10px; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Записи пациентов</h1>
+        <div class="info">
+          <div>Врач: ${doctorInfo.full_name}</div>
+          <div>Специальность: ${doctorInfo.specialization || 'Не указана'}</div>
+          <div>Дата печати: ${new Date().toLocaleString('ru-RU')}</div>
+          <div>Всего записей: ${filtered.length}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Дата</th>
+              <th>Время</th>
+              <th>Пациент</th>
+              <th>Телефон</th>
+              <th>СНИЛС</th>
+              <th>Статус</th>
+              <th>Описание</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map((app, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${new Date(app.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
+                <td>${app.appointment_time.slice(0, 5)}</td>
+                <td>${app.patient_name}</td>
+                <td>${app.patient_phone}</td>
+                <td>${app.patient_snils || '—'}</td>
+                <td class="status-${app.status}">
+                  ${app.status === 'scheduled' ? 'Запланировано' : 
+                    app.status === 'completed' ? 'Завершено' : 'Отменено'}
+                </td>
+                <td>${app.description || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    }
+    
+    toast({
+      title: "Печать",
+      description: `Подготовлено к печати: ${filtered.length} записей`,
+    });
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
@@ -1876,6 +1996,15 @@ const Doctor = () => {
                     >
                       <Icon name="UserPlus" size={14} />
                       Записать пациента
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={printAppointments}
+                      className="gap-1.5 bg-purple-50 hover:bg-purple-100 border-purple-300 text-purple-700 hover:text-purple-800 text-xs h-8"
+                    >
+                      <Icon name="Printer" size={14} />
+                      Печать
                     </Button>
                     <Button 
                       variant="outline" 
