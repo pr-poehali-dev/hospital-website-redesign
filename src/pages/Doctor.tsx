@@ -2197,10 +2197,11 @@ const Doctor = () => {
                 </CardContent>
               </Card>
 
-              <div className="flex flex-col gap-3 mb-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <h2 className="text-3xl font-bold">Записи пациентов</h2>
-                  <div className="flex gap-1.5 flex-wrap items-center">
+              <div className="mb-6 space-y-4">
+                <h3 className="text-2xl font-bold">Записи пациентов</h3>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 items-center">
                     <Button 
                       variant="default"
                       size="sm"
@@ -2228,6 +2229,83 @@ const Doctor = () => {
                       <Icon name="Download" size={14} />
                       Экспорт
                     </Button>
+                  </div>
+                  
+                  <div className="flex gap-2 items-center">
+                    {selectedAppointment && (
+                      <>
+                        {selectedAppointment.status === 'scheduled' && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1.5"
+                              onClick={() => openRescheduleDialog(selectedAppointment)}
+                            >
+                              <Icon name="Calendar" size={14} className="text-purple-600" />
+                              Перенести
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1.5"
+                              onClick={() => handleOpenCloneDialog(selectedAppointment)}
+                            >
+                              <Icon name="Copy" size={14} className="text-blue-600" />
+                              Клонировать
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+                              onClick={() => setConfirmDialog({
+                                open: true,
+                                appointmentId: selectedAppointment.id,
+                                patientName: selectedAppointment.patient_name,
+                                patientPhone: selectedAppointment.patient_phone,
+                                patientSnils: selectedAppointment.patient_snils || '',
+                                appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                                appointmentDateRaw: selectedAppointment.appointment_date,
+                                appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                                description: selectedAppointment.description || '',
+                                newDescription: selectedAppointment.description || ''
+                              })}
+                            >
+                              <Icon name="CheckCircle" size={14} />
+                              Завершить прием
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs gap-1.5 bg-red-100 hover:bg-red-200 text-red-800 border-red-300"
+                              onClick={() => setCancelDialog({
+                                open: true,
+                                appointmentId: selectedAppointment.id,
+                                patientName: selectedAppointment.patient_name,
+                                patientPhone: selectedAppointment.patient_phone,
+                                patientSnils: selectedAppointment.patient_snils || '',
+                                appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                                appointmentDateRaw: selectedAppointment.appointment_date,
+                                appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                                description: selectedAppointment.description || ''
+                              })}
+                            >
+                              <Icon name="XCircle" size={14} />
+                              Отменить прием
+                            </Button>
+                          </>
+                        )}
+                        {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => handleOpenCloneDialog(selectedAppointment)}
+                          >
+                            <Icon name="Copy" size={14} className="text-blue-600" />
+                            Клонировать
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
                 
@@ -2367,20 +2445,109 @@ const Doctor = () => {
                 </div>
               </div>
               
-              {selectedAppointment && (
-                <div className="flex justify-end mb-4">
-                  <div className="flex gap-2 items-center">
-                    {selectedAppointment.status === 'scheduled' && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-8 text-xs gap-1.5"
-                          onClick={() => openRescheduleDialog(selectedAppointment)}
-                        >
-                          <Icon name="Calendar" size={14} className="text-purple-600" />
-                          Перенести
-                        </Button>
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex gap-2 items-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setNewAppointmentDialog({
+                      open: true,
+                      date: '',
+                      time: '',
+                      patientName: '',
+                      patientPhone: '',
+                      patientSnils: '',
+                      description: '',
+                      availableSlots: []
+                    })}
+                    className="gap-1.5 bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-700 hover:text-blue-800 text-xs h-8"
+                  >
+                    <Icon name="UserPlus" size={14} />
+                    Записать пациента
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={printAppointments}
+                    className="gap-1.5 text-xs h-8"
+                  >
+                    <Icon name="Printer" size={14} />
+                    Печать
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={exportToExcel}
+                    className="gap-1.5 bg-green-50 hover:bg-green-100 border-green-300 text-green-700 hover:text-green-800 text-xs h-8"
+                  >
+                    <Icon name="Download" size={14} />
+                    Экспорт
+                  </Button>
+                </div>
+                
+                <div className="flex gap-2 items-center">
+                  {selectedAppointment && (
+                    <>
+                      {selectedAppointment.status === 'scheduled' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => openRescheduleDialog(selectedAppointment)}
+                          >
+                            <Icon name="Calendar" size={14} className="text-purple-600" />
+                            Перенести
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => handleOpenCloneDialog(selectedAppointment)}
+                          >
+                            <Icon name="Copy" size={14} className="text-blue-600" />
+                            Клонировать
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
+                            onClick={() => setConfirmDialog({
+                              open: true,
+                              appointmentId: selectedAppointment.id,
+                              patientName: selectedAppointment.patient_name,
+                              patientPhone: selectedAppointment.patient_phone,
+                              patientSnils: selectedAppointment.patient_snils || '',
+                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                              appointmentDateRaw: selectedAppointment.appointment_date,
+                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                              description: selectedAppointment.description || '',
+                              newDescription: selectedAppointment.description || ''
+                            })}
+                          >
+                            <Icon name="CheckCircle" size={14} />
+                            Завершить прием
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-red-100 hover:bg-red-200 text-red-800 border-red-300"
+                            onClick={() => setCancelDialog({
+                              open: true,
+                              appointmentId: selectedAppointment.id,
+                              patientName: selectedAppointment.patient_name,
+                              patientPhone: selectedAppointment.patient_phone,
+                              patientSnils: selectedAppointment.patient_snils || '',
+                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                              appointmentDateRaw: selectedAppointment.appointment_date,
+                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                              description: selectedAppointment.description || ''
+                            })}
+                          >
+                            <Icon name="XCircle" size={14} />
+                            Отменить прием
+                          </Button>
+                        </>
+                      )}
+                      {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -2390,59 +2557,11 @@ const Doctor = () => {
                           <Icon name="Copy" size={14} className="text-blue-600" />
                           Клонировать
                         </Button>
-                        <Button
-                          size="sm"
-                          className="h-8 text-xs gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
-                          onClick={() => setConfirmDialog({
-                            open: true,
-                            appointmentId: selectedAppointment.id,
-                            patientName: selectedAppointment.patient_name,
-                            patientPhone: selectedAppointment.patient_phone,
-                            patientSnils: selectedAppointment.patient_snils || '',
-                            appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                            appointmentDateRaw: selectedAppointment.appointment_date,
-                            appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
-                            description: selectedAppointment.description || '',
-                            newDescription: selectedAppointment.description || ''
-                          })}
-                        >
-                          <Icon name="CheckCircle" size={14} />
-                          Завершить прием
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="h-8 text-xs gap-1.5 bg-red-100 hover:bg-red-200 text-red-800 border-red-300"
-                          onClick={() => setCancelDialog({
-                            open: true,
-                            appointmentId: selectedAppointment.id,
-                            patientName: selectedAppointment.patient_name,
-                            patientPhone: selectedAppointment.patient_phone,
-                            patientSnils: selectedAppointment.patient_snils || '',
-                            appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                            appointmentDateRaw: selectedAppointment.appointment_date,
-                            appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
-                            description: selectedAppointment.description || ''
-                          })}
-                        >
-                          <Icon name="XCircle" size={14} />
-                          Отменить прием
-                        </Button>
-                      </>
-                    )}
-                    {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'cancelled') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs gap-1.5"
-                        onClick={() => handleOpenCloneDialog(selectedAppointment)}
-                      >
-                        <Icon name="Copy" size={14} className="text-blue-600" />
-                        Клонировать
-                      </Button>
-                    )}
-                  </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
               
               {filteredAppointments.length === 0 ? (
                 <Card>
@@ -2488,22 +2607,28 @@ const Doctor = () => {
                                 key={appointment.id} 
                                 className={`h-8 cursor-pointer transition-colors ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''} ${
                                   selectedAppointment?.id === appointment.id 
-                                    ? 'bg-primary/10 hover:bg-primary/15' 
+                                    ? 'bg-primary/20 hover:bg-primary/25' 
                                     : 'hover:bg-muted/50'
                                 }`}
                                 onClick={() => setSelectedAppointment(appointment)}
                               >
-                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
+                                <TableCell className={`text-xs py-1 px-2 h-8 ${
+                                  selectedAppointment?.id === appointment.id ? 'font-bold' : 'font-medium'
+                                }`}>
                                   {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                                     day: 'numeric', 
                                     month: 'short',
                                     weekday: 'short'
                                   })}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
+                                <TableCell className={`text-xs py-1 px-2 h-8 ${
+                                  selectedAppointment?.id === appointment.id ? 'font-bold' : 'font-medium'
+                                }`}>
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-1 px-2 h-8">
+                                <TableCell className={`text-xs py-1 px-2 h-8 ${
+                                  selectedAppointment?.id === appointment.id ? 'font-bold' : 'font-medium'
+                                }`}>
                                   {appointment.status === 'completed' && appointment.completed_at ? (
                                     <span className="text-blue-600">
                                       {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
@@ -2512,7 +2637,9 @@ const Doctor = () => {
                                     <span className="text-muted-foreground">—</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-1 px-2 h-8">{appointment.patient_name}</TableCell>
+                                <TableCell className={`text-xs py-1 px-2 h-8 ${
+                                  selectedAppointment?.id === appointment.id ? 'font-bold' : 'font-medium'
+                                }`}>{appointment.patient_name}</TableCell>
                                 <TableCell className="text-xs py-1 px-2 h-8">{appointment.patient_phone}</TableCell>
                                 <TableCell className="hidden lg:table-cell text-xs py-1 px-2 h-8">{appointment.patient_snils || '—'}</TableCell>
                                 <TableCell className="hidden md:table-cell text-xs text-muted-foreground py-1 px-2 h-8">
