@@ -1120,56 +1120,23 @@ const Doctor = () => {
             <TabsContent value="calendar" className="mt-6">
               <Card className="mb-6 bg-gradient-to-r from-green-50 to-teal-50 border-green-200">
                 <CardContent className="pt-4">
-                  <div className="flex items-start gap-3">
-                    <Icon name="Calendar" size={24} className="text-green-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-base font-bold text-green-900 mb-3">📅 Инструкция: Годовой календарь работы</h3>
-                      
-                      <div className="space-y-3 text-sm text-green-800">
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="font-semibold mb-1">🎯 Для чего нужен календарь?</p>
-                          <p className="text-green-700">
-                            Календарь позволяет отметить конкретные даты как выходные или рабочие дни. 
-                            Это удобно для отпусков, праздников и нестандартных дней работы.
-                          </p>
-                        </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="bg-white/60 p-3 rounded-lg">
+                      <p className="font-semibold mb-1 text-green-900">⚡ Важно!</p>
+                      <p className="text-green-700">
+                        <strong>Календарь имеет приоритет!</strong> Если день отмечен как выходной в календаре, 
+                        пациенты не смогут записаться, даже если в еженедельном расписании этот день рабочий.
+                      </p>
+                    </div>
 
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="font-semibold mb-2">📋 Как пользоваться:</p>
-                          <ul className="list-decimal list-inside space-y-1 text-green-700 ml-2">
-                            <li><strong>Клик по дате</strong> — переключает статус дня (рабочий ↔ выходной)</li>
-                            <li><strong>Зелёная ячейка</strong> — рабочий день по расписанию</li>
-                            <li><strong>Красная ячейка</strong> — выходной день (записи невозможны)</li>
-                            <li><strong>Кнопка "Получить слоты"</strong> — показывает статистику на 2 месяца в формате: свободные/занятые</li>
-                          </ul>
-                        </div>
-
-                        <div className="bg-white/60 p-3 rounded-lg">
-                          <p className="font-semibold mb-1">⚡ Важно!</p>
-                          <p className="text-green-700">
-                            <strong>Календарь имеет приоритет!</strong> Если день отмечен как выходной в календаре, 
-                            пациенты не смогут записаться, даже если в еженедельном расписании этот день рабочий.
-                          </p>
-                        </div>
-
-                        <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
-                          <p className="font-semibold mb-1 text-amber-900">💡 Пример использования:</p>
-                          <p className="text-amber-800 text-xs">
-                            У вас отпуск с 1 по 10 марта → Кликните по всем датам с 1 по 10 марта (они станут красными). 
-                            Пациенты не увидят эти дни при записи. После отпуска кликните снова — дни станут рабочими.
-                          </p>
-                        </div>
+                    <div className="flex gap-4 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-green-200 border-2 border-green-400 rounded shadow-sm"></div>
+                        <span className="text-green-900 font-medium">Рабочий день</span>
                       </div>
-
-                      <div className="flex gap-4 text-xs mt-4 pt-3 border-t border-green-200">
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 bg-green-200 border-2 border-green-400 rounded shadow-sm"></div>
-                          <span className="text-green-900 font-medium">Рабочий день</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-5 h-5 bg-red-200 border-2 border-red-400 rounded shadow-sm"></div>
-                          <span className="text-red-900 font-medium">Выходной день</span>
-                        </div>
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-5 h-5 bg-red-200 border-2 border-red-400 rounded shadow-sm"></div>
+                        <span className="text-red-900 font-medium">Выходной день</span>
                       </div>
                     </div>
                   </div>
