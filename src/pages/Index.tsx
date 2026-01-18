@@ -1759,6 +1759,16 @@ const Index = () => {
                       <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_phone}</p>
                     </div>
 
+                    {successAppointmentData.doctor.office_number && (
+                      <div className="space-y-1">
+                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
+                          <Icon name="DoorOpen" size={14} className="text-primary sm:w-4 sm:h-4" />
+                          Кабинет
+                        </p>
+                        <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.doctor.office_number}</p>
+                      </div>
+                    )}
+
                     {successAppointmentData.patient_snils && (
                       <div className="space-y-1">
                         <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
