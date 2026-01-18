@@ -84,6 +84,8 @@ const Admin = () => {
   const [isRegistrarEditOpen, setIsRegistrarEditOpen] = useState(false);
   const [registrarLogs, setRegistrarLogs] = useState([]);
   const [selectedRegistrarForLogs, setSelectedRegistrarForLogs] = useState<any>(null);
+  const [doctorLogs, setDoctorLogs] = useState([]);
+  const [selectedDoctorForLogs, setSelectedDoctorForLogs] = useState<any>(null);
   const [logFilterType, setLogFilterType] = useState<string>('all');
   const [logFilterText, setLogFilterText] = useState<string>('');
   const [logFilterDateFrom, setLogFilterDateFrom] = useState<string>('');
@@ -214,8 +216,21 @@ const Admin = () => {
     }
   };
 
-  const getFilteredLogs = () => {
-    return registrarLogs.filter((log: any) => {
+  const loadDoctorLogs = async (doctorId?: number) => {
+    try {
+      const url = doctorId 
+        ? `${API_URLS.appointments}?action=logs&doctor_id=${doctorId}&limit=500`
+        : `${API_URLS.appointments}?action=logs&limit=1000`;
+      const response = await fetch(url);
+      const data = await response.json();
+      setDoctorLogs(data.logs || []);
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Не удалось загрузить журнал врача", variant: "destructive" });
+    }
+  };
+
+  const getFilteredLogs = (logs: any[] = registrarLogs) => {
+    return logs.filter((log: any) => {
       if (logFilterType !== 'all' && log.action_type !== logFilterType) return false;
       
       if (logFilterText) {
@@ -244,16 +259,16 @@ const Admin = () => {
     });
   };
 
-  const getUniqueActionTypes = () => {
+  const getUniqueActionTypes = (logs: any[] = registrarLogs) => {
     const types = new Set<string>();
-    registrarLogs.forEach((log: any) => {
+    logs.forEach((log: any) => {
       if (log.action_type) types.add(log.action_type);
     });
     return Array.from(types).sort();
   };
 
-  const exportLogsToExcel = () => {
-    const filteredLogs = getFilteredLogs();
+  const exportLogsToExcel = (logs: any[], fileName: string = 'журнал_регистраторов') => {
+    const filteredLogs = getFilteredLogs(logs);
     if (filteredLogs.length === 0) {
       toast({ title: "Ошибка", description: "Нет данных для экспорта", variant: "destructive" });
       return;
@@ -292,7 +307,7 @@ const Admin = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `журнал_регистраторов_${new Date().toISOString().split('T')[0]}.xls`;
+    link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.xls`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -301,8 +316,8 @@ const Admin = () => {
     toast({ title: "Успешно", description: `Экспортировано ${filteredLogs.length} записей` });
   };
 
-  const printLogs = () => {
-    const filteredLogs = getFilteredLogs();
+  const printLogs = (logs: any[], title: string = 'Журнал действий регистраторов') => {
+    const filteredLogs = getFilteredLogs(logs);
     if (filteredLogs.length === 0) {
       toast({ title: "Ошибка", description: "Нет данных для печати", variant: "destructive" });
       return;
@@ -364,7 +379,7 @@ const Admin = () => {
         </style>
       </head>
       <body>
-        <h1>Журнал действий регистраторов</h1>
+        <h1>${title}</h1>
         <p>ГБУЗ Антрацитовская ЦГМБ ЛНР</p>
         ${selectedRegistrarForLogs?.full_name ? `<p>Регистратор: ${selectedRegistrarForLogs.full_name}</p>` : ''}
         ${logFilterDateFrom || logFilterDateTo ? `<p>Период: ${logFilterDateFrom || 'начало'} - ${logFilterDateTo || 'сегодня'}</p>` : ''}
@@ -1370,6 +1385,17 @@ const Admin = () => {
             <TabsContent value="doctors">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold">Управление врачами</h2>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSelectedDoctorForLogs({ full_name: 'Все врачи' });
+                      loadDoctorLogs();
+                    }}
+                  >
+                    <Icon name="FileText" size={18} className="mr-2" />
+                    Общий журнал
+                  </Button>
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button size="lg">
@@ -1716,6 +1742,7 @@ const Admin = () => {
                 </form>
               </DialogContent>
             </Dialog>
+                </div>
           </div>
 
           {['Центральная городская поликлиника', 'Детская городская поликлиника'].map(clinic => {
@@ -1762,7 +1789,16 @@ const Admin = () => {
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="font-medium">{doctor.full_name}</TableCell>
+                            <TableCell 
+                              className="font-medium cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => {
+                                setSelectedDoctorForLogs(doctor);
+                                loadDoctorLogs(doctor.id);
+                              }}
+                              title="Нажмите для просмотра журнала действий"
+                            >
+                              {doctor.full_name}
+                            </TableCell>
                             <TableCell>{doctor.position}</TableCell>
                             <TableCell>{doctor.specialization || '—'}</TableCell>
                             <TableCell className="text-center">{doctor.office_number || '—'}</TableCell>
@@ -1818,6 +1854,192 @@ const Admin = () => {
               </div>
             );
           })}
+
+          <Dialog open={!!selectedDoctorForLogs} onOpenChange={() => {
+            setSelectedDoctorForLogs(null);
+            setLogFilterType('all');
+            setLogFilterText('');
+            setLogFilterDateFrom('');
+            setLogFilterDateTo('');
+          }}>
+            <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="FileText" size={24} className="text-primary" />
+                  Журнал действий: {selectedDoctorForLogs?.full_name}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="pb-3 border-b">
+                <div className="flex gap-2 items-center justify-between flex-wrap">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <Select value={logFilterType} onValueChange={setLogFilterType}>
+                      <SelectTrigger className="w-[150px] h-8 text-xs">
+                        <SelectValue placeholder="Тип операции" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все операции</SelectItem>
+                        {getUniqueActionTypes(doctorLogs).map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input
+                      placeholder="Поиск..."
+                      value={logFilterText}
+                      onChange={(e) => setLogFilterText(e.target.value)}
+                      className="w-[150px] h-8 text-xs"
+                    />
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">с:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateFrom}
+                        onChange={(e) => setLogFilterDateFrom(e.target.value)}
+                        className="w-[145px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">по:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateTo}
+                        onChange={(e) => setLogFilterDateTo(e.target.value)}
+                        className="w-[145px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    {(logFilterType !== 'all' || logFilterText || logFilterDateFrom || logFilterDateTo) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLogFilterType('all');
+                          setLogFilterText('');
+                          setLogFilterDateFrom('');
+                          setLogFilterDateTo('');
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        <Icon name="X" size={12} />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2 items-center">
+                    <div className="text-xs text-muted-foreground">
+                      Найдено: {getFilteredLogs(doctorLogs).length} из {doctorLogs.length}
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => exportLogsToExcel(doctorLogs, 'журнал_врачей')}
+                      className="h-8 text-xs bg-green-600 hover:bg-green-700"
+                    >
+                      <Icon name="FileSpreadsheet" size={14} className="mr-1" />
+                      Экспорт
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => printLogs(doctorLogs, 'Журнал действий врачей')}
+                      className="h-8 text-xs"
+                    >
+                      <Icon name="Printer" size={14} className="mr-1" />
+                      Печать
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {getFilteredLogs(doctorLogs).length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    <Icon name="Search" size={48} className="mx-auto mb-4 opacity-20" />
+                    <p>Записей не найдено</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-muted/50 backdrop-blur-sm">
+                      <tr className="border-b">
+                        <th className="text-left py-1.5 px-2 w-10 text-xs font-medium">№</th>
+                        <th className="text-left py-1.5 px-2 w-20 text-xs font-medium">Дата</th>
+                        <th className="text-left py-1.5 px-2 w-16 text-xs font-medium">Время</th>
+                        <th className="text-left py-1.5 px-2 w-24 text-xs font-medium">Логин</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Тип операции</th>
+                        <th className="text-left py-1.5 px-2 text-xs font-medium">Описание</th>
+                        <th className="text-left py-1.5 px-2 w-28 text-xs font-medium">IP</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Устройство</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getFilteredLogs(doctorLogs).map((log: any, index: number) => {
+                        const date = new Date(log.created_at);
+                        let detailsObj: any = {};
+                        try {
+                          detailsObj = JSON.parse(log.details || '{}');
+                        } catch (e) {
+                          detailsObj = { raw: log.details };
+                        }
+                        
+                        const formatDetails = () => {
+                          const parts = [];
+                          if (detailsObj.patient_name) parts.push(`Пациент: ${detailsObj.patient_name}`);
+                          if (detailsObj.patient_phone) parts.push(`Тел: ${detailsObj.patient_phone}`);
+                          if (detailsObj.doctor_name) parts.push(`Врач: ${detailsObj.doctor_name}`);
+                          if (detailsObj.appointment_date) parts.push(`Дата: ${new Date(detailsObj.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU')}`);
+                          if (detailsObj.appointment_time) parts.push(`Время: ${detailsObj.appointment_time.slice(0, 5)}`);
+                          if (detailsObj.old_date && detailsObj.new_date) {
+                            parts.push(`${new Date(detailsObj.old_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.old_time?.slice(0, 5)} → ${new Date(detailsObj.new_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.new_time?.slice(0, 5)}`);
+                          }
+                          if (detailsObj.original_date && detailsObj.new_date) {
+                            parts.push(`Клонирование: ${new Date(detailsObj.original_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.original_time?.slice(0, 5)} → ${new Date(detailsObj.new_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.new_time?.slice(0, 5)}`);
+                          }
+                          if (detailsObj.raw) parts.push(detailsObj.raw);
+                          return parts.join(' • ');
+                        };
+
+                        return (
+                          <tr key={log.id} className="border-b hover:bg-muted/30 transition-colors">
+                            <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              {date.toLocaleDateString('ru-RU')}
+                            </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              {date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              <span className="text-[10px] font-medium">{log.user_login || '—'}</span>
+                            </td>
+                            <td className="py-1.5 px-2">
+                              <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
+                                {log.action_type}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 text-muted-foreground">
+                              {formatDetails() || '—'}
+                              {log.doctor_name && (
+                                <span className="ml-2 text-[10px] opacity-60">({log.doctor_name})</span>
+                              )}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground">
+                              {log.ip_address || '—'}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground max-w-[200px] truncate" title={log.computer_name || '—'}>
+                              {log.computer_name || '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="registrars">
@@ -2071,7 +2293,7 @@ const Admin = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Все операции</SelectItem>
-                        {getUniqueActionTypes().map(type => (
+                        {getUniqueActionTypes(registrarLogs).map(type => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
                       </SelectContent>
@@ -2123,12 +2345,12 @@ const Admin = () => {
                   
                   <div className="flex gap-2 items-center">
                     <div className="text-xs text-muted-foreground">
-                      Найдено: {getFilteredLogs().length} из {registrarLogs.length}
+                      Найдено: {getFilteredLogs(registrarLogs).length} из {registrarLogs.length}
                     </div>
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={exportLogsToExcel}
+                      onClick={() => exportLogsToExcel(registrarLogs, 'журнал_регистраторов')}
                       className="h-8 text-xs bg-green-600 hover:bg-green-700"
                     >
                       <Icon name="FileSpreadsheet" size={14} className="mr-1" />
@@ -2137,7 +2359,7 @@ const Admin = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={printLogs}
+                      onClick={() => printLogs(registrarLogs, 'Журнал действий регистраторов')}
                       className="h-8 text-xs"
                     >
                       <Icon name="Printer" size={14} className="mr-1" />
@@ -2148,7 +2370,7 @@ const Admin = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto">
-                {getFilteredLogs().length === 0 ? (
+                {getFilteredLogs(registrarLogs).length === 0 ? (
                   <div className="text-center text-muted-foreground py-12">
                     <Icon name="Search" size={48} className="mx-auto mb-4 opacity-20" />
                     <p>Записей не найдено</p>
@@ -2168,7 +2390,7 @@ const Admin = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {getFilteredLogs().map((log: any, index: number) => {
+                      {getFilteredLogs(registrarLogs).map((log: any, index: number) => {
                         const date = new Date(log.created_at);
                         let detailsObj: any = {};
                         try {
@@ -2212,6 +2434,192 @@ const Admin = () => {
                               {formatDetails() || '—'}
                               {log.registrar_name && (
                                 <span className="ml-2 text-[10px] opacity-60">({log.registrar_name})</span>
+                              )}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground">
+                              {log.ip_address || '—'}
+                            </td>
+                            <td className="py-1.5 px-2 text-[10px] text-muted-foreground max-w-[200px] truncate" title={log.computer_name || '—'}>
+                              {log.computer_name || '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={!!selectedDoctorForLogs} onOpenChange={() => {
+            setSelectedDoctorForLogs(null);
+            setLogFilterType('all');
+            setLogFilterText('');
+            setLogFilterDateFrom('');
+            setLogFilterDateTo('');
+          }}>
+            <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Icon name="FileText" size={24} className="text-primary" />
+                  Журнал действий: {selectedDoctorForLogs?.full_name}
+                </DialogTitle>
+              </DialogHeader>
+              
+              <div className="pb-3 border-b">
+                <div className="flex gap-2 items-center justify-between flex-wrap">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <Select value={logFilterType} onValueChange={setLogFilterType}>
+                      <SelectTrigger className="w-[150px] h-8 text-xs">
+                        <SelectValue placeholder="Тип операции" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Все операции</SelectItem>
+                        {getUniqueActionTypes(doctorLogs).map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input
+                      placeholder="Поиск..."
+                      value={logFilterText}
+                      onChange={(e) => setLogFilterText(e.target.value)}
+                      className="w-[150px] h-8 text-xs"
+                    />
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">с:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateFrom}
+                        onChange={(e) => setLogFilterDateFrom(e.target.value)}
+                        className="w-[145px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-1">
+                      <label className="text-xs whitespace-nowrap">по:</label>
+                      <Input
+                        type="date"
+                        value={logFilterDateTo}
+                        onChange={(e) => setLogFilterDateTo(e.target.value)}
+                        className="w-[145px] h-8 text-xs"
+                      />
+                    </div>
+                    
+                    {(logFilterType !== 'all' || logFilterText || logFilterDateFrom || logFilterDateTo) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLogFilterType('all');
+                          setLogFilterText('');
+                          setLogFilterDateFrom('');
+                          setLogFilterDateTo('');
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        <Icon name="X" size={12} />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2 items-center">
+                    <div className="text-xs text-muted-foreground">
+                      Найдено: {getFilteredLogs(doctorLogs).length} из {doctorLogs.length}
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => exportLogsToExcel(doctorLogs, 'журнал_врачей')}
+                      className="h-8 text-xs bg-green-600 hover:bg-green-700"
+                    >
+                      <Icon name="FileSpreadsheet" size={14} className="mr-1" />
+                      Экспорт
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => printLogs(doctorLogs, 'Журнал действий врачей')}
+                      className="h-8 text-xs"
+                    >
+                      <Icon name="Printer" size={14} className="mr-1" />
+                      Печать
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto">
+                {getFilteredLogs(doctorLogs).length === 0 ? (
+                  <div className="text-center text-muted-foreground py-12">
+                    <Icon name="Search" size={48} className="mx-auto mb-4 opacity-20" />
+                    <p>Записей не найдено</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-muted/50 backdrop-blur-sm">
+                      <tr className="border-b">
+                        <th className="text-left py-1.5 px-2 w-10 text-xs font-medium">№</th>
+                        <th className="text-left py-1.5 px-2 w-20 text-xs font-medium">Дата</th>
+                        <th className="text-left py-1.5 px-2 w-16 text-xs font-medium">Время</th>
+                        <th className="text-left py-1.5 px-2 w-24 text-xs font-medium">Логин</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Тип операции</th>
+                        <th className="text-left py-1.5 px-2 text-xs font-medium">Описание</th>
+                        <th className="text-left py-1.5 px-2 w-28 text-xs font-medium">IP</th>
+                        <th className="text-left py-1.5 px-2 w-32 text-xs font-medium">Устройство</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getFilteredLogs(doctorLogs).map((log: any, index: number) => {
+                        const date = new Date(log.created_at);
+                        let detailsObj: any = {};
+                        try {
+                          detailsObj = JSON.parse(log.details || '{}');
+                        } catch (e) {
+                          detailsObj = { raw: log.details };
+                        }
+                        
+                        const formatDetails = () => {
+                          const parts = [];
+                          if (detailsObj.patient_name) parts.push(`Пациент: ${detailsObj.patient_name}`);
+                          if (detailsObj.patient_phone) parts.push(`Тел: ${detailsObj.patient_phone}`);
+                          if (detailsObj.doctor_name) parts.push(`Врач: ${detailsObj.doctor_name}`);
+                          if (detailsObj.appointment_date) parts.push(`Дата: ${new Date(detailsObj.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU')}`);
+                          if (detailsObj.appointment_time) parts.push(`Время: ${detailsObj.appointment_time.slice(0, 5)}`);
+                          if (detailsObj.old_date && detailsObj.new_date) {
+                            parts.push(`${new Date(detailsObj.old_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.old_time?.slice(0, 5)} → ${new Date(detailsObj.new_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.new_time?.slice(0, 5)}`);
+                          }
+                          if (detailsObj.original_date && detailsObj.new_date) {
+                            parts.push(`Клонирование: ${new Date(detailsObj.original_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.original_time?.slice(0, 5)} → ${new Date(detailsObj.new_date + 'T00:00:00').toLocaleDateString('ru-RU')} ${detailsObj.new_time?.slice(0, 5)}`);
+                          }
+                          if (detailsObj.raw) parts.push(detailsObj.raw);
+                          return parts.join(' • ');
+                        };
+
+                        return (
+                          <tr key={log.id} className="border-b hover:bg-muted/30 transition-colors">
+                            <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              {date.toLocaleDateString('ru-RU')}
+                            </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              {date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                            </td>
+                            <td className="py-1.5 px-2 whitespace-nowrap">
+                              <span className="text-[10px] font-medium">{log.user_login || '—'}</span>
+                            </td>
+                            <td className="py-1.5 px-2">
+                              <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px] font-medium">
+                                {log.action_type}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 text-muted-foreground">
+                              {formatDetails() || '—'}
+                              {log.doctor_name && (
+                                <span className="ml-2 text-[10px] opacity-60">({log.doctor_name})</span>
                               )}
                             </td>
                             <td className="py-1.5 px-2 text-[10px] text-muted-foreground">
