@@ -49,6 +49,7 @@ const Index = () => {
   const [maxTextIndex, setMaxTextIndex] = useState(0);
   const [isMaxBannerVisible, setIsMaxBannerVisible] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
 
   const maxTexts = [
     'Максимум возможностей для жизни',
@@ -117,6 +118,7 @@ const Index = () => {
   const loadAllSlots = async () => {
     if (!selectedDoctor) return;
     
+    setIsLoadingCalendar(true);
     const days = getNext7Days();
     const slotsMap: any = {};
     
@@ -136,6 +138,7 @@ const Index = () => {
     }
     
     setAllSlots(slotsMap);
+    setIsLoadingCalendar(false);
   };
 
   const loadAvailableSlots = async () => {
@@ -666,59 +669,100 @@ const Index = () => {
                     </div>
                   </div>
                 ) : !selectedDate ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {selectedDoctor.photo_url ? (
-                          <img 
-                            src={selectedDoctor.photo_url} 
-                            alt={selectedDoctor.full_name} 
-                            className="w-12 h-12 rounded-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Icon name="User" size={24} className="text-primary" />
+                  isLoadingCalendar ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {selectedDoctor.photo_url ? (
+                            <img 
+                              src={selectedDoctor.photo_url} 
+                              alt={selectedDoctor.full_name} 
+                              className="w-12 h-12 rounded-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Icon name="User" size={24} className="text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
+                            <p className="text-sm text-muted-foreground">{selectedDoctor.position}</p>
                           </div>
-                        )}
-                        <div>
-                          <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
-                          <p className="text-sm text-muted-foreground">{selectedDoctor.position}</p>
                         </div>
+                        <Button variant="outline" size="sm" onClick={() => { setSelectedDoctor(null); setSelectedClinic(null); setIsLoadingCalendar(false); }}>
+                          Изменить
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => { setSelectedDoctor(null); setSelectedClinic(null); }}>
-                        Изменить
-                      </Button>
+                      <Card className="bg-blue-50 border-blue-200">
+                        <CardContent className="py-12 text-center">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                            <div>
+                              <p className="text-lg font-semibold text-blue-900">Идет получение данных</p>
+                              <p className="text-sm text-blue-700 mt-1">Загружаем доступные даты...</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <h3 className="font-semibold">Выберите дату:</h3>
-                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                      {getNext7Days().map((day) => {
-                        const isAvailable = isDayAvailable(day.date);
-                        const availableCount = allSlots[day.date]?.available?.length || 0;
-                        return (
-                          <Button
-                            key={day.date}
-                            variant="outline"
-                            className={`h-24 flex flex-col ${!isAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
-                            onClick={() => isAvailable && setSelectedDate(day.date)}
-                            disabled={!isAvailable}
-                          >
-                            <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
-                            <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
-                            {!isAvailable ? (
-                              <span className="text-[10px] text-red-500 mt-0.5">Нет приема</span>
-                            ) : (
-                              <span className="text-[10px] text-green-600 mt-0.5 font-semibold">
-                                {availableCount} {availableCount === 1 ? 'место' : availableCount < 5 ? 'места' : 'мест'}
-                              </span>
-                            )}
-                          </Button>
-                        );
-                      })}
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {selectedDoctor.photo_url ? (
+                            <img 
+                              src={selectedDoctor.photo_url} 
+                              alt={selectedDoctor.full_name} 
+                              className="w-12 h-12 rounded-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Icon name="User" size={24} className="text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <h3 className="font-semibold">{selectedDoctor.full_name}</h3>
+                            <p className="text-sm text-muted-foreground">{selectedDoctor.position}</p>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => { setSelectedDoctor(null); setSelectedClinic(null); }}>
+                          Изменить
+                        </Button>
+                      </div>
+                      <h3 className="font-semibold">Выберите дату:</h3>
+                      <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                        {getNext7Days().map((day) => {
+                          const isAvailable = isDayAvailable(day.date);
+                          const availableCount = allSlots[day.date]?.available?.length || 0;
+                          return (
+                            <Button
+                              key={day.date}
+                              variant="outline"
+                              className={`h-24 flex flex-col ${!isAvailable ? 'opacity-40 cursor-not-allowed' : ''}`}
+                              onClick={() => isAvailable && setSelectedDate(day.date)}
+                              disabled={!isAvailable}
+                            >
+                              <span className="text-xs text-muted-foreground">{day.label.split(',')[0]}</span>
+                              <span className="text-lg font-bold">{day.label.split(',')[1]}</span>
+                              {!isAvailable ? (
+                                <span className="text-[10px] text-red-500 mt-0.5">Нет приема</span>
+                              ) : (
+                                <span className="text-[10px] text-green-600 mt-0.5 font-semibold">
+                                  {availableCount} {availableCount === 1 ? 'место' : availableCount < 5 ? 'места' : 'мест'}
+                                </span>
+                              )}
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : isLoadingSlots ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
