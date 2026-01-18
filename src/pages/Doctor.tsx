@@ -2382,16 +2382,16 @@ const Doctor = () => {
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="h-7">
-                          <TableHead className="w-[110px] py-0.5 text-xs">Дата</TableHead>
-                          <TableHead className="w-[70px] py-0.5 text-xs">Время</TableHead>
-                          <TableHead className="w-[70px] py-0.5 text-xs">Завершено</TableHead>
-                          <TableHead className="w-[200px] py-0.5 text-xs">Пациент</TableHead>
-                          <TableHead className="py-0.5 text-xs">Телефон</TableHead>
-                          <TableHead className="hidden lg:table-cell py-0.5 text-xs">СНИЛС</TableHead>
-                          <TableHead className="hidden md:table-cell py-0.5 text-xs">Описание</TableHead>
-                          <TableHead className="w-[110px] py-0.5 text-xs">Статус</TableHead>
-                          <TableHead className="w-[140px] text-right py-0.5 text-xs">Действия</TableHead>
+                        <TableRow className="h-6">
+                          <TableHead className="w-[100px] py-0.5 px-2 text-[10px] h-6">Дата</TableHead>
+                          <TableHead className="w-[50px] py-0.5 px-2 text-[10px] h-6">Время</TableHead>
+                          <TableHead className="w-[50px] py-0.5 px-2 text-[10px] h-6">Завер.</TableHead>
+                          <TableHead className="w-[180px] py-0.5 px-2 text-[10px] h-6">Пациент</TableHead>
+                          <TableHead className="py-0.5 px-2 text-[10px] h-6">Телефон</TableHead>
+                          <TableHead className="hidden lg:table-cell py-0.5 px-2 text-[10px] h-6">СНИЛС</TableHead>
+                          <TableHead className="hidden md:table-cell py-0.5 px-2 text-[10px] h-6">Описание</TableHead>
+                          <TableHead className="w-[100px] py-0.5 px-2 text-[10px] h-6">Статус</TableHead>
+                          <TableHead className="w-[120px] text-right py-0.5 px-2 text-[10px] h-6">Действия</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -2408,19 +2408,19 @@ const Doctor = () => {
                             return (
                               <TableRow 
                                 key={appointment.id} 
-                                className={`h-7 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
+                                className={`h-6 ${isNewDay && index > 0 ? 'border-t-[3px] border-t-gray-300' : ''}`}
                               >
-                                <TableCell className="font-medium text-xs py-0.5">
+                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
                                   {isNewDay && new Date(appointment.appointment_date + 'T00:00:00').toLocaleDateString('ru-RU', { 
                                     day: 'numeric', 
                                     month: 'short',
                                     weekday: 'short'
                                   })}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-0.5">
+                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
                                   {appointment.appointment_time.slice(0, 5)}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-0.5">
+                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">
                                   {appointment.status === 'completed' && appointment.completed_at ? (
                                     <span className="text-blue-600">
                                       {new Date(appointment.completed_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
@@ -2429,14 +2429,14 @@ const Doctor = () => {
                                     <span className="text-muted-foreground">—</span>
                                   )}
                                 </TableCell>
-                                <TableCell className="font-medium text-xs py-0.5">{appointment.patient_name}</TableCell>
-                                <TableCell className="text-xs py-0.5">{appointment.patient_phone}</TableCell>
-                                <TableCell className="hidden lg:table-cell text-xs py-0.5">{appointment.patient_snils || '—'}</TableCell>
-                                <TableCell className="hidden md:table-cell text-xs text-muted-foreground py-0.5">
+                                <TableCell className="font-medium text-[10px] py-0 px-2 h-6">{appointment.patient_name}</TableCell>
+                                <TableCell className="text-[10px] py-0 px-2 h-6">{appointment.patient_phone}</TableCell>
+                                <TableCell className="hidden lg:table-cell text-[10px] py-0 px-2 h-6">{appointment.patient_snils || '—'}</TableCell>
+                                <TableCell className="hidden md:table-cell text-[10px] text-muted-foreground py-0 px-2 h-6">
                                   {appointment.description || '—'}
                                 </TableCell>
-                                <TableCell>
-                                  <span className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${
+                                <TableCell className="py-0 px-2 h-6">
+                                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] whitespace-nowrap inline-block ${
                                     appointment.status === 'scheduled' 
                                       ? 'bg-green-100 text-green-800' 
                                       : appointment.status === 'completed'
@@ -2447,24 +2447,26 @@ const Doctor = () => {
                                      appointment.status === 'completed' ? 'Завершено' : 'Отменено'}
                                   </span>
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-right py-0 px-2 h-6">
                                   {appointment.status === 'scheduled' && (
-                                    <div className="flex gap-1 justify-end">
+                                    <div className="flex gap-0.5 justify-end">
                                       <Button 
                                         size="sm" 
                                         variant="ghost"
                                         onClick={() => openRescheduleDialog(appointment)}
                                         title="Перенести запись"
+                                        className="h-5 w-5 p-0"
                                       >
-                                        <Icon name="Calendar" size={16} className="text-purple-600" />
+                                        <Icon name="Calendar" size={12} className="text-purple-600" />
                                       </Button>
                                       <Button 
                                         size="sm" 
                                         variant="ghost"
                                         onClick={() => handleOpenCloneDialog(appointment)}
                                         title="Клонировать запись"
+                                        className="h-5 w-5 p-0"
                                       >
-                                        <Icon name="Copy" size={16} className="text-blue-600" />
+                                        <Icon name="Copy" size={12} className="text-blue-600" />
                                       </Button>
                                       <Button 
                                         size="sm" 
@@ -2482,8 +2484,9 @@ const Doctor = () => {
                                           newDescription: appointment.description || ''
                                         })}
                                         title="Завершить прием"
+                                        className="h-5 w-5 p-0"
                                       >
-                                        <Icon name="CheckCircle" size={16} className="text-green-600" />
+                                        <Icon name="CheckCircle" size={12} className="text-green-600" />
                                       </Button>
                                       <Button 
                                         size="sm" 
@@ -2500,8 +2503,9 @@ const Doctor = () => {
                                           description: appointment.description || ''
                                         })}
                                         title="Отменить"
+                                        className="h-5 w-5 p-0"
                                       >
-                                        <Icon name="XCircle" size={16} className="text-red-600" />
+                                        <Icon name="XCircle" size={12} className="text-red-600" />
                                       </Button>
                                     </div>
                                   )}
