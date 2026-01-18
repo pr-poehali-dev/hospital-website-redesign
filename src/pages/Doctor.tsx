@@ -2339,7 +2339,7 @@ const Doctor = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="flex gap-2 items-center">
                   <Button 
-                    variant="outline" 
+                    variant="default" 
                     size="sm"
                     onClick={() => setNewAppointmentDialog({
                       open: true,
@@ -2351,7 +2351,7 @@ const Doctor = () => {
                       description: '',
                       availableSlots: []
                     })}
-                    className="gap-1.5 bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-700 hover:text-blue-800 text-xs h-8"
+                    className="gap-1.5 bg-blue-700 hover:bg-blue-800 text-white text-xs h-8 font-bold animate-pulse-blue"
                   >
                     <Icon name="UserPlus" size={14} />
                     Записать пациента
@@ -2382,6 +2382,26 @@ const Doctor = () => {
                       {selectedAppointment.status === 'scheduled' && (
                         <>
                           <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5 bg-green-600 hover:bg-green-700 text-white font-bold animate-pulse-green"
+                            onClick={() => setConfirmDialog({
+                              open: true,
+                              appointmentId: selectedAppointment.id,
+                              patientName: selectedAppointment.patient_name,
+                              patientPhone: selectedAppointment.patient_phone,
+                              patientSnils: selectedAppointment.patient_snils || '',
+                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+                              appointmentDateRaw: selectedAppointment.appointment_date,
+                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
+                              description: selectedAppointment.description || '',
+                              newDescription: selectedAppointment.description || ''
+                            })}
+                          >
+                            <Icon name="CheckCircle" size={14} />
+                            Завершить прием
+                          </Button>
+                          <Button
                             variant="outline"
                             size="sm"
                             className="h-8 text-xs gap-1.5"
@@ -2398,25 +2418,6 @@ const Doctor = () => {
                           >
                             <Icon name="Copy" size={14} className="text-blue-600" />
                             Клонировать
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs gap-1.5 bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
-                            onClick={() => setConfirmDialog({
-                              open: true,
-                              appointmentId: selectedAppointment.id,
-                              patientName: selectedAppointment.patient_name,
-                              patientPhone: selectedAppointment.patient_phone,
-                              patientSnils: selectedAppointment.patient_snils || '',
-                              appointmentDate: new Date(selectedAppointment.appointment_date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-                              appointmentDateRaw: selectedAppointment.appointment_date,
-                              appointmentTime: selectedAppointment.appointment_time.slice(0, 5),
-                              description: selectedAppointment.description || '',
-                              newDescription: selectedAppointment.description || ''
-                            })}
-                          >
-                            <Icon name="CheckCircle" size={14} />
-                            Завершить прием
                           </Button>
                           <Button
                             size="sm"
