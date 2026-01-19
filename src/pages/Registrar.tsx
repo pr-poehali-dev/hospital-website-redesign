@@ -696,6 +696,7 @@ const Registrar = () => {
                 }`}
                 onClick={() => {
                   setSelectedDoctor(doctor);
+                  setDoctorSearchQuery(doctor.full_name);
                   setTimeout(() => {
                     const dateSection = document.getElementById('available-dates-section');
                     if (dateSection) {
