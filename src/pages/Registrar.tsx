@@ -57,6 +57,8 @@ const Registrar = () => {
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [photoModalUrl, setPhotoModalUrl] = useState('');
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem('registrar_auth');
@@ -70,6 +72,7 @@ const Registrar = () => {
 
   useEffect(() => {
     if (selectedDoctor) {
+      setIsLoadingDates(true);
       loadSchedules(selectedDoctor.id);
       loadCalendar(selectedDoctor.id);
     }
@@ -175,6 +178,7 @@ const Registrar = () => {
   };
 
   const generateAvailableDates = async () => {
+    setIsLoadingDates(true);
     const dates = [];
     for (let i = 0; i <= 20; i++) {
       const date = new Date();
@@ -209,15 +213,19 @@ const Registrar = () => {
       });
     }
     setAvailableDates(dates);
+    setIsLoadingDates(false);
   };
 
   const loadAvailableSlots = async (doctorId: number, date: string) => {
+    setIsLoadingSlots(true);
     try {
       const response = await fetch(`${API_URLS.appointments}?action=available-slots&doctor_id=${doctorId}&date=${date}`);
       const data = await response.json();
       setAvailableSlots(data.available_slots || []);
     } catch (error) {
       toast({ title: "Ошибка", description: "Не удалось загрузить слоты", variant: "destructive" });
+    } finally {
+      setIsLoadingSlots(false);
     }
   };
 
@@ -769,36 +777,62 @@ const Registrar = () => {
                   Доступные даты для записи к врачу {selectedDoctor.full_name}
                 </h3>
               </div>
-              <div className="grid grid-cols-7 gap-2 mb-8">
-                {availableDates.map((dateInfo) => (
-                  <button
-                    key={dateInfo.date}
-                    onClick={() => dateInfo.isWorking && setSelectedDate(dateInfo.date)}
-                    disabled={!dateInfo.isWorking}
-                    className={`p-3 rounded-lg border text-sm transition-all ${
-                      selectedDate === dateInfo.date
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : dateInfo.isWorking
-                        ? 'bg-white hover:bg-gray-50 border-gray-200'
-                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    }`}
-                  >
-                    <div className="font-medium">{dateInfo.label}</div>
-                    {dateInfo.isWorking && (
-                      <div className="text-xs mt-1 font-semibold text-green-600">
-                        {dateInfo.slotsCount > 0 ? `${dateInfo.slotsCount} слот` : 'Нет слотов'}
+              {isLoadingDates ? (
+                <Card className="mb-8 bg-blue-50 border-blue-200">
+                  <CardContent className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <div>
+                        <p className="text-lg font-semibold text-blue-900">Загружаю доступные даты...</p>
+                        <p className="text-sm text-blue-700 mt-1">Пожалуйста, подождите</p>
                       </div>
-                    )}
-                  </button>
-                ))}
-              </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-7 gap-2 mb-8">
+                  {availableDates.map((dateInfo) => (
+                    <button
+                      key={dateInfo.date}
+                      onClick={() => dateInfo.isWorking && setSelectedDate(dateInfo.date)}
+                      disabled={!dateInfo.isWorking}
+                      className={`p-3 rounded-lg border text-sm transition-all ${
+                        selectedDate === dateInfo.date
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : dateInfo.isWorking
+                          ? 'bg-white hover:bg-gray-50 border-gray-200'
+                          : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="font-medium">{dateInfo.label}</div>
+                      {dateInfo.isWorking && (
+                        <div className="text-xs mt-1 font-semibold text-green-600">
+                          {dateInfo.slotsCount > 0 ? `${dateInfo.slotsCount} слот` : 'Нет слотов'}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {selectedDate && (
                 <>
                   <h3 className="text-2xl font-bold mb-4">
                     Свободные слоты на {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')}
                   </h3>
-                  {availableSlots.length === 0 ? (
+                  {isLoadingSlots ? (
+                    <Card className="mb-8 bg-green-50 border-green-200">
+                      <CardContent className="py-12 text-center">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                          <div>
+                            <p className="text-lg font-semibold text-green-900">Загружаю свободные слоты...</p>
+                            <p className="text-sm text-green-700 mt-1">Секунду, проверяю доступное время</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : availableSlots.length === 0 ? (
                     <Card className="mb-8">
                       <CardContent className="py-8 text-center text-muted-foreground">
                         Нет свободных слотов на эту дату
