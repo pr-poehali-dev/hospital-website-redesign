@@ -59,11 +59,11 @@ export function showSlotErrorDialog(errorMessage: string): void {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 99999;
     animation: fadeIn 0.2s ease-in;
   `;
 
@@ -77,6 +77,8 @@ export function showSlotErrorDialog(errorMessage: string): void {
     width: 90%;
     text-align: center;
     animation: slideDown 0.3s ease-out;
+    position: relative;
+    z-index: 100000;
   `;
 
   const icon = document.createElement('div');
@@ -127,6 +129,11 @@ export function showSlotErrorDialog(errorMessage: string): void {
   `;
   button.textContent = 'Понятно';
   
+  const closeDialog = () => {
+    overlay.style.animation = 'fadeOut 0.2s ease-out';
+    setTimeout(() => overlay.remove(), 200);
+  };
+  
   button.addEventListener('mouseenter', () => {
     button.style.transform = 'translateY(-2px)';
     button.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
@@ -137,9 +144,18 @@ export function showSlotErrorDialog(errorMessage: string): void {
     button.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
   });
 
-  button.addEventListener('click', () => {
-    overlay.style.animation = 'fadeOut 0.2s ease-out';
-    setTimeout(() => overlay.remove(), 200);
+  button.addEventListener('click', closeDialog);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      closeDialog();
+    }
+  });
+
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeDialog();
+    }
   });
 
   dialog.appendChild(icon);
@@ -180,10 +196,7 @@ export function showSlotErrorDialog(errorMessage: string): void {
   document.head.appendChild(style);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      overlay.style.animation = 'fadeOut 0.2s ease-out';
-      setTimeout(() => overlay.remove(), 200);
-    }
-  });
+  setTimeout(() => {
+    button.focus();
+  }, 100);
 }
