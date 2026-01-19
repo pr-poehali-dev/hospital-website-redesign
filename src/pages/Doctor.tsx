@@ -2848,8 +2848,22 @@ const Doctor = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={newAppointmentDialog.open} onOpenChange={(open) => setNewAppointmentDialog({...newAppointmentDialog, open})}>
-        <DialogContent className="sm:max-w-2xl">
+      <Dialog open={newAppointmentDialog.open} onOpenChange={(open) => {
+        // Проверяем, есть ли модальное окно ошибки слота
+        const slotErrorDialog = document.getElementById('slot-error-overlay');
+        if (!open && slotErrorDialog) {
+          // Если пытаются закрыть диалог, но открыто окно ошибки - игнорируем
+          return;
+        }
+        setNewAppointmentDialog({...newAppointmentDialog, open});
+      }}>
+        <DialogContent className="sm:max-w-2xl" onPointerDownOutside={(e) => {
+          // Блокируем закрытие диалога при клике на overlay, если открыто окно ошибки
+          const slotErrorDialog = document.getElementById('slot-error-overlay');
+          if (slotErrorDialog) {
+            e.preventDefault();
+          }
+        }}>
           <DialogHeader>
             <DialogTitle>Записать пациента на прием</DialogTitle>
           </DialogHeader>
@@ -3008,8 +3022,22 @@ const Doctor = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={rescheduleDialog.open} onOpenChange={(open) => setRescheduleDialog({...rescheduleDialog, open})}>
-        <DialogContent className="max-w-4xl">
+      <Dialog open={rescheduleDialog.open} onOpenChange={(open) => {
+        // Проверяем, есть ли модальное окно ошибки слота
+        const slotErrorDialog = document.getElementById('slot-error-overlay');
+        if (!open && slotErrorDialog) {
+          // Если пытаются закрыть диалог, но открыто окно ошибки - игнорируем
+          return;
+        }
+        setRescheduleDialog({...rescheduleDialog, open});
+      }}>
+        <DialogContent className="max-w-4xl" onPointerDownOutside={(e) => {
+          // Блокируем закрытие диалога при клике на overlay, если открыто окно ошибки
+          const slotErrorDialog = document.getElementById('slot-error-overlay');
+          if (slotErrorDialog) {
+            e.preventDefault();
+          }
+        }}>
           <DialogHeader>
             <DialogTitle>Перенести запись</DialogTitle>
             <DialogDescription>
@@ -3092,8 +3120,22 @@ const Doctor = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cloneDialog.open} onOpenChange={(open) => setCloneDialog({...cloneDialog, open})}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={cloneDialog.open} onOpenChange={(open) => {
+        // Проверяем, есть ли модальное окно ошибки слота
+        const slotErrorDialog = document.getElementById('slot-error-overlay');
+        if (!open && slotErrorDialog) {
+          // Если пытаются закрыть диалог, но открыто окно ошибки - игнорируем
+          return;
+        }
+        setCloneDialog({...cloneDialog, open});
+      }}>
+        <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => {
+          // Блокируем закрытие диалога при клике на overlay, если открыто окно ошибки
+          const slotErrorDialog = document.getElementById('slot-error-overlay');
+          if (slotErrorDialog) {
+            e.preventDefault();
+          }
+        }}>
           <DialogHeader>
             <DialogTitle>Клонировать запись</DialogTitle>
             <DialogDescription>

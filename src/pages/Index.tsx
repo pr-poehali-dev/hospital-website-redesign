@@ -559,14 +559,28 @@ const Index = () => {
           </p>
           <div className="flex flex-col items-center gap-3 animate-scale-in">
             <div className="flex gap-4 justify-center flex-wrap">
-              <Dialog open={isAppointmentOpen} onOpenChange={setIsAppointmentOpen}>
+              <Dialog open={isAppointmentOpen} onOpenChange={(open) => {
+                // Проверяем, есть ли модальное окно ошибки слота
+                const slotErrorDialog = document.getElementById('slot-error-overlay');
+                if (!open && slotErrorDialog) {
+                  // Если пытаются закрыть диалог, но открыто окно ошибки - игнорируем
+                  return;
+                }
+                setIsAppointmentOpen(open);
+              }}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-shadow w-full sm:w-auto sm:min-w-[200px] bg-blue-900 hover:bg-blue-800">
                     <Icon name="Calendar" size={20} />
                     Записаться на прием
                   </Button>
                 </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => {
+                // Блокируем закрытие диалога при клике на overlay, если открыто окно ошибки
+                const slotErrorDialog = document.getElementById('slot-error-overlay');
+                if (slotErrorDialog) {
+                  e.preventDefault();
+                }
+              }}>
                 <DialogHeader>
                   <DialogTitle>Запись на прием</DialogTitle>
                   <DialogDescription>Выберите врача, дату и время приема</DialogDescription>
