@@ -50,6 +50,8 @@ const Index = () => {
   const [isMaxBannerVisible, setIsMaxBannerVisible] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoModalUrl, setPhotoModalUrl] = useState('');
 
   const maxTexts = [
     'Максимум возможностей для жизни',
@@ -615,14 +617,19 @@ const Index = () => {
                                 <img 
                                   src={doctor.photo_url} 
                                   alt={doctor.full_name} 
-                                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                  className="w-24 h-24 rounded-lg object-cover flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPhotoModalUrl(doctor.photo_url);
+                                    setPhotoModalOpen(true);
+                                  }}
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
                                 />
                               ) : (
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Icon name="User" size={24} className="text-primary" />
+                                <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <Icon name="User" size={40} className="text-primary" />
                                 </div>
                               )}
                               <div className="flex-1 min-w-0 space-y-1">
@@ -835,14 +842,18 @@ const Index = () => {
                           <img 
                             src={selectedDoctor.photo_url} 
                             alt={selectedDoctor.full_name} 
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-24 h-24 rounded-lg object-cover cursor-pointer hover:shadow-lg transition-shadow"
+                            onClick={() => {
+                              setPhotoModalUrl(selectedDoctor.photo_url);
+                              setPhotoModalOpen(true);
+                            }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Icon name="User" size={24} className="text-primary" />
+                          <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Icon name="User" size={40} className="text-primary" />
                           </div>
                         )}
                         <div>
@@ -1711,7 +1722,11 @@ const Index = () => {
                     <img 
                       src={successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/100'} 
                       alt={successAppointmentData.doctor.full_name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 sm:border-4 border-white shadow-lg"
+                      className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg object-cover border-2 sm:border-4 border-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+                      onClick={() => {
+                        setPhotoModalUrl(successAppointmentData.doctor.photo_url);
+                        setPhotoModalOpen(true);
+                      }}
                     />
                     <div className="text-center sm:text-left">
                       <p className="text-xs sm:text-sm text-muted-foreground">Врач</p>
@@ -1985,6 +2000,27 @@ const Index = () => {
                 Закрыть
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+        <DialogContent className="max-w-4xl p-0">
+          <div className="relative">
+            <img 
+              src={photoModalUrl} 
+              alt="Фото врача" 
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+              onClick={() => setPhotoModalOpen(false)}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+              onClick={() => setPhotoModalOpen(false)}
+            >
+              <Icon name="X" size={24} />
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
