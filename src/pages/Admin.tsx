@@ -1786,17 +1786,27 @@ const Admin = () => {
                           <TableRow key={doctor.id} className={!doctor.is_active ? 'opacity-50' : ''}>
                             <TableCell>
                               {doctor.photo_url ? (
-                                <img 
-                                  src={doctor.photo_url} 
-                                  alt={doctor.full_name} 
-                                  className="w-10 h-10 rounded-full object-cover"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
+                                <div className="relative group">
+                                  <img 
+                                    src={doctor.photo_url} 
+                                    alt={doctor.full_name} 
+                                    className="w-20 h-20 rounded-full object-cover cursor-pointer transition-transform"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                  <div className="absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    <img 
+                                      src={doctor.photo_url} 
+                                      alt={doctor.full_name} 
+                                      className="rounded-lg shadow-2xl border-4 border-white"
+                                      style={{ width: 'auto', maxWidth: '400px', height: 'auto', maxHeight: '400px' }}
+                                    />
+                                  </div>
+                                </div>
                               ) : (
-                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <Icon name="User" size={20} className="text-primary" />
+                                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <Icon name="User" size={32} className="text-primary" />
                                 </div>
                               )}
                             </TableCell>
