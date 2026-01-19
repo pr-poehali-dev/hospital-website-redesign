@@ -1,18 +1,17 @@
-import { API_URLS } from '@/config/api';
-
 export interface SlotCheckResult {
   available: boolean;
   error?: string;
 }
 
 export async function checkSlotAvailability(
+  appointmentsApiUrl: string,
   doctorId: number,
   date: string,
   time: string,
   excludeAppointmentId?: number
 ): Promise<SlotCheckResult> {
   try {
-    let url = `${API_URLS.appointments}?action=check-slot&doctor_id=${doctorId}&date=${date}&time=${time}`;
+    let url = `${appointmentsApiUrl}?action=check-slot&doctor_id=${doctorId}&date=${date}&time=${time}`;
     
     if (excludeAppointmentId) {
       url += `&exclude_id=${excludeAppointmentId}`;

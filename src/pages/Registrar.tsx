@@ -254,6 +254,7 @@ const Registrar = () => {
     }
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       selectedDoctor.id,
       selectedDate,
       newAppointmentDialog.time
@@ -483,6 +484,7 @@ const Registrar = () => {
     const newTime = rescheduleSelectedSlot;
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       selectedDoctor.id,
       newDate,
       newTime,
@@ -552,6 +554,7 @@ const Registrar = () => {
     if (!cloneDialog) return;
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       cloneDialog.doctor_id,
       cloneSelectedDate,
       cloneSelectedSlot

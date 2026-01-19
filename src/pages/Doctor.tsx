@@ -818,6 +818,7 @@ const Doctor = () => {
     }
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       doctorInfo.id,
       cloneDialog.newDate,
       cloneDialog.newTime
@@ -1022,6 +1023,7 @@ const Doctor = () => {
     const newTime = rescheduleDialog.newTime;
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       doctorInfo.id,
       newDate,
       newTime,
@@ -1089,6 +1091,7 @@ const Doctor = () => {
     }
 
     const slotCheck = await checkSlotAvailability(
+      API_URLS.appointments,
       doctorInfo.id,
       newAppointmentDialog.date,
       newAppointmentDialog.time
