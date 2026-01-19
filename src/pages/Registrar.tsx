@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
+import { checkSlotAvailability, showSlotErrorDialog } from '@/utils/slotChecker';
 
 const API_URLS = {
   auth: 'https://functions.poehali.dev/b51b3f73-d83d-4a55-828e-5feec95d1227',
@@ -252,6 +253,17 @@ const Registrar = () => {
       return;
     }
 
+    const slotCheck = await checkSlotAvailability(
+      selectedDoctor.id,
+      selectedDate,
+      newAppointmentDialog.time
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
+      return;
+    }
+
     try {
       const response = await fetch(API_URLS.appointments, {
         method: 'POST',
@@ -465,12 +477,24 @@ const Registrar = () => {
   const handleRescheduleAppointment = async () => {
     setRescheduleConfirmDialog({open: false, data: null});
 
-    try {
-      const oldDate = rescheduleDialog.appointment_date;
-      const oldTime = rescheduleDialog.appointment_time;
-      const newDate = rescheduleSelectedDate;
-      const newTime = rescheduleSelectedSlot;
+    const oldDate = rescheduleDialog.appointment_date;
+    const oldTime = rescheduleDialog.appointment_time;
+    const newDate = rescheduleSelectedDate;
+    const newTime = rescheduleSelectedSlot;
 
+    const slotCheck = await checkSlotAvailability(
+      selectedDoctor.id,
+      newDate,
+      newTime,
+      rescheduleDialog.id
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
+      return;
+    }
+
+    try {
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -526,6 +550,17 @@ const Registrar = () => {
     }
 
     if (!cloneDialog) return;
+
+    const slotCheck = await checkSlotAvailability(
+      cloneDialog.doctor_id,
+      cloneSelectedDate,
+      cloneSelectedSlot
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
+      return;
+    }
 
     try {
       const response = await fetch(API_URLS.appointments, {

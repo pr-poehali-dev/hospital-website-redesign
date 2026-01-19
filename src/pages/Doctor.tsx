@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Icon from '@/components/ui/icon';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { checkSlotAvailability, showSlotErrorDialog } from '@/utils/slotChecker';
 
 const API_URLS = {
   auth: 'https://functions.poehali.dev/b51b3f73-d83d-4a55-828e-5feec95d1227',
@@ -816,6 +817,17 @@ const Doctor = () => {
       return;
     }
 
+    const slotCheck = await checkSlotAvailability(
+      doctorInfo.id,
+      cloneDialog.newDate,
+      cloneDialog.newTime
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
+      return;
+    }
+
     try {
       const response = await fetch(API_URLS.appointments, {
         method: 'POST',
@@ -1004,12 +1016,24 @@ const Doctor = () => {
       return;
     }
 
-    try {
-      const oldDate = rescheduleDialog.appointment.appointment_date;
-      const oldTime = rescheduleDialog.appointment.appointment_time;
-      const newDate = rescheduleDialog.newDate;
-      const newTime = rescheduleDialog.newTime;
+    const oldDate = rescheduleDialog.appointment.appointment_date;
+    const oldTime = rescheduleDialog.appointment.appointment_time;
+    const newDate = rescheduleDialog.newDate;
+    const newTime = rescheduleDialog.newTime;
 
+    const slotCheck = await checkSlotAvailability(
+      doctorInfo.id,
+      newDate,
+      newTime,
+      rescheduleDialog.appointment.id
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
+      return;
+    }
+
+    try {
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1061,6 +1085,17 @@ const Doctor = () => {
     
     if (!newAppointmentDialog.date || !newAppointmentDialog.time || !newAppointmentDialog.patientName || !newAppointmentDialog.patientPhone) {
       toast({ title: "Ошибка", description: "Заполните все обязательные поля", variant: "destructive" });
+      return;
+    }
+
+    const slotCheck = await checkSlotAvailability(
+      doctorInfo.id,
+      newAppointmentDialog.date,
+      newAppointmentDialog.time
+    );
+
+    if (!slotCheck.available) {
+      showSlotErrorDialog(slotCheck.error || 'Слот времени занят');
       return;
     }
 

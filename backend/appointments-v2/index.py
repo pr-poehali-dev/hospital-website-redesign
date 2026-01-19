@@ -48,8 +48,57 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             query_params = event.get('queryStringParameters') or {}
             path = event.get('path', '/')
             
+            # Quick slot check endpoint
+            if query_params.get('action') == 'check-slot':
+                doctor_id = query_params.get('doctor_id')
+                date_str = query_params.get('date')
+                time_str = query_params.get('time')
+                exclude_id = query_params.get('exclude_id')
+                
+                if not all([doctor_id, date_str, time_str]):
+                    return {
+                        'statusCode': 400,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({'error': 'doctor_id, date and time are required'}),
+                        'isBase64Encoded': False
+                    }
+                
+                cursor = conn.cursor(cursor_factory=RealDictCursor)
+                
+                if exclude_id:
+                    cursor.execute(
+                        "SELECT id FROM appointments_v2 WHERE doctor_id = %s AND appointment_date = %s AND appointment_time = %s AND status != 'cancelled' AND id != %s",
+                        (doctor_id, date_str, time_str, exclude_id)
+                    )
+                else:
+                    cursor.execute(
+                        "SELECT id FROM appointments_v2 WHERE doctor_id = %s AND appointment_date = %s AND appointment_time = %s AND status != 'cancelled'",
+                        (doctor_id, date_str, time_str)
+                    )
+                
+                existing = cursor.fetchone()
+                cursor.close()
+                
+                if existing:
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                        'body': json.dumps({
+                            'available': False,
+                            'error': f'Время {time_str} на {date_str} уже занято другим пациентом'
+                        }),
+                        'isBase64Encoded': False
+                    }
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'available': True}),
+                    'isBase64Encoded': False
+                }
+            
             # Check for available-slots endpoint via query param or path
-            if '/available-slots' in path or query_params.get('action') == 'available-slots':
+            elif '/available-slots' in path or query_params.get('action') == 'available-slots':
                 doctor_id = query_params.get('doctor_id')
                 date_str = query_params.get('date')
                 
