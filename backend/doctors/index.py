@@ -93,6 +93,8 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             work_experience = body.get('work_experience')
             office_number = body.get('office_number')
             
+            work_experience = None if work_experience == '' else work_experience
+            
             if not all([full_name, position, login]):
                 return {
                     'statusCode': 400,
