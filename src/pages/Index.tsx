@@ -1727,118 +1727,126 @@ const Index = () => {
 
 
       <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="text-center py-3 sm:py-6 space-y-3 sm:space-y-5">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center animate-bounce">
-                <Icon name="CheckCircle" size={40} className="text-green-600 sm:w-16 sm:h-16" />
+        <DialogContent className="max-w-[95vw] sm:max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="text-center py-2 space-y-2">
+              <div className="flex justify-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <Icon name="CheckCircle" size={28} className="text-green-600" />
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-green-600">Запись создана!</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">Вы успешно записаны на прием</p>
+              </div>
+
+              <div id="print-content" className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg p-3 space-y-2 border border-green-200">
+                {successAppointmentData && (
+                  <>
+                    <div className="flex items-center gap-3 pb-2 border-b border-green-200">
+                      <img 
+                        src={successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/100'} 
+                        alt={successAppointmentData.doctor.full_name}
+                        className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow cursor-pointer"
+                        onClick={() => {
+                          setPhotoModalUrl(successAppointmentData.doctor.photo_url);
+                          setPhotoModalOpen(true);
+                        }}
+                      />
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground">Врач</p>
+                        <p className="text-sm font-bold text-primary truncate">{successAppointmentData.doctor.full_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{successAppointmentData.doctor.specialization}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-left">
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Icon name="Calendar" size={12} className="text-primary" />
+                          Дата
+                        </p>
+                        <p className="text-sm font-semibold">
+                          {new Date(successAppointmentData.date + 'T00:00:00').toLocaleDateString('ru-RU', { 
+                            day: 'numeric', 
+                            month: 'long'
+                          })}
+                        </p>
+                      </div>
+
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Icon name="Clock" size={12} className="text-primary" />
+                          Время
+                        </p>
+                        <p className="text-sm font-semibold">{successAppointmentData.time}</p>
+                      </div>
+
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Icon name="User" size={12} className="text-primary" />
+                          Пациент
+                        </p>
+                        <p className="text-xs font-medium break-words">{successAppointmentData.patient_name}</p>
+                      </div>
+
+                      <div className="col-span-2 sm:col-span-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Icon name="Phone" size={12} className="text-primary" />
+                          Телефон
+                        </p>
+                        <p className="text-xs font-medium">{successAppointmentData.patient_phone}</p>
+                      </div>
+
+                      {successAppointmentData.doctor.office_number && (
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Icon name="DoorOpen" size={12} className="text-primary" />
+                            Кабинет
+                          </p>
+                          <p className="text-xs font-medium">{successAppointmentData.doctor.office_number}</p>
+                        </div>
+                      )}
+
+                      {successAppointmentData.patient_snils && (
+                        <div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Icon name="CreditCard" size={12} className="text-primary" />
+                            СНИЛС
+                          </p>
+                          <p className="text-xs font-medium">{successAppointmentData.patient_snils}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {successAppointmentData.description && (
+                      <div className="text-left pt-2 border-t border-green-200">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                          <Icon name="FileText" size={12} className="text-primary" />
+                          Описание
+                        </p>
+                        <p className="text-xs break-words">{successAppointmentData.description}</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-            
-            <div className="space-y-1 sm:space-y-2 px-2">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">Запись успешно создана!</h2>
-              <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
-                Вы успешно записаны на прием
-              </p>
-            </div>
+          </div>
 
-            <div id="print-content" className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg sm:rounded-xl p-3 sm:p-5 md:p-6 space-y-3 sm:space-y-4 border-2 border-green-200">
-              {successAppointmentData && (
-                <>
-                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center pb-3 sm:pb-4 border-b-2 border-green-200">
-                    <img 
-                      src={successAppointmentData.doctor.photo_url || 'https://via.placeholder.com/100'} 
-                      alt={successAppointmentData.doctor.full_name}
-                      className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg object-cover border-2 sm:border-4 border-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
-                      onClick={() => {
-                        setPhotoModalUrl(successAppointmentData.doctor.photo_url);
-                        setPhotoModalOpen(true);
-                      }}
-                    />
-                    <div className="text-center sm:text-left">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Врач</p>
-                      <p className="text-base sm:text-lg md:text-xl font-bold text-primary">{successAppointmentData.doctor.full_name}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{successAppointmentData.doctor.specialization}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-left">
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Calendar" size={14} className="text-primary sm:w-4 sm:h-4" />
-                        Дата приема
-                      </p>
-                      <p className="text-sm sm:text-base md:text-lg font-semibold">
-                        {new Date(successAppointmentData.date + 'T00:00:00').toLocaleDateString('ru-RU', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Clock" size={14} className="text-primary sm:w-4 sm:h-4" />
-                        Время приема
-                      </p>
-                      <p className="text-sm sm:text-base md:text-lg font-semibold">{successAppointmentData.time}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="User" size={14} className="text-primary sm:w-4 sm:h-4" />
-                        ФИО пациента
-                      </p>
-                      <p className="text-xs sm:text-sm md:text-base font-medium break-words">{successAppointmentData.patient_name}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="Phone" size={14} className="text-primary sm:w-4 sm:h-4" />
-                        Телефон
-                      </p>
-                      <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_phone}</p>
-                    </div>
-
-                    {successAppointmentData.doctor.office_number && (
-                      <div className="space-y-1">
-                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                          <Icon name="DoorOpen" size={14} className="text-primary sm:w-4 sm:h-4" />
-                          Кабинет
-                        </p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.doctor.office_number}</p>
-                      </div>
-                    )}
-
-                    {successAppointmentData.patient_snils && (
-                      <div className="space-y-1">
-                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                          <Icon name="CreditCard" size={14} className="text-primary sm:w-4 sm:h-4" />
-                          СНИЛС
-                        </p>
-                        <p className="text-xs sm:text-sm md:text-base font-medium">{successAppointmentData.patient_snils}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {successAppointmentData.description && (
-                    <div className="space-y-1 text-left pt-2 border-t-2 border-green-200">
-                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2">
-                        <Icon name="FileText" size={14} className="text-primary sm:w-4 sm:h-4" />
-                        Описание
-                      </p>
-                      <p className="text-xs sm:text-sm break-words">{successAppointmentData.description}</p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center pt-3 sm:pt-4 px-2">
-              <Button
-                size="sm"
-                className="sm:text-base"
+          </div>
+          
+          <div className="flex gap-2 justify-center pt-2 border-t mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowSuccessModal(false)}
+            >
+              Закрыть
+            </Button>
+            <Button
+              size="sm"
                 onClick={() => {
                   const printContent = document.getElementById('print-content');
                   if (printContent) {
@@ -2004,29 +2012,9 @@ const Index = () => {
                 variant="outline"
                 className="gap-2 text-xs sm:text-sm"
               >
-                <Icon name="Printer" size={16} className="sm:w-5 sm:h-5" />
-                Распечатать талон
-              </Button>
-
-              <Button
-                size="sm"
-                className="sm:text-base"
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  setAppointmentForm({ patient_name: '', patient_phone: '', appointment_time: '', description: '' });
-                  setVerificationStep('form');
-                  setVerificationCode('');
-                  setSentCode('');
-                  setSelectedDoctor(null);
-                  setSelectedDate('');
-                  setSuccessAppointmentData(null);
-                }}
-                className="gap-2 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
-              >
-                <Icon name="X" size={16} className="sm:w-5 sm:h-5" />
-                Закрыть
-              </Button>
-            </div>
+              <Icon name="Printer" size={14} />
+              Печать
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
