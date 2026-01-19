@@ -55,6 +55,8 @@ const Registrar = () => {
   const [rescheduleSuccessDialog, setRescheduleSuccessDialog] = useState<{open: boolean, data: any}>({open: false, data: null});
   const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoModalUrl, setPhotoModalUrl] = useState('');
 
   useEffect(() => {
     const auth = localStorage.getItem('registrar_auth');
@@ -708,11 +710,16 @@ const Registrar = () => {
                       <img 
                         src={doctor.photo_url} 
                         alt={doctor.full_name} 
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        className="w-24 h-24 rounded-lg object-cover flex-shrink-0 cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPhotoModalUrl(doctor.photo_url);
+                          setPhotoModalOpen(true);
+                        }}
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Icon name="User" size={24} className="text-primary" />
+                      <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Icon name="User" size={40} className="text-primary" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0 space-y-1">
@@ -939,14 +946,31 @@ const Registrar = () => {
           <DialogHeader>
             <DialogTitle>Записать пациента</DialogTitle>
           </DialogHeader>
-          <div className="bg-muted/30 p-3 rounded-lg mb-4 space-y-1 text-sm">
-            <p><strong>Врач:</strong> {selectedDoctor?.full_name}</p>
-            <p><strong>Должность:</strong> {selectedDoctor?.position}</p>
-            {selectedDoctor?.specialization && <p><strong>Специализация:</strong> {selectedDoctor?.specialization}</p>}
-            {selectedDoctor?.office_number && <p><strong>Кабинет:</strong> {selectedDoctor?.office_number}</p>}
-            {selectedDoctor?.education && <p><strong>Образование:</strong> {selectedDoctor?.education}</p>}
-            {selectedDoctor?.work_experience && <p><strong>Стаж:</strong> {selectedDoctor?.work_experience} лет</p>}
-            <p><strong>Дата и время:</strong> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')} в {newAppointmentDialog.time}</p>
+          <div className="bg-muted/30 p-3 rounded-lg mb-4 flex items-start gap-3">
+            {selectedDoctor?.photo_url ? (
+              <img 
+                src={selectedDoctor.photo_url} 
+                alt={selectedDoctor.full_name} 
+                className="w-24 h-24 rounded-lg object-cover cursor-pointer hover:shadow-lg transition-shadow flex-shrink-0"
+                onClick={() => {
+                  setPhotoModalUrl(selectedDoctor.photo_url);
+                  setPhotoModalOpen(true);
+                }}
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon name="User" size={40} className="text-primary" />
+              </div>
+            )}
+            <div className="space-y-1 text-sm flex-1">
+              <p><strong>Врач:</strong> {selectedDoctor?.full_name}</p>
+              <p><strong>Должность:</strong> {selectedDoctor?.position}</p>
+              {selectedDoctor?.specialization && <p><strong>Специализация:</strong> {selectedDoctor?.specialization}</p>}
+              {selectedDoctor?.office_number && <p><strong>Кабинет:</strong> {selectedDoctor?.office_number}</p>}
+              {selectedDoctor?.education && <p><strong>Образование:</strong> {selectedDoctor?.education}</p>}
+              {selectedDoctor?.work_experience && <p><strong>Стаж:</strong> {selectedDoctor?.work_experience} лет</p>}
+              <p><strong>Дата и время:</strong> {new Date(selectedDate + 'T00:00:00').toLocaleDateString('ru-RU')} в {newAppointmentDialog.time}</p>
+            </div>
           </div>
           <form onSubmit={handleCreateAppointment} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -1521,6 +1545,27 @@ const Registrar = () => {
               onClick={() => setRescheduleSuccessDialog({open: false, data: null})}
             >
               Закрыть
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={photoModalOpen} onOpenChange={setPhotoModalOpen}>
+        <DialogContent className="max-w-4xl p-0">
+          <div className="relative">
+            <img 
+              src={photoModalUrl} 
+              alt="Фото врача" 
+              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+              onClick={() => setPhotoModalOpen(false)}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white"
+              onClick={() => setPhotoModalOpen(false)}
+            >
+              <Icon name="X" size={24} />
             </Button>
           </div>
         </DialogContent>
