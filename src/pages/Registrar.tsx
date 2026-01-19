@@ -725,9 +725,15 @@ const Registrar = () => {
                     )}
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="font-semibold text-sm">{doctor.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{doctor.position}</p>
+                      <p className="text-xs font-bold text-blue-900">{doctor.position}</p>
                       {doctor.specialization && (
                         <p className="text-xs text-muted-foreground">{doctor.specialization}</p>
+                      )}
+                      {doctor.phone && (
+                        <p className="text-xs flex items-center gap-1 font-bold text-blue-900">
+                          <Icon name="Phone" size={12} className="text-blue-900" />
+                          <span>{doctor.phone}</span>
+                        </p>
                       )}
                       <div className="pt-1 space-y-0.5">
                         {doctor.office_number && (
