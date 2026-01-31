@@ -1366,18 +1366,21 @@ const Doctor = () => {
     }
 
     try {
+      const payload = {
+        action: 'update_patient_info',
+        id: editAppointmentDialog.appointmentId,
+        patient_name: editAppointmentDialog.patientName,
+        patient_phone: editAppointmentDialog.patientPhone,
+        patient_snils: editAppointmentDialog.patientSnils || null,
+        patient_oms: editAppointmentDialog.patientOms || null,
+        description: editAppointmentDialog.description || null
+      };
+      console.log('Editing appointment with payload:', payload);
+      
       const response = await fetch(API_URLS.appointments, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update_patient_info',
-          id: editAppointmentDialog.appointmentId,
-          patient_name: editAppointmentDialog.patientName,
-          patient_phone: editAppointmentDialog.patientPhone,
-          patient_snils: editAppointmentDialog.patientSnils || null,
-          patient_oms: editAppointmentDialog.patientOms || null,
-          description: editAppointmentDialog.description || null
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -1408,9 +1411,11 @@ const Doctor = () => {
         });
         loadAppointments(doctorInfo.id);
       } else {
+        console.error('Edit appointment error:', response.status, data);
         toast({ title: "Ошибка", description: data.error || "Не удалось обновить данные", variant: "destructive" });
       }
     } catch (error) {
+      console.error('Edit appointment exception:', error);
       toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
     }
   };
