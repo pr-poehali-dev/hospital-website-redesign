@@ -2919,6 +2919,15 @@ const Doctor = () => {
                 <div className="flex gap-2 items-center">
                   {selectedAppointment && (
                     <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs gap-1.5"
+                        onClick={() => openEditAppointmentDialog(selectedAppointment)}
+                      >
+                        <Icon name="Edit" size={14} className="text-orange-600" />
+                        Редактировать
+                      </Button>
                       {selectedAppointment.status === 'scheduled' && (
                         <>
                           <Button
@@ -2940,15 +2949,6 @@ const Doctor = () => {
                           >
                             <Icon name="CheckCircle" size={14} />
                             Завершить прием
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs gap-1.5"
-                            onClick={() => openEditAppointmentDialog(selectedAppointment)}
-                          >
-                            <Icon name="Edit" size={14} className="text-orange-600" />
-                            Редактировать
                           </Button>
                           <Button
                             variant="outline"
