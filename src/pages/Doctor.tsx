@@ -51,6 +51,17 @@ const Doctor = () => {
   const [isDailyScheduleOpen, setIsDailyScheduleOpen] = useState(false);
   const [editingDailySchedule, setEditingDailySchedule] = useState<any>(null);
   const [isDailyEditOpen, setIsDailyEditOpen] = useState(false);
+  const [isBulkGenerateOpen, setIsBulkGenerateOpen] = useState(false);
+  const [bulkGenerateForm, setBulkGenerateForm] = useState({
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: '',
+    start_time: '08:00',
+    end_time: '17:00',
+    break_start_time: '',
+    break_end_time: '',
+    slot_duration: 15,
+    is_active: true
+  });
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilterFrom, setDateFilterFrom] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
@@ -229,43 +240,7 @@ const Doctor = () => {
     }
   }, [rescheduleDialog.open]);
 
-  useEffect(() => {
-    if (doctorInfo && dailySchedules.length > 0) {
-      // Проверим, есть ли дни на следующие 2 месяца
-      const today = new Date();
-      const twoMonthsLater = new Date(today);
-      twoMonthsLater.setMonth(today.getMonth() + 2);
-      
-      const existingDates = new Set(dailySchedules.map((s: any) => s.schedule_date));
-      const missingDates: string[] = [];
-      
-      for (let d = new Date(today); d <= twoMonthsLater; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
-        if (!existingDates.has(dateStr)) {
-          missingDates.push(dateStr);
-        }
-      }
-      
-      // Автоматически создадим недостающие дни с дефолтными параметрами
-      if (missingDates.length > 0 && missingDates.length < 10) {
-        missingDates.forEach(async (date) => {
-          await fetch(API_URLS.schedules, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'daily',
-              doctor_id: doctorInfo.id,
-              schedule_date: date,
-              start_time: '08:00',
-              end_time: '17:00',
-              slot_duration: 15,
-              is_active: false  // По умолчанию выходной
-            }),
-          });
-        });
-      }
-    }
-  }, [dailySchedules, doctorInfo]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -712,6 +687,66 @@ const Doctor = () => {
       } else {
         toast({ title: "Ошибка", description: data.error || "Не удалось удалить", variant: "destructive" });
       }
+    } catch (error) {
+      toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
+    }
+  };
+
+  const handleBulkGenerateDays = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!bulkGenerateForm.start_date || !bulkGenerateForm.end_date) {
+      toast({ title: "Ошибка", description: "Укажите период", variant: "destructive" });
+      return;
+    }
+    
+    const startDate = new Date(bulkGenerateForm.start_date + 'T00:00:00');
+    const endDate = new Date(bulkGenerateForm.end_date + 'T00:00:00');
+    
+    if (startDate > endDate) {
+      toast({ title: "Ошибка", description: "Дата начала должна быть раньше даты окончания", variant: "destructive" });
+      return;
+    }
+    
+    const dates: string[] = [];
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    
+    toast({ title: "Генерация дней", description: `Создаём ${dates.length} дней...` });
+    
+    try {
+      for (const date of dates) {
+        await fetch(API_URLS.schedules, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'daily',
+            doctor_id: doctorInfo.id,
+            schedule_date: date,
+            start_time: bulkGenerateForm.start_time,
+            end_time: bulkGenerateForm.end_time,
+            break_start_time: bulkGenerateForm.break_start_time || null,
+            break_end_time: bulkGenerateForm.break_end_time || null,
+            slot_duration: bulkGenerateForm.slot_duration,
+            is_active: bulkGenerateForm.is_active
+          }),
+        });
+      }
+      
+      toast({ title: "Готово", description: `Создано ${dates.length} дней` });
+      setIsBulkGenerateOpen(false);
+      setBulkGenerateForm({
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: '',
+        start_time: '08:00',
+        end_time: '17:00',
+        break_start_time: '',
+        break_end_time: '',
+        slot_duration: 15,
+        is_active: true
+      });
+      loadDailySchedules(doctorInfo.id);
     } catch (error) {
       toast({ title: "Ошибка", description: "Проблема с подключением", variant: "destructive" });
     }
@@ -1984,91 +2019,114 @@ const Doctor = () => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold">Рабочее расписание</h2>
                 <div className="flex gap-2">
-                  {dailySchedules.length === 0 && (
-                    <Button
-                      size="lg"
-                      variant="secondary"
-                      onClick={async () => {
-                        const today = new Date();
-                        const twoMonthsLater = new Date(today);
-                        twoMonthsLater.setMonth(today.getMonth() + 2);
-                        
-                        const dates: string[] = [];
-                        for (let d = new Date(today); d <= twoMonthsLater; d.setDate(d.getDate() + 1)) {
-                          dates.push(d.toISOString().split('T')[0]);
-                        }
-                        
-                        toast({ title: "Генерация расписания", description: `Создаём ${dates.length} дней...` });
-                        
-                        for (const date of dates) {
-                          await fetch(API_URLS.schedules, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              action: 'daily',
-                              doctor_id: doctorInfo.id,
-                              schedule_date: date,
-                              start_time: '08:00',
-                              end_time: '17:00',
-                              slot_duration: 15,
-                              is_active: false
-                            }),
-                          });
-                        }
-                        
-                        toast({ title: "Готово", description: "Дни созданы. Теперь активируйте нужные дни." });
-                        loadDailySchedules(doctorInfo.id);
-                      }}
-                      title="Автоматически создать дни на 2 месяца вперед"
-                    >
-                      <Icon name="Calendar" size={20} className="mr-2" />
-                      Сгенерировать дни на 2 месяца
-                    </Button>
-                  )}
-                  <Dialog open={bulkSlotDialogOpen} onOpenChange={setBulkSlotDialogOpen}>
+                  <Dialog open={isBulkGenerateOpen} onOpenChange={setIsBulkGenerateOpen}>
                     <DialogTrigger asChild>
-                      <Button 
-                        size="lg" 
-                        variant="outline" 
-                        disabled={schedules.length === 0}
-                        title="Установить одинаковую длительность слота для всех рабочих дней"
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        title="Создать несколько дней с одинаковыми параметрами"
                       >
-                        <Icon name="Clock" size={20} className="mr-2" />
-                        Применить слоты ко всем дням
+                        <Icon name="Calendar" size={20} className="mr-2" />
+                        Сгенерировать дни
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Применить длительность слота ко всем дням</DialogTitle>
+                        <DialogTitle>Массовое создание дней</DialogTitle>
                         <DialogDescription>
-                          Установите одинаковую длительность слота для всех рабочих дней
+                          Создайте несколько дней сразу с одинаковыми параметрами расписания
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4">
+                      <form onSubmit={handleBulkGenerateDays} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Дата начала</label>
+                            <Input
+                              type="date"
+                              value={bulkGenerateForm.start_date}
+                              min={new Date().toISOString().split('T')[0]}
+                              onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, start_date: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Дата окончания</label>
+                            <Input
+                              type="date"
+                              value={bulkGenerateForm.end_date}
+                              min={bulkGenerateForm.start_date}
+                              onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, end_date: e.target.value })}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Время начала</label>
+                            <Input
+                              type="time"
+                              value={bulkGenerateForm.start_time}
+                              onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, start_time: e.target.value })}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Время окончания</label>
+                            <Input
+                              type="time"
+                              value={bulkGenerateForm.end_time}
+                              onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, end_time: e.target.value })}
+                              required
+                            />
+                          </div>
+                        </div>
                         <div>
-                          <label className="block text-sm font-medium mb-2">Длительность слота (минуты)</label>
+                          <label className="text-sm font-medium mb-2 block">Длительность слота (минуты)</label>
                           <Input
                             type="number"
                             min="1"
                             max="120"
                             step="1"
-                            value={bulkSlotDuration}
-                            onChange={(e) => setBulkSlotDuration(parseInt(e.target.value) || 15)}
-                            placeholder="15"
+                            value={bulkGenerateForm.slot_duration}
+                            onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, slot_duration: parseInt(e.target.value) || 15 })}
+                            required
                           />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Это значение будет применено ко всем {schedules.length} дням в расписании
-                          </p>
                         </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" onClick={() => setBulkSlotDialogOpen(false)}>
-                            Отмена
-                          </Button>
-                          <Button onClick={handleBulkSlotUpdate}>
-                            Применить
-                          </Button>
+                        <div className="border-t pt-4">
+                          <label className="text-sm font-medium mb-2 block">Перерыв (необязательно)</label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1 block">Начало перерыва</label>
+                              <Input
+                                type="time"
+                                value={bulkGenerateForm.break_start_time}
+                                onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, break_start_time: e.target.value })}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-muted-foreground mb-1 block">Конец перерыва</label>
+                              <Input
+                                type="time"
+                                value={bulkGenerateForm.break_end_time}
+                                onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, break_end_time: e.target.value })}
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="bulk-is-active"
+                            checked={bulkGenerateForm.is_active}
+                            onChange={(e) => setBulkGenerateForm({ ...bulkGenerateForm, is_active: e.target.checked })}
+                            className="w-4 h-4"
+                          />
+                          <label htmlFor="bulk-is-active" className="text-sm font-medium cursor-pointer">
+                            Создать дни как рабочие (активные)
+                          </label>
+                        </div>
+                        <Button type="submit" className="w-full">Создать дни</Button>
+                      </form>
                     </DialogContent>
                   </Dialog>
                   <Dialog open={isDailyScheduleOpen} onOpenChange={setIsDailyScheduleOpen}>
