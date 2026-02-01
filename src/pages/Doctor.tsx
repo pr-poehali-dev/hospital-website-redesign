@@ -1366,15 +1366,17 @@ const Doctor = () => {
     }
 
     try {
-      const payload = {
+      const payload: any = {
         action: 'update_patient_info',
         id: editAppointmentDialog.appointmentId,
         patient_name: editAppointmentDialog.patientName,
-        patient_phone: editAppointmentDialog.patientPhone,
-        snils: editAppointmentDialog.patientSnils || null,
-        oms: editAppointmentDialog.patientOms || null,
-        description: editAppointmentDialog.description || null
+        patient_phone: editAppointmentDialog.patientPhone
       };
+      
+      if (editAppointmentDialog.patientSnils) payload.snils = editAppointmentDialog.patientSnils;
+      if (editAppointmentDialog.patientOms) payload.oms = editAppointmentDialog.patientOms;
+      if (editAppointmentDialog.description) payload.description = editAppointmentDialog.description;
+      
       console.log('Editing appointment with payload:', payload);
       
       const response = await fetch(API_URLS.appointments, {
