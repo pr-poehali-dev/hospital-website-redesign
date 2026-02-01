@@ -1369,10 +1369,10 @@ const Doctor = () => {
       const payload = {
         action: 'update_patient_info',
         id: editAppointmentDialog.appointmentId,
-        patientName: editAppointmentDialog.patientName,
-        patientPhone: editAppointmentDialog.patientPhone,
-        patientSnils: editAppointmentDialog.patientSnils || null,
-        patientOms: editAppointmentDialog.patientOms || null,
+        patient_name: editAppointmentDialog.patientName,
+        patient_phone: editAppointmentDialog.patientPhone,
+        snils: editAppointmentDialog.patientSnils || null,
+        oms: editAppointmentDialog.patientOms || null,
         description: editAppointmentDialog.description || null
       };
       console.log('Editing appointment with payload:', payload);
