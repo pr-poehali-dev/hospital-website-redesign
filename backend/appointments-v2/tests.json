@@ -1,7 +1,7 @@
 {
   "tests": [
     {
-      "name": "Get appointments",
+      "name": "Get appointments for doctor",
       "method": "GET",
       "path": "/?doctor_id=1",
       "expectedStatus": 200,

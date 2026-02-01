@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, time
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
-    Управление записями пациентов и логирование действий врачей
+    Управление записями пациентов и логирование действий врачей.
     GET /?doctor_id=X&date=YYYY-MM-DD - получить записи врача на дату
     GET /?doctor_id=X&start_date=YYYY-MM-DD&end_date=YYYY-MM-DD - получить записи за период
     GET /?action=logs&doctor_id=X&limit=500 - получить журнал действий врача
